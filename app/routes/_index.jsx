@@ -62,6 +62,7 @@ function loadDeferredData({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
+  console.log('testing');
   return (
     <div className="home">
       <FeaturedCollection collection={data.featuredCollection} />
