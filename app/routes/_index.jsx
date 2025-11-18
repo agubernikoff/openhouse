@@ -1,7 +1,8 @@
 import {Await, useLoaderData, Link} from 'react-router';
-import {Suspense} from 'react';
+import React, {Suspense, useState, useRef, useEffect} from 'react';
 import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
+import {COLLECTION_QUERY} from './collections.$handle';
 
 /**
  * @type {Route.MetaFunction}
@@ -29,13 +30,13 @@ export async function loader(args) {
  * @param {Route.LoaderArgs}
  */
 async function loadCriticalData({context}) {
-  const [{collections}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  // const [{}] = await Promise.all([
+  //   // context.storefront.query(FEATURED_COLLECTION_QUERY),
+  //   // Add other queries here, so that they are loaded in parallel
+  // ]);
 
   return {
-    featuredCollection: collections.nodes[0],
+    // featuredCollection: collections.nodes[0],
   };
 }
 
@@ -46,8 +47,13 @@ async function loadCriticalData({context}) {
  * @param {Route.LoaderArgs}
  */
 function loadDeferredData({context}) {
-  const recommendedProducts = context.storefront
-    .query(RECOMMENDED_PRODUCTS_QUERY)
+  const featuredCollection = context.storefront
+    .query(COLLECTION_QUERY, {
+      variables: {
+        handle: 'signature-collection',
+        first: 12,
+      },
+    })
     .catch((error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
@@ -55,19 +61,33 @@ function loadDeferredData({context}) {
     });
 
   return {
-    recommendedProducts,
+    featuredCollection,
   };
 }
 
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
-  console.log('testing');
+  console.log(data);
   return (
     <div className="home">
+      <Hero />
+      <Partners />
       <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+      {/* <RecommendedProducts products={data.recommendedProducts} /> */}
     </div>
+  );
+}
+
+function Hero() {
+  return <section className="hero-section"></section>;
+}
+
+function Partners() {
+  return (
+    <section className="home-partners-section">
+      <p>WE'RE IN GOOD COMPANY</p>
+    </section>
   );
 }
 
@@ -77,20 +97,114 @@ export default function Homepage() {
  * }}
  */
 function FeaturedCollection({collection}) {
-  if (!collection) return null;
-  const image = collection?.image;
+  const track = useRef(null);
+  const item = useRef(null);
+  const [index, setIndex] = useState(0);
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    if (!item.current || !track.current) return;
+
+    const itemWidth = item.current.offsetWidth;
+    const gap = 20; // your existing gap
+    const step = itemWidth + gap;
+
+    setOffset(index * step);
+  }, [index]);
+
   return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
-      {image && (
-        <div className="featured-collection-image">
-          <Image data={image} sizes="100vw" />
-        </div>
-      )}
-      <h1>{collection.title}</h1>
-    </Link>
+    <section className="home-featured-collection">
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={collection}>
+          {(response) => {
+            const products = response?.collection?.products?.nodes ?? [];
+            const visibleCount = 3;
+            const total = products.length;
+
+            const maxIndex = total - visibleCount;
+
+            function next() {
+              setIndex((i) => Math.min(i + 1, maxIndex));
+            }
+
+            function prev() {
+              setIndex((i) => Math.max(i - 1, 0));
+            }
+            return (
+              <>
+                <div>
+                  <p className="red-dot">FEATURED</p>
+                </div>
+                <div className="subgrid home-featured-products-grid">
+                  <h3>{response.collection.description}</h3>
+                  {/* Carousel wrapper */}
+                  <div className="carousel-wrapper">
+                    <div className="carousel-viewport">
+                      <div
+                        className="carousel-track"
+                        ref={track}
+                        style={{transform: `translateX(-${offset}px)`}}
+                      >
+                        {products.map((product, i) => (
+                          <div
+                            className="carousel-item"
+                            key={product.id}
+                            ref={i === 0 ? item : null} // measure first item
+                          >
+                            <ProductItem product={product} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="featured-products-button-container">
+                    <button className="explore-all">EXPLORE ALL</button>
+                    <div>
+                      <button
+                        className="carousel-btn left"
+                        onClick={prev}
+                        disabled={index === 0}
+                      >
+                        <svg
+                          width="32"
+                          height="15"
+                          viewBox="0 0 32 15"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M0.292892 8.07112C-0.0976295 7.6806 -0.0976295 7.04743 0.292892 6.65691L6.65685 0.292946C7.04738 -0.0975785 7.68054 -0.0975785 8.07107 0.292946C8.46159 0.68347 8.46159 1.31664 8.07107 1.70716L2.41421 7.36401L8.07107 13.0209C8.46159 13.4114 8.46159 14.0446 8.07107 14.4351C7.68054 14.8256 7.04738 14.8256 6.65685 14.4351L0.292892 8.07112ZM32 7.36401V8.36401H1V7.36401V6.36401H32V7.36401Z"
+                            fill="#2D2D2B"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        className="carousel-btn right"
+                        onClick={next}
+                        disabled={index === maxIndex}
+                      >
+                        <svg
+                          width="32"
+                          height="15"
+                          viewBox="0 0 32 15"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M31.7071 8.07112C32.0976 7.6806 32.0976 7.04743 31.7071 6.65691L25.3431 0.292946C24.9526 -0.0975785 24.3195 -0.0975785 23.9289 0.292946C23.5384 0.68347 23.5384 1.31664 23.9289 1.70716L29.5858 7.36401L23.9289 13.0209C23.5384 13.4114 23.5384 14.0446 23.9289 14.4351C24.3195 14.8256 24.9526 14.8256 25.3431 14.4351L31.7071 8.07112ZM0 7.36401V8.36401H31V7.36401V6.36401H0V7.36401Z"
+                            fill="#2D2D2B"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          }}
+        </Await>
+      </Suspense>
+    </section>
   );
 }
 
@@ -120,58 +234,6 @@ function RecommendedProducts({products}) {
     </div>
   );
 }
-
-const FEATURED_COLLECTION_QUERY = `#graphql
-  fragment FeaturedCollection on Collection {
-    id
-    title
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    handle
-  }
-  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...FeaturedCollection
-      }
-    }
-  }
-`;
-
-const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  fragment RecommendedProduct on Product {
-    id
-    title
-    handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    featuredImage {
-      id
-      url
-      altText
-      width
-      height
-    }
-  }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...RecommendedProduct
-      }
-    }
-  }
-`;
 
 /** @typedef {import('./+types/_index').Route} Route */
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
