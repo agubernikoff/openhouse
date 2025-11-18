@@ -3,6 +3,7 @@ import React, {Suspense, useState, useRef, useEffect} from 'react';
 import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
 import {COLLECTION_QUERY} from './collections.$handle';
+import {motion, AnimatePresence} from 'motion/react';
 
 /**
  * @type {Route.MetaFunction}
@@ -30,13 +31,13 @@ export async function loader(args) {
  * @param {Route.LoaderArgs}
  */
 async function loadCriticalData({context}) {
-  // const [{}] = await Promise.all([
-  //   // context.storefront.query(FEATURED_COLLECTION_QUERY),
-  //   // Add other queries here, so that they are loaded in parallel
-  // ]);
+  const [x] = await Promise.all([
+    context.storefront.query(HERO_QUERY),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
 
   return {
-    // featuredCollection: collections.nodes[0],
+    hero: x.metaobject,
   };
 }
 
@@ -68,10 +69,9 @@ function loadDeferredData({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
-  console.log(data);
   return (
     <div className="home">
-      <Hero />
+      <Hero data={data.hero} />
       <Partners />
       <FeaturedCollection collection={data.featuredCollection} />
       {/* <RecommendedProducts products={data.recommendedProducts} /> */}
@@ -79,8 +79,155 @@ export default function Homepage() {
   );
 }
 
-function Hero() {
-  return <section className="hero-section"></section>;
+function Hero({data}) {
+  const fields = normalizeMetaobject(data);
+  const buttonData = JSON.parse(fields?.button_link?.value);
+
+  const videoRef = useRef(null);
+
+  // Play/pause based on visibility
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch((e) => {
+            // autoplay can fail if not muted
+            console.warn('Video play failed', e);
+          });
+        } else {
+          video.pause();
+        }
+      },
+      {threshold: 0.1}, // 50% visible triggers play
+    );
+
+    observer.observe(video);
+
+    return () => observer.unobserve(video);
+  }, []);
+  return (
+    <section className="hero-section">
+      <video
+        ref={videoRef}
+        src={
+          fields.background.reference.sources.find((src) =>
+            src.url.includes('.mp4'),
+          ).url
+        }
+        poster={fields.background.reference.previewImage.url}
+        loop
+        muted
+        playsInline
+        autoPlay
+        preload="auto"
+        className="media-element"
+      >
+        <track kind="captions" />
+      </video>
+      <h2>
+        <em>
+          Custom Product Collections
+          <br />
+          for World Class
+        </em>
+        {' — '}
+        <RotatingBrandTypes
+          types={[
+            'Hospitality',
+            'Retail',
+            'Media',
+            'PR',
+            'Wellness',
+            'Fitness',
+          ]}
+        />
+      </h2>
+      <div>
+        <p>{fields.subtext.value}</p>
+        <Link to={buttonData.url} className="explore-all">
+          {buttonData.text}
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function RotatingBrandTypes({types, interval = 2500}) {
+  const [index, setIndex] = useState(0);
+  const [width, setWidth] = useState(0);
+
+  const measureRef = useRef(null);
+
+  // Rotate text
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex((prev) => (prev + 1) % types.length);
+    }, interval);
+
+    return () => clearInterval(id);
+  }, [types.length, interval]);
+
+  // Re-measure width whenever text changes
+  useEffect(() => {
+    if (measureRef.current) {
+      const nextWidth = measureRef.current.offsetWidth;
+      setWidth(nextWidth);
+    }
+  }, [index]);
+
+  return (
+    <span style={{display: 'inline-flex'}}>
+      ({/* Outer container with animated width */}
+      <motion.span
+        style={{
+          display: 'inline-block',
+          height: '57px',
+          width, // 👈 controlled width
+          paddingBottom: '5px',
+          overflow: 'hidden',
+        }}
+        animate={{width}} // 👈 auto-animate to measured width
+        transition={{
+          duration: 0.3,
+          ease: 'easeInOut',
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={types[index]}
+            initial={{y: '-100%'}}
+            animate={{y: '0%'}}
+            exit={{y: '100%'}}
+            transition={{duration: 0.3, ease: 'easeInOut'}}
+            style={{
+              display: 'inline-block',
+              whiteSpace: 'nowrap',
+              lineHeight: '57px',
+            }}
+          >
+            {types[index]}
+          </motion.span>
+        </AnimatePresence>
+      </motion.span>
+      {')'} Brands
+      {/* Hidden measurer */}
+      <span
+        ref={measureRef}
+        style={{
+          position: 'absolute',
+          visibility: 'hidden',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}
+      >
+        {types[index]}
+      </span>
+    </span>
+  );
 }
 
 function Partners() {
@@ -239,3 +386,47 @@ function RecommendedProducts({products}) {
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+function normalizeMetaobject(meta) {
+  return meta.fields.reduce((acc, field) => {
+    acc[field.key] = {
+      value: field.value,
+      reference: field.reference,
+    };
+    return acc;
+  }, {});
+}
+
+const HERO_QUERY = `#graphql
+query GetLocationVideos {
+  metaobject(
+    handle: {
+      type: "hero_section"
+      handle: "hero-section-gaf0wq6b"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      reference {
+        __typename
+        ... on MediaImage {
+          image {
+            url
+          }
+        }
+        ... on Video {
+          sources {
+            url
+            mimeType
+          }
+          previewImage {
+            url
+          }
+        }
+      }
+    }
+  }
+}
+`;
