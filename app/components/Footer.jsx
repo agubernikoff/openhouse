@@ -1,5 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from 'react-router';
+import logo from '../assets/Logo.svg';
 
 /**
  * @param {FooterProps}
@@ -10,13 +11,54 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
       <Await resolve={footerPromise}>
         {(footer) => (
           <footer className="footer">
-            {footer?.menu && header.shop.primaryDomain?.url && (
-              <FooterMenu
-                menu={footer.menu}
-                primaryDomainUrl={header.shop.primaryDomain.url}
-                publicStoreDomain={publicStoreDomain}
-              />
+            {/* Hero Image Section */}
+            {footer?.metaobject && (
+              <FooterHero metaobject={footer.metaobject} />
             )}
+
+            {/* Content Section with 50/50 split */}
+            <div className="footer-content-wrapper">
+              <div className="footer-content">
+                <div className="footer-content-left">
+                  <h2 className="footer-content-title">
+                    Exceptional Design.
+                    <br />
+                    Industry-Leading Quality.
+                  </h2>
+                </div>
+
+                {/* Menu Columns */}
+                {footer?.menu && header.shop.primaryDomain?.url && (
+                  <FooterMenu
+                    menu={footer.menu}
+                    primaryDomainUrl={header.shop.primaryDomain.url}
+                    publicStoreDomain={publicStoreDomain}
+                  />
+                )}
+              </div>
+
+              {/* Newsletter Section (overlapping at bottom) */}
+              <div className="footer-newsletter-wrapper">
+                <FooterNewsletter />
+              </div>
+            </div>
+
+            {/* Legal Bar */}
+            <div className="footer-legal-bar">
+              <div className="footer-legal-left">
+                <a href="/policies/privacy-policy">Privacy Policy</a>
+                <a href="/policies/terms-of-service">Terms & Conditions</a>
+              </div>
+              <div className="footer-legal-right">
+                © {new Date().getFullYear()} Openhouse Inc. All rights
+                reserved.
+              </div>
+            </div>
+
+            {/* Large Branding */}
+            <div className="footer-branding">
+              <img src={logo} alt="Openhouse" className="footer-logo" />
+            </div>
           </footer>
         )}
       </Await>
@@ -25,42 +67,104 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
 }
 
 /**
- * @param {{
- *   menu: FooterQuery['menu'];
- *   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
- *   publicStoreDomain: string;
- * }}
+ * Footer Hero Section with Image
+ */
+function FooterHero({metaobject}) {
+  const imageField = metaobject.fields.find((field) => field.key === 'image');
+  const imageUrl = imageField?.reference?.image?.url;
+  const altText = imageField?.reference?.image?.altText || 'Footer hero image';
+
+  return (
+    <div className="footer-hero">
+      {imageUrl && (
+        <>
+          <img src={imageUrl} alt={altText} className="footer-hero-image" />
+          <div className="footer-hero-content">
+            <h2 className="footer-hero-title">
+              Crafting Lasting Merchandise
+              <br />
+              for Brands that Care
+            </h2>
+            <a href="/collections/all" className="footer-hero-button">
+              EXPLORE ALL
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Newsletter Section
+ */
+function FooterNewsletter() {
+  return (
+    <div className="footer-newsletter">
+      <p className="footer-newsletter-title">Newsletter</p>
+      <p className="footer-newsletter-description">
+        Let's get connected. Reach out about a project, collaboration or just to
+        say hello!
+      </p>
+      <form className="footer-newsletter-form">
+        <input
+          type="email"
+          placeholder="Email"
+          className="footer-newsletter-input"
+          required
+        />
+        <button type="submit" className="footer-newsletter-button">
+          SUBSCRIBE
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/**
+ * Footer Menu with Submenu Support
  */
 function FooterMenu({menu, primaryDomainUrl, publicStoreDomain}) {
+  const menuCategories = (menu || FALLBACK_FOOTER_MENU).items;
+
   return (
-    <nav className="footer-menu" role="navigation">
-      {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
-        if (!item.url) return null;
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        const isExternal = !url.startsWith('/');
-        return isExternal ? (
-          <a href={url} key={item.id} rel="noopener noreferrer" target="_blank">
-            {item.title}
-          </a>
-        ) : (
-          <NavLink
-            end
-            key={item.id}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
+    <div className="footer-menu-right">
+      <div className="footer-menu-grid">
+        {menuCategories.map((category) => (
+          <div key={category.id} className="footer-menu-column">
+            <p className="footer-menu-heading">{category.title}</p>
+            {category.items && category.items.length > 0 && (
+              <ul className="footer-menu-list">
+                {category.items.map((item) => {
+                  if (!item.url) return null;
+                  const url =
+                    item.url.includes('myshopify.com') ||
+                    item.url.includes(publicStoreDomain) ||
+                    item.url.includes(primaryDomainUrl)
+                      ? new URL(item.url).pathname
+                      : item.url;
+                  const isExternal = !url.startsWith('/');
+
+                  return (
+                    <li key={item.id}>
+                      {isExternal ? (
+                        <a href={url} rel="noopener noreferrer" target="_blank">
+                          {item.title}
+                        </a>
+                      ) : (
+                        <NavLink to={url} prefetch="intent">
+                          {item.title}
+                        </NavLink>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -105,19 +209,6 @@ const FALLBACK_FOOTER_MENU = {
     },
   ],
 };
-
-/**
- * @param {{
- *   isActive: boolean;
- *   isPending: boolean;
- * }}
- */
-function activeLinkStyle({isActive, isPending}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'white',
-  };
-}
 
 /**
  * @typedef {Object} FooterProps

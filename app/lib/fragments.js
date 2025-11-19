@@ -229,6 +229,22 @@ export const FOOTER_QUERY = `#graphql
     menu(handle: $footerMenuHandle) {
       ...Menu
     }
+    metaobject(handle: {handle: "footer-image-qspbcphp", type: "footer_image"}) {
+      fields {
+        key
+        value
+        reference {
+          ... on MediaImage {
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+        }
+      }
+    }
   }
   ${MENU_FRAGMENT}
 `;
