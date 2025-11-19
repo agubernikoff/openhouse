@@ -499,6 +499,8 @@ button.reset:hover:not(:has(> *)) {
 
 .footer-logo {
   width: 100%;
+  fill: currentColor;
+  color: #2d2d2b;
 }
 
 /*

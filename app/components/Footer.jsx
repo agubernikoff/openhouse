@@ -1,6 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from 'react-router';
-import logo from '../assets/Logo.svg';
+import {Logo} from './Logo';
 
 /**
  * @param {FooterProps}
@@ -57,7 +57,7 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
 
             {/* Large Branding */}
             <div className="footer-branding">
-              <img src={logo} alt="Openhouse" className="footer-logo" />
+              <Logo className="footer-logo" />
             </div>
           </footer>
         )}
