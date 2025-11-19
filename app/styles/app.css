@@ -8,6 +8,7 @@
   --color-light: #fff;
   --color-oh-gray: rgba(191, 192, 193, 1);
   --color-oh-red: rgba(216, 36, 12, 1);
+  --color-oh-white: rgba(244, 242, 234, 1);
 }
 
 img {
@@ -366,7 +367,7 @@ button.reset:hover:not(:has(> *)) {
   border-radius: 20px;
   background: rgba(0, 0, 0, 0.2);
   position: relative;
-  color: white;
+  color: var(--color-oh-white);
 }
 .hero-section video,
 .hero-section img {
@@ -394,12 +395,12 @@ button.reset:hover:not(:has(> *)) {
   max-width: 367px;
 }
 .hero-section > div > .explore-all {
-  border-color: white;
-  color: white;
+  border-color: var(--color-oh-white);
+  color: var(--color-oh-white);
 }
 .hero-section > div > .explore-all:hover {
   background: transparent;
-  color: white;
+  color: var(--color-oh-white);
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
   transform: translate(-2.5px, -2.5px);
   text-decoration: none;
@@ -501,7 +502,7 @@ button.reset:hover:not(:has(> *)) {
 }
 .explore-all:hover {
   /* background: black;
-  color: white; */
+  color: var(--color-oh-white); */
 
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
   transform: translate(-2.5px, -2.5px);
@@ -535,7 +536,7 @@ button.reset:hover:not(:has(> *)) {
   text-align: center;
   background: rgba(45, 45, 43, 0.4);
   backdrop-filter: blur(5px);
-  color: white;
+  color: var(--color-oh-white);
   padding: 10px;
   transform: translateY(100%);
   transition: transform 300ms ease-in-out;
@@ -572,6 +573,44 @@ button.reset:hover:not(:has(> *)) {
   flex-direction: column;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.home-collections-hero {
+  width: 100%;
+  height: calc(100vh - 2rem);
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  color: var(--color-oh-white);
+}
+.home-collections-hero > div > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.home-collections-hero-titles-container {
+  position: absolute;
+  background: rgba(45, 45, 43, 0.4);
+  backdrop-filter: blur(5px);
+  border-radius: 20px;
+  padding: 20px;
+  bottom: 1rem;
+  left: 1rem;
+}
+.home-collections-hero-titles-container > p:first-of-type {
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 14px;
+  cursor: text;
+}
+.home-collections-hero-titles-container > p {
+  font-size: 36px;
+  line-height: 36px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+.home-collections-hero-titles-container > p:last-of-type {
+  margin-bottom: 0;
 }
 
 /*

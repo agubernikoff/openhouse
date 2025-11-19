@@ -84,6 +84,7 @@ export default function Homepage() {
       <Partners />
       <FeaturedCollection collection={data.featuredCollection} />
       <CollectionGrid collections={data.collections} />
+      <CollectionsHero collections={data.collections} />
     </div>
   );
 }
@@ -381,13 +382,15 @@ function CollectionGrid({collections}) {
           <Await resolve={collections}>
             {(r) => {
               const fields = normalizeMetaobject(r.metaobject);
-              console.log(fields);
               return (
                 <div className="home-collections-grid">
                   {fields?.collections?.references?.nodes?.map((coll) => (
-                    <div className="collection-grid-item">
+                    <div className="collection-grid-item" key={coll.id}>
                       <Link to={`/collections/${coll.handle}`}>
-                        <Image data={coll.image} />
+                        <Image
+                          data={coll.image}
+                          sizes="(min-width: 500px) 30vw, 100vw"
+                        />
                         <p>{coll.title}</p>
                       </Link>
                     </div>
@@ -404,6 +407,47 @@ function CollectionGrid({collections}) {
           </Await>
         </Suspense>
       </div>
+    </section>
+  );
+}
+
+function CollectionsHero({collections}) {
+  const [selected, setSelected] = useState();
+  return (
+    <section className="home-collections-hero">
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={collections}>
+          {(r) => {
+            const fields = normalizeMetaobject(r.metaobject);
+            useEffect(() => {
+              setSelected(fields?.collections?.references?.nodes[0]);
+            }, []);
+            return (
+              <>
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    style={{width: '100%', height: '100%'}}
+                    key={selected?.id}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                  >
+                    {selected && <Image data={selected?.image} sizes="100vw" />}
+                  </motion.div>
+                </AnimatePresence>
+                <div className="home-collections-hero-titles-container">
+                  <p>70+ Customizable Products Waiting for Your Brand</p>
+                  {fields?.collections?.references?.nodes?.map((coll) => (
+                    <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
+                      {coll.title}
+                    </p>
+                  ))}
+                </div>
+              </>
+            );
+          }}
+        </Await>
+      </Suspense>
     </section>
   );
 }
