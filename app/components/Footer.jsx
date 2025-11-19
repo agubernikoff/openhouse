@@ -20,11 +20,11 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
             <div className="footer-content-wrapper">
               <div className="footer-content">
                 <div className="footer-content-left">
-                  <h2 className="footer-content-title">
+                  <p className="footer-content-title">
                     Exceptional Design.
                     <br />
                     Industry-Leading Quality.
-                  </h2>
+                  </p>
                 </div>
 
                 {/* Menu Columns */}
@@ -80,11 +80,11 @@ function FooterHero({metaobject}) {
         <>
           <img src={imageUrl} alt={altText} className="footer-hero-image" />
           <div className="footer-hero-content">
-            <h2 className="footer-hero-title">
+            <p className="footer-hero-title">
               Crafting Lasting Merchandise
               <br />
               for Brands that Care
-            </h2>
+            </p>
             <a href="/collections/all" className="footer-hero-button">
               EXPLORE ALL
             </a>
