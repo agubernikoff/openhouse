@@ -61,8 +61,17 @@ function loadDeferredData({context}) {
       return null;
     });
 
+  const collections = context.storefront
+    .query(COLLECTIONS_QUERY)
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
   return {
     featuredCollection,
+    collections,
   };
 }
 
@@ -74,7 +83,7 @@ export default function Homepage() {
       <Hero data={data.hero} />
       <Partners />
       <FeaturedCollection collection={data.featuredCollection} />
-      {/* <RecommendedProducts products={data.recommendedProducts} /> */}
+      <CollectionGrid collections={data.collections} />
     </div>
   );
 }
@@ -360,25 +369,42 @@ function FeaturedCollection({collection}) {
  *   products: Promise<RecommendedProductsQuery | null>;
  * }}
  */
-function RecommendedProducts({products}) {
+function CollectionGrid({collections}) {
   return (
-    <div className="recommended-products">
-      <h2>Recommended Products</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={products}>
-          {(response) => (
-            <div className="recommended-products-grid">
-              {response
-                ? response.products.nodes.map((product) => (
-                    <ProductItem key={product.id} product={product} />
-                  ))
-                : null}
-            </div>
-          )}
-        </Await>
-      </Suspense>
-      <br />
-    </div>
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">COLLECTIONS</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <h3>Explore Categories</h3>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Await resolve={collections}>
+            {(r) => {
+              const fields = normalizeMetaobject(r.metaobject);
+              console.log(fields);
+              return (
+                <div className="home-collections-grid">
+                  {fields?.collections?.references?.nodes?.map((coll) => (
+                    <div className="collection-grid-item">
+                      <Link to={`/collections/${coll.handle}`}>
+                        <Image data={coll.image} />
+                        <p>{coll.title}</p>
+                      </Link>
+                    </div>
+                  ))}
+                  <div>
+                    <p>{fields?.blurb?.value}</p>
+                    <Link className="explore-all" to={`collections/frontpage`}>
+                      {fields?.button_text?.value}
+                    </Link>
+                  </div>
+                </div>
+              );
+            }}
+          </Await>
+        </Suspense>
+      </div>
+    </section>
   );
 }
 
@@ -391,6 +417,7 @@ function normalizeMetaobject(meta) {
     acc[field.key] = {
       value: field.value,
       reference: field.reference,
+      references: field.references,
     };
     return acc;
   }, {});
@@ -423,6 +450,40 @@ query GetLocationVideos {
           }
           previewImage {
             url
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+const COLLECTIONS_QUERY = `#graphql
+query GetLocationVideos {
+  metaobject(
+    handle: {
+      type: "homepage_collection_grid"
+      handle: "explore-all"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      references(first: 6) {
+        nodes{
+          ... on Collection{
+            id
+            handle
+            title
+            image{
+              id
+              altText
+              width
+              height
+              url
+            }
           }
         }
       }
