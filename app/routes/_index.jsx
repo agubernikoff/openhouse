@@ -69,9 +69,16 @@ function loadDeferredData({context}) {
       return null;
     });
 
+  const partners = context.storefront.query(PARTNERS_QUERY).catch((error) => {
+    // Log query errors, but don't throw them so the page can still render
+    console.error(error);
+    return null;
+  });
+
   return {
     featuredCollection,
     collections,
+    partners,
   };
 }
 
@@ -81,7 +88,7 @@ export default function Homepage() {
   return (
     <div className="home">
       <Hero data={data.hero} />
-      <Partners />
+      <Partners data={data.partners} />
       <FeaturedCollection collection={data.featuredCollection} />
       <CollectionGrid collections={data.collections} />
       <CollectionsHero collections={data.collections} />
@@ -142,9 +149,8 @@ function Hero({data}) {
         <em>
           Custom Product Collections
           <br />
-          for World Class
+          for World Class{' '}
         </em>
-        {' — '}
         <RotatingBrandTypes
           types={[
             'Hospitality',
@@ -159,7 +165,7 @@ function Hero({data}) {
       <div>
         <p>{fields.subtext.value}</p>
         <Link to={buttonData.url} className="explore-all">
-          {buttonData.text}
+          {buttonData.text.toUpperCase()}
         </Link>
       </div>
     </section>
@@ -191,7 +197,7 @@ function RotatingBrandTypes({types, interval = 2500}) {
 
   return (
     <span style={{display: 'inline-flex'}}>
-      ({/* Outer container with animated width */}
+      {' — '}({/* Outer container with animated width */}
       <motion.span
         style={{
           display: 'inline-block',
@@ -240,10 +246,42 @@ function RotatingBrandTypes({types, interval = 2500}) {
   );
 }
 
-function Partners() {
+function Partners({data}) {
   return (
     <section className="home-partners-section">
       <p>WE'RE IN GOOD COMPANY</p>
+
+      <div className="partners-carousel-mask">
+        <Suspense fallback={<div>Loading...</div>}>
+          <Await resolve={data}>
+            {(d) => {
+              const fields = normalizeMetaobject(d?.metaobject);
+              const partners = fields?.partners?.references?.nodes || [];
+
+              const renderLogo = (n, i) => {
+                const fieldz = normalizeMetaobject(n);
+                return (
+                  <div className="partner-logo-container" key={n.id + '-' + i}>
+                    <Image
+                      data={fieldz.logo?.reference?.image}
+                      altText={fieldz.name?.value}
+                      sizes="20vw"
+                      className="partner-logo"
+                    />
+                  </div>
+                );
+              };
+
+              return (
+                <div className="partners-carousel-track">
+                  <div className="partners-set">{partners.map(renderLogo)}</div>
+                  <div className="partners-set">{partners.map(renderLogo)}</div>
+                </div>
+              );
+            }}
+          </Await>
+        </Suspense>
+      </div>
     </section>
   );
 }
@@ -485,6 +523,9 @@ query GetLocationVideos {
         ... on MediaImage {
           image {
             url
+            id
+            height
+            width
           }
         }
         ... on Video {
@@ -527,6 +568,45 @@ query GetLocationVideos {
               width
               height
               url
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+const PARTNERS_QUERY = `#graphql
+query GetLocationVideos {
+  metaobject(
+    handle: {
+      type: "partners"
+      handle: "partners-atsdwhs9"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      references(first: 10) {
+        nodes{
+          ... on Metaobject{
+            id
+            fields{
+              key
+              value
+              reference{
+                ... on MediaImage {
+                  image {
+                    id
+                    url
+                    height
+                    width
+                  }
+                }
+              }
             }
           }
         }

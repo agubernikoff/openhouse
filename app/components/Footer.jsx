@@ -108,10 +108,12 @@ function FooterNewsletter() {
       </p>
       <form className="footer-newsletter-form">
         <input
+          id="email"
           type="email"
           placeholder="Email"
           className="footer-newsletter-input"
           required
+          autoComplete="off"
         />
         <button type="submit" className="footer-newsletter-button">
           SUBSCRIBE

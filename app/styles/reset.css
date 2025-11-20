@@ -14,6 +14,7 @@ body {
   margin: 0;
   padding: 0;
   background: var(--color-oh-white);
+  color: var(--color-oh-black);
 }
 
 h1,
@@ -112,6 +113,7 @@ input {
   margin-bottom: 0.5rem;
   margin-top: 0.25rem;
   padding: 0.5rem;
+  color: var(--color-oh-black);
 }
 
 legend {
