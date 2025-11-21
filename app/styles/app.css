@@ -842,8 +842,7 @@ div:has(> .testimonials-container) {
 }
 
 .carousel-item {
-  flex: 0 0 calc((100% - 40px) / 3);
-  /* matches your 3-column layout; 40px = 2*gaps if gap=20px */
+  width: calc((100vw - 60px - 2rem) / 4);
 }
 .featured-products-button-container {
   grid-column: span 3;
@@ -1020,6 +1019,8 @@ div:has(> .testimonials-container) {
 }
 .product-item {
   color: var(--color-oh-black);
+  width: calc((100vw - 60px - 2rem) / 4);
+  display: block;
 }
 .product-item:hover {
   text-decoration: none;
@@ -1030,8 +1031,8 @@ div:has(> .testimonials-container) {
 }
 
 .product-item img {
-  height: 350px;
-  width: 350px !important;
+  height: 100%;
+  width: 100%;
   border-radius: 10px;
 }
 

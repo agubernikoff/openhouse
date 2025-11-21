@@ -68,7 +68,7 @@ export function ProductItem({product, loading}) {
                 onMouseEnter={() =>
                   variantImage && setHoveredImage(variantImage)
                 }
-                onMouseLeave={() => setHoveredImage(null)}
+                // onMouseLeave={() => setHoveredImage(null)}
                 style={{
                   backgroundColor: swatch?.color || '#e5e5e5',
                   backgroundImage: swatch?.image?.previewImage?.url
