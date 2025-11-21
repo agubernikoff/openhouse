@@ -4,6 +4,7 @@ import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
 import {COLLECTION_QUERY} from './collections.$handle';
 import {motion, AnimatePresence} from 'motion/react';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 
 /**
  * @type {Route.MetaFunction}
@@ -69,11 +70,13 @@ function loadDeferredData({context}) {
       return null;
     });
 
-  const partners = context.storefront.query(PARTNERS_QUERY).catch((error) => {
-    // Log query errors, but don't throw them so the page can still render
-    console.error(error);
-    return null;
-  });
+  const partners = context.storefront
+    .query(PARTNERS_QUERY, {variables: {first: 10}})
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
 
   return {
     featuredCollection,
@@ -263,8 +266,10 @@ function Partners({data}) {
                 return (
                   <div className="partner-logo-container" key={n.id + '-' + i}>
                     <Image
-                      data={fieldz.logo?.reference?.image}
-                      altText={fieldz.name?.value}
+                      data={{
+                        ...fieldz.logo?.reference?.image,
+                        altText: fieldz?.name?.value,
+                      }}
                       sizes="20vw"
                       className="partner-logo"
                     />
@@ -494,16 +499,6 @@ function CollectionsHero({collections}) {
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
-function normalizeMetaobject(meta) {
-  return meta.fields.reduce((acc, field) => {
-    acc[field.key] = {
-      value: field.value,
-      reference: field.reference,
-      references: field.references,
-    };
-    return acc;
-  }, {});
-}
 
 const HERO_QUERY = `#graphql
 query GetLocationVideos {
@@ -577,8 +572,8 @@ query GetLocationVideos {
 }
 `;
 
-const PARTNERS_QUERY = `#graphql
-query GetLocationVideos {
+export const PARTNERS_QUERY = `#graphql
+query GetLocationVideos($first: Int) {
   metaobject(
     handle: {
       type: "partners"
@@ -590,7 +585,7 @@ query GetLocationVideos {
     fields {
       key
       value
-      references(first: 10) {
+      references(first: $first) {
         nodes{
           ... on Metaobject{
             id

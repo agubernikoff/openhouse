@@ -1,16 +1,25 @@
-import {Suspense} from 'react';
+import {Suspense, useState} from 'react';
 import {Await, NavLink} from 'react-router';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {Logo} from './Logo';
+import {motion} from 'motion/react';
+import bg from 'app/assets/testi-bg.png';
 
 /**
  * @param {FooterProps}
  */
-export function Footer({footer: footerPromise, header, publicStoreDomain}) {
+export function Footer({
+  footer: footerPromise,
+  header,
+  publicStoreDomain,
+  testimonials,
+}) {
   return (
     <Suspense>
       <Await resolve={footerPromise}>
         {(footer) => (
           <footer className="footer">
+            <Testimonials data={testimonials} />
             {/* Hero Image Section */}
             {footer?.metaobject && (
               <FooterHero metaobject={footer.metaobject} />
@@ -66,6 +75,107 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
   );
 }
 
+function Testimonials({data}) {
+  const [index, setIndex] = useState(1);
+
+  function prev() {
+    setIndex(index + 1);
+  }
+
+  function next() {
+    setIndex(index - 1);
+  }
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Await resolve={data}>
+        {(d) => {
+          const fields = normalizeMetaobject(d.metaobject);
+          console.log(fields);
+          return (
+            <section
+              className="home-featured-collection"
+              style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              }}
+            >
+              <div>
+                <p className="red-dot">TESTIMONIALS</p>
+              </div>
+              <div className="subgrid home-featured-products-grid">
+                <h3>{fields?.header?.value}</h3>
+              </div>
+              <div>
+                <motion.div
+                  className="testimonials-container"
+                  initial={{x: `calc(25vw + 5px)`}}
+                  animate={{x: `calc(${index * 25}vw + ${index * 5}px)`}}
+                  transition={{ease: 'easeInOut'}}
+                >
+                  {fields?.testimonials?.references?.nodes?.map((testi, i) => {
+                    const fieldz = normalizeMetaobject(testi);
+                    return (
+                      <div
+                        className={`testimonial ${i === Math.abs(index - 1) ? 'selected' : ''}`}
+                        key={testi.id}
+                      >
+                        <p>{`"${fieldz?.testimonial?.value}"`}</p>
+                        <p className="red-dot">{`${fieldz?.person?.value}${fieldz?.company?.value ? ` - ${fieldz.company.value}` : ''}`}</p>
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+              <div>
+                <button
+                  className="carousel-btn left"
+                  onClick={prev}
+                  disabled={index === 1}
+                >
+                  <svg
+                    width="32"
+                    height="15"
+                    viewBox="0 0 32 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M0.292892 8.07112C-0.0976295 7.6806 -0.0976295 7.04743 0.292892 6.65691L6.65685 0.292946C7.04738 -0.0975785 7.68054 -0.0975785 8.07107 0.292946C8.46159 0.68347 8.46159 1.31664 8.07107 1.70716L2.41421 7.36401L8.07107 13.0209C8.46159 13.4114 8.46159 14.0446 8.07107 14.4351C7.68054 14.8256 7.04738 14.8256 6.65685 14.4351L0.292892 8.07112ZM32 7.36401V8.36401H1V7.36401V6.36401H32V7.36401Z"
+                      fill="#2D2D2B"
+                    />
+                  </svg>
+                </button>
+                <button
+                  className="carousel-btn right"
+                  onClick={next}
+                  disabled={
+                    index * -1 ===
+                    fields?.testimonials?.references?.nodes.length - 2
+                  }
+                >
+                  <svg
+                    width="32"
+                    height="15"
+                    viewBox="0 0 32 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M31.7071 8.07112C32.0976 7.6806 32.0976 7.04743 31.7071 6.65691L25.3431 0.292946C24.9526 -0.0975785 24.3195 -0.0975785 23.9289 0.292946C23.5384 0.68347 23.5384 1.31664 23.9289 1.70716L29.5858 7.36401L23.9289 13.0209C23.5384 13.4114 23.5384 14.0446 23.9289 14.4351C24.3195 14.8256 24.9526 14.8256 25.3431 14.4351L31.7071 8.07112ZM0 7.36401V8.36401H31V7.36401V6.36401H0V7.36401Z"
+                      fill="#2D2D2B"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </section>
+          );
+        }}
+      </Await>
+    </Suspense>
+  );
+}
 /**
  * Footer Hero Section with Image
  */

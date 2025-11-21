@@ -248,3 +248,42 @@ export const FOOTER_QUERY = `#graphql
   }
   ${MENU_FRAGMENT}
 `;
+
+export const TESTIMONIALS_QUERY = `#graphql
+query GetTestimonials {
+  metaobject(
+    handle: {
+      type: "testimonials_section"
+      handle: "testimonials-section-qvj6m6p0"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      references(first: 100) {
+        nodes{
+          ... on Metaobject{
+            id
+            fields{
+              key
+              value
+              reference{
+                ... on MediaImage {
+                  image {
+                    id
+                    url
+                    height
+                    width
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
