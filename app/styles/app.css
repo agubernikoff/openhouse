@@ -1035,7 +1035,7 @@ div:has(> .testimonials-container) {
   border-radius: 10px;
 }
 
-.low-stock-badge {
+.product-badge {
   position: absolute;
   font-family: 'apfel';
   top: 15px;

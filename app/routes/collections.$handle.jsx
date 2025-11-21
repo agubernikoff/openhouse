@@ -151,7 +151,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
         }
       }
     }
-    lowStock: metafield(namespace: "custom", key: "low_stock") {
+    badgeText: metafield(namespace: "custom", key: "badge_text") {
       value
     }
   }

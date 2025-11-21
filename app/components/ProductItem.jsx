@@ -28,8 +28,8 @@ export function ProductItem({product, loading}) {
   const visibleSwatches = colorValues.slice(0, maxSwatches);
   const remainingCount = colorValues.length - maxSwatches;
 
-  // Check if low stock is true
-  const isLowStock = product.lowStock?.value === 'true';
+  // Get badge text from metafield
+  const badgeText = product.badgeText?.value;
 
   return (
     <Link
@@ -48,7 +48,7 @@ export function ProductItem({product, loading}) {
             sizes="(min-width: 45em) 400px, 100vw"
           />
         )}
-        {isLowStock && <p className="low-stock-badge">Low Stock</p>}
+        {badgeText && <p className="product-badge">{badgeText}</p>}
       </div>
       <div className="product-title-container">
         <p>{product.title}</p>
