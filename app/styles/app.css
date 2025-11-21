@@ -404,7 +404,7 @@ div:has(> .testimonials-container) {
   display: flex;
   justify-content: flex-start;
   padding-left: 2rem;
-  padding-bottom: 6rem;
+  padding-bottom: 7rem;
 }
 
 .footer-menu-grid {
@@ -453,8 +453,8 @@ div:has(> .testimonials-container) {
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  width: 30%;
-  max-width: 30%;
+  width: 500px;
+  max-width: 500px;
 }
 
 .footer-newsletter {
