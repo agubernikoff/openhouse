@@ -127,6 +127,33 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
         ...MoneyProductItem
       }
     }
+    options {
+      name
+      optionValues {
+        name
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
+        firstSelectableVariant {
+          id
+          availableForSale
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+    }
+    lowStock: metafield(namespace: "custom", key: "low_stock") {
+      value
+    }
   }
 `;
 
