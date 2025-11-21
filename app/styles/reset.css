@@ -81,6 +81,9 @@ body {
 }
 
 body > main {
+  margin: 12rem 1rem 1rem 1rem;
+}
+body > main:has(> .home) {
   margin: 1rem;
 }
 

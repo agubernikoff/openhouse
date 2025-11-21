@@ -1,5 +1,5 @@
 import {Suspense, useState} from 'react';
-import {Await, NavLink} from 'react-router';
+import {Await, NavLink, useLocation} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {Logo} from './Logo';
 import {motion} from 'motion/react';
@@ -14,12 +14,19 @@ export function Footer({
   publicStoreDomain,
   testimonials,
 }) {
+  const {pathname} = useLocation();
+  const hideTestimonials = [
+    '/collections',
+    '/products',
+    '/blogs',
+    '/cart',
+  ].some((prefix) => pathname.startsWith(prefix));
   return (
     <Suspense>
       <Await resolve={footerPromise}>
         {(footer) => (
           <footer className="footer">
-            <Testimonials data={testimonials} />
+            {!hideTestimonials && <Testimonials data={testimonials} />}
             {/* Hero Image Section */}
             {footer?.metaobject && (
               <FooterHero metaobject={footer.metaobject} />

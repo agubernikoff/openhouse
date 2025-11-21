@@ -1,4 +1,4 @@
-import {redirect, useLoaderData} from 'react-router';
+import {redirect, useLoaderData, NavLink} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -33,7 +33,7 @@ async function loadCriticalData({context, params, request}) {
   const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 12,
   });
 
   if (!handle) {
@@ -74,23 +74,25 @@ function loadDeferredData({context}) {
 export default function Collection() {
   /** @type {LoaderReturnData} */
   const {collection} = useLoaderData();
+  console.log(collection.products);
 
   return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection
-        connection={collection.products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
+    <section className="home-featured-collection collection">
+      <div>
+        <div className="collection-side-menu">side menu</div>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <h1>{collection.title}</h1>
+        <div className="filter-container">
+          <button>filter</button>
+          {/* implementation from hosh for total products */}
+          <p>{`${1} Products`}</p>
+        </div>
+        <PAJGination
+          products={collection.products}
+          handle={collection.handle}
+        />
+      </div>
       <Analytics.CollectionView
         data={{
           collection: {
@@ -99,7 +101,47 @@ export default function Collection() {
           },
         }}
       />
-    </div>
+    </section>
+  );
+}
+
+function PAJGination({products, handle}) {
+  const {endCursor, hasNextPage, hasPreviousPage, startCursor} =
+    products.pageInfo;
+
+  return (
+    <>
+      <div className="products-grid">
+        {products.nodes.map((product, index) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
+        ))}
+      </div>
+      <div className="pagination-links-container">
+        <NavLink
+          onClick={(e) => {
+            if (!hasPreviousPage) e.preventDefault();
+          }}
+          to={`/collections/${handle}?direction=previous&cursor=${startCursor}`}
+          className={`pagination-link ${!hasPreviousPage ? 'disabled' : ''}`}
+        >
+          Previous Page
+        </NavLink>
+        <div className="line" />
+        <NavLink
+          onClick={(e) => {
+            if (!hasNextPage) e.preventDefault();
+          }}
+          className={`pagination-link ${!hasNextPage ? 'disabled' : ''}`}
+          to={`/collections/${handle}?direction=next&cursor=${endCursor}`}
+        >
+          Next Page
+        </NavLink>
+      </div>
+    </>
   );
 }
 

@@ -358,7 +358,12 @@ function FeaturedCollection({collection}) {
                     </div>
                   </div>
                   <div className="featured-products-button-container">
-                    <button className="explore-all">EXPLORE ALL</button>
+                    <Link
+                      to={`/collections/${response.collection.handle}`}
+                      className="explore-all"
+                    >
+                      EXPLORE ALL
+                    </Link>
                     <div>
                       <button
                         className="carousel-btn left"
