@@ -681,6 +681,7 @@ div:has(> .testimonials-container) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 20px;
 }
 .hero-section h2 {
   position: absolute;
@@ -725,6 +726,10 @@ div:has(> .testimonials-container) {
   align-items: center;
   text-align: center;
   position: relative;
+}
+.home-partners-section p {
+  font-family: 'mono';
+  font-size: 14px;
 }
 /* Mask with soft gradient fades */
 .partners-carousel-mask {
