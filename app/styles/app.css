@@ -456,6 +456,7 @@ div:has(> .testimonials-container) {
   z-index: 100;
   width: 500px;
   max-width: 500px;
+  background: var(--color-oh-white);
 }
 
 .footer-newsletter {
