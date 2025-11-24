@@ -20,6 +20,7 @@ export function Footer({
     '/products',
     '/blogs',
     '/cart',
+    '/contact',
   ].some((prefix) => pathname.startsWith(prefix));
   return (
     <Suspense>
