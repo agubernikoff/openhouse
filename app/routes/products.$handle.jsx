@@ -1,4 +1,4 @@
-import {useLoaderData} from 'react-router';
+import {useLoaderData, Link} from 'react-router';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -11,6 +11,7 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {color} from 'motion';
 
 /**
  * @type {Route.MetaFunction}
@@ -109,24 +110,32 @@ export default function Product() {
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
       <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
+        <div className="product-main-details">
+          <nav className="breadcrumbs" aria-label="Breadcrumb">
+            <Link style={{color: '#BFC0C1'}} to="/products">
+              Rework
+            </Link>
+            <span className="breadcrumb-separator" style={{color: '#BFC0C1'}}>
+              {' '}
+              -{' '}
+            </span>
+            <span aria-current="page">This</span>
+          </nav>
+          <p className="product-title">{title}</p>
+          <ProductPrice
+            price={selectedVariant?.price}
+            compareAtPrice={selectedVariant?.compareAtPrice}
+          />
+          <div
+            className="product-description"
+            dangerouslySetInnerHTML={{__html: descriptionHtml}}
+          />
+        </div>
+        {/* ALEXANDER PICK UP HERE!!! */}
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
       </div>
       <Analytics.ProductView
         data={{

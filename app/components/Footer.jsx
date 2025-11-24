@@ -44,6 +44,8 @@ export function Footer({
                   </p>
                 </div>
 
+                <div className="footer-divider"></div>
+
                 {/* Menu Columns */}
                 {footer?.menu && header.shop.primaryDomain?.url && (
                   <FooterMenu
