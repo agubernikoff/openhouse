@@ -93,6 +93,7 @@ export default function Contact() {
         </p>
       </div>
       <form className="contact-form">
+        <h3>Email</h3>
         <div className="contact-form-row">
           <Input
             id="firstName"
@@ -137,7 +138,7 @@ export default function Contact() {
           />
         </div>
         <button type="submit" className="contact-submit">
-          SUBMIT
+          ORDER SPECIAL INSTRUCTIONS
         </button>
       </form>
     </div>
@@ -156,7 +157,7 @@ function Input({id, label, value, setter, type = 'text'}) {
         value={value}
         onChange={(e) => setter(e.target.value)}
         className="contact-input"
-        placeholder="placeholder"
+        placeholder={label}
       />
     </div>
   );
