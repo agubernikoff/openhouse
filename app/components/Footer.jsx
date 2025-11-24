@@ -55,7 +55,14 @@ export function Footer({
               </div>
 
               {/* Newsletter Section (overlapping at bottom) */}
-              <div className="footer-newsletter-wrapper">
+              <div
+                className="footer-newsletter-wrapper"
+                style={
+                  pathname.includes('/contact')
+                    ? {background: 'var(--color-oh-black)'}
+                    : {}
+                }
+              >
                 <FooterNewsletter />
               </div>
             </div>
