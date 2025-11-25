@@ -1439,7 +1439,8 @@ div:has(.products-grid) {
   background: var(--color-oh-white);
   color: var(--color-oh-black);
 }
-body:has(.contact) {
+body:has(.contact),
+body:has(.contact) .footer-newsletter-wrapper {
   background: var(--color-oh-black);
   color: var(--color-oh-white);
 }
