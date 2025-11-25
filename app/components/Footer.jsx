@@ -120,8 +120,8 @@ function Testimonials({data}) {
               <div>
                 <motion.div
                   className="testimonials-container"
-                  initial={{x: `calc(25vw + 5px)`}}
-                  animate={{x: `calc(${index * 25}vw + ${index * 5}px)`}}
+                  initial={{x: `var(--init-testi-transform)`}}
+                  animate={{x: `calc(${index} * var(--unit-testi-transform))`}}
                   transition={{ease: 'easeInOut'}}
                 >
                   {fields?.testimonials?.references?.nodes?.map((testi, i) => {
