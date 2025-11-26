@@ -1735,6 +1735,11 @@ body:has(.contact) .footer-newsletter-button:hover {
     fill: var(--color-oh-black);
   }
 
+  .footer .home-featured-collection {
+    padding-top: 30px;
+    background-image: none !important;
+  }
+
   .footer .home-featured-collection h3 {
     font-size: 28px;
     line-height: 28px;

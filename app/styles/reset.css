@@ -92,10 +92,10 @@ body > main:has(> .product) {
 
 section {
   margin-bottom: 120px;
-  /* padding: 1rem 0;
-  @media (min-width: 768px) {
-    padding: 2rem 0;
-  } */
+  /* padding: 1rem 0; */
+  @media (max-width: 767px) {
+    margin-bottom: 90px;
+  }
 }
 
 fieldset {
