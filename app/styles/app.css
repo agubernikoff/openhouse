@@ -1589,7 +1589,7 @@ body:has(.contact) .footer-newsletter-button:hover {
     display: none;
   }
   .footer-menu-column:nth-child(1) {
-    order: 1; /* Shop stays first */
+    order: 1; /* Shop stays first  */
   }
   .footer-menu-column:nth-child(2) {
     order: 3; /* About becomes third */
