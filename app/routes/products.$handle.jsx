@@ -15,6 +15,8 @@ import React, {useState, useEffect, Suspense, useRef} from 'react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import Expandable from '~/components/Expandable';
 import mapRichText from '~/helpers/mapRichText';
+import {PRODUCT_ITEM_FRAGMENT} from './collections.$handle';
+import {ProductItem} from '~/components/ProductItem';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -90,15 +92,22 @@ async function loadCriticalData({context, params, request}) {
  */
 function loadDeferredData({context, params}) {
   const {storefront} = context;
+  const {handle} = params;
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
   const faqs = storefront.query(FAQ_QUERY);
-  return {faqs};
+  const recs = storefront.query(PRODUCT_RECOMENDATIONS_QUERY, {
+    variables: {handle},
+  });
+  const compliments = storefront.query(COMPLEMENTARY_QUERY, {
+    variables: {handle},
+  });
+  return {faqs, recs, compliments};
 }
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, faqs} = useLoaderData();
+  const {product, faqs, recs, compliments} = useLoaderData();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -202,6 +211,7 @@ export default function Product() {
         />
       </div>
       <FAQSection data={faqs} />
+      <YouMayAlsoLike recs={recs} compliments={compliments} />
     </>
   );
 }
@@ -240,6 +250,51 @@ function FAQSection({data}) {
             }}
           </Await>
         </Suspense>
+      </div>
+    </section>
+  );
+}
+
+function YouMayAlsoLike({compliments, recs}) {
+  const [resolvedCompliments, setResolvedCompliments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([compliments, recs])
+      .then(([complimentsRes, recsRes]) => {
+        const complimentsData = complimentsRes?.productRecommendations || [];
+        const recsData = recsRes?.productRecommendations || [];
+
+        const uniqueProducts = [
+          ...new Map(
+            [...complimentsData, ...recsData]
+              .filter((p) => p?.id)
+              .map((p) => [p.id, p]),
+          ).values(),
+        ].slice(0, 3);
+
+        setResolvedCompliments(uniqueProducts);
+      })
+      .finally(() => setLoading(false));
+  }, [compliments, recs]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">YOU MAY ALSO LIKE</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        {resolvedCompliments.map((product, index) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
+        ))}
       </div>
     </section>
   );
@@ -387,3 +442,28 @@ query GetFAQ() {
   }
 }
 `;
+
+const PRODUCT_RECOMENDATIONS_QUERY = `
+${PRODUCT_ITEM_FRAGMENT}
+#graphql
+query MyQuery(
+$country: CountryCode
+$handle: String!
+$language: LanguageCode
+) @inContext(country: $country, language: $language) {
+  productRecommendations(intent: RELATED, productHandle: $handle) {
+    ...ProductItem
+  }
+}`;
+
+const COMPLEMENTARY_QUERY = `${PRODUCT_ITEM_FRAGMENT}
+#graphql
+query MyQuery(
+$country: CountryCode
+$handle: String!
+$language: LanguageCode
+) @inContext(country: $country, language: $language) {
+  productRecommendations(intent: COMPLEMENTARY, productHandle: $handle) {
+    ...ProductItem
+  }
+}`;

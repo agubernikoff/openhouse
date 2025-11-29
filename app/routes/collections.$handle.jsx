@@ -145,7 +145,7 @@ function PAJGination({products, handle}) {
   );
 }
 
-const PRODUCT_ITEM_FRAGMENT = `#graphql
+export const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
     currencyCode
