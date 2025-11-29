@@ -2,6 +2,7 @@ import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
 import {useState} from 'react';
+import {AnimatePresence, motion} from 'motion/react';
 
 /**
  * @param {{
@@ -58,21 +59,31 @@ export function ProductForm({productOptions, selectedVariant}) {
         if (option.optionValues.length === 1) return null;
 
         const isColorOption = option.name === 'Color';
-
+        const isEmbroideryOption = option.name === 'Embellishment Type';
         // Get the selected value name
         const selectedValue = option.optionValues.find((v) => v.selected);
         const selectedName = selectedValue?.name || '';
 
         return (
           <div
-            className={`product-options ${isColorOption ? 'product-options-color' : ''}`}
+            className={`product-options ${isColorOption ? 'product-options-color' : ''} ${isEmbroideryOption ? 'product-options-embroidery' : ''}`}
             key={option.name}
           >
             <div className="product-options-header">
               <h5>
                 <span className="option-bullet">●</span>
                 <span className="option-number">{index + 1}.</span>{' '}
-                {option.name.toUpperCase()}: {selectedName.toUpperCase()}
+                {option.name.toUpperCase()}:{' '}
+                <AnimatePresence mode="popLayout">
+                  <motion.span
+                    key={selectedName}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                  >
+                    {selectedName.toUpperCase()}
+                  </motion.span>
+                </AnimatePresence>
               </h5>
               <span className="option-required">REQUIRED</span>
             </div>
@@ -88,7 +99,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                   isDifferentProduct,
                   swatch,
                 } = value;
-
+                console.log(name, selected, !isColorOption);
                 if (isDifferentProduct) {
                   return (
                     <Link
@@ -121,6 +132,14 @@ export function ProductForm({productOptions, selectedVariant}) {
                           ? '1px solid black'
                           : '1px solid transparent',
                         opacity: available ? 1 : 0.3,
+                        background:
+                          selected && !isColorOption
+                            ? 'var(--color-oh-black)'
+                            : 'transparent',
+                        color:
+                          selected && !isColorOption
+                            ? 'var(--color-oh-white)'
+                            : 'var(--color-oh-black)',
                       }}
                       disabled={!exists}
                       onClick={() => {

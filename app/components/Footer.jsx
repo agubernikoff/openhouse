@@ -100,7 +100,6 @@ function Testimonials({data}) {
       <Await resolve={data}>
         {(d) => {
           const fields = normalizeMetaobject(d.metaobject);
-          console.log(fields);
           return (
             <section
               className="home-featured-collection"

@@ -24,6 +24,11 @@ img {
   src: url('../assets/apfel.otf');
   font-weight: 400;
 }
+@font-face {
+  font-family: 'apfel';
+  src: url('../assets/ApfelGrotezk-Fett.otf');
+  font-weight: 700;
+}
 
 @font-face {
   font-family: 'bedford';
@@ -1151,21 +1156,48 @@ div:has(.products-grid) {
   display: flex;
   width: 100%;
   justify-content: space-between;
+  margin-bottom: 120px;
 }
 
 .product h1 {
   margin-top: 0;
 }
-
-.product-image {
+.product-images-gallery {
   width: 45%;
+  position: relative;
+  border: 1px solid var(--color-oh-gray);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.product-image {
+  width: 100%;
+  aspect-ratio: 1/1;
 }
 
 .product-image img {
   height: auto;
   width: 100%;
+}
+.product-image-previews-container {
+  display: flex;
+  max-width: 100%;
+  width: fit-content;
+  padding: 1rem;
+  position: absolute;
+  bottom: 0;
+  gap: 1rem;
+  overflow: scroll;
+  justify-content: center;
+}
+.product-image-previews-container button {
+  padding: 0;
+  width: calc((100% - 9rem) / 10);
+  flex-shrink: 0;
+  cursor: pointer;
   border: 1px solid var(--color-oh-gray);
-  border-radius: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 1/1;
 }
 
 .product-main {
@@ -1268,6 +1300,10 @@ div:has(.products-grid) {
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
+  transition: all 300ms ease-in-out;
+}
+.product-options-item:disabled {
+  opacity: 0.33;
 }
 
 /* Color option - circular swatches */
@@ -1306,12 +1342,8 @@ div:has(.products-grid) {
   cursor: pointer;
   text-decoration: none;
 }
-
-/* Selected state for non-color options */
-.product-options:not(.product-options-color)
-  .product-options-item[style*='border: 1px solid black'] {
-  background-color: #2d2d2b;
-  color: #ffffff;
+.product-options-embroidery .product-options-grid {
+  gap: 1rem;
 }
 
 .product-option-label-swatch {
@@ -1370,8 +1402,32 @@ div:has(.products-grid) {
 }
 
 .add-cart {
-  background-color: #2d2d2b;
+  background-color: var(--color-oh-black);
   color: var(--color-oh-white);
+}
+
+.home-featured-collection > div:has(> .dropdown) {
+  grid-column: span 2;
+}
+.dropdown {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 18px;
+}
+.dropdown-header {
+  font-weight: bold;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-oh-gray);
+  cursor: pointer;
+}
+div:has(> .dropdown-content) {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+.rich-text-div p {
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
+  line-height: 18px;
 }
 
 /*

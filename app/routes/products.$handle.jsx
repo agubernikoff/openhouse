@@ -1,4 +1,4 @@
-import {useLoaderData, Link} from 'react-router';
+import {useLoaderData, Link, Await} from 'react-router';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -11,7 +11,18 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-import {color} from 'motion';
+import React, {useState, useEffect, Suspense, useRef} from 'react';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
+import Expandable from '~/components/Expandable';
+import mapRichText from '~/helpers/mapRichText';
+
+function useIsFirstRender() {
+  const isFirst = useRef(true);
+  useEffect(() => {
+    isFirst.current = false;
+  }, []);
+  return isFirst.current;
+}
 
 /**
  * @type {Route.MetaFunction}
@@ -78,15 +89,16 @@ async function loadCriticalData({context, params, request}) {
  * @param {Route.LoaderArgs}
  */
 function loadDeferredData({context, params}) {
+  const {storefront} = context;
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
-
-  return {};
+  const faqs = storefront.query(FAQ_QUERY);
+  return {faqs};
 }
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product} = useLoaderData();
+  const {product, faqs} = useLoaderData();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -118,53 +130,118 @@ export default function Product() {
   });
 
   const {title, descriptionHtml} = product;
+  const [selectedImage, setSelectedImage] = useState(selectedVariant?.image);
+
+  useEffect(() => {
+    setSelectedImage(selectedVariant.image);
+  }, [selectedVariant]);
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <div className="product-main-details">
-          <nav className="breadcrumbs" aria-label="Breadcrumb">
-            <Link style={{color: '#BFC0C1'}} to="/products">
-              Rework
-            </Link>
-            <span className="breadcrumb-separator" style={{color: '#BFC0C1'}}>
-              {' '}
-              -{' '}
-            </span>
-            <span aria-current="page">This</span>
-          </nav>
-          <p className="product-title">{title}</p>
-          <ProductPrice
-            price={selectedVariant?.price}
-            compareAtPrice={selectedVariant?.compareAtPrice}
-          />
-          <div
-            className="product-description"
-            dangerouslySetInnerHTML={{__html: descriptionHtml}}
+    <>
+      <div className="product">
+        <div className="product-images-gallery">
+          <div className="product-image-previews-container">
+            {product.images.nodes
+              .filter((img) => {
+                if (selectedVariant?.image.altText && img.altText)
+                  return img.altText === selectedVariant.image.altText;
+                else return true;
+              })
+              .map((img) => (
+                <button key={img.id} onClick={() => setSelectedImage(img)}>
+                  <ProductImage image={img} />
+                </button>
+              ))}
+          </div>
+          {product.images.nodes.map((img) => (
+            <ProductImage key={img.id} image={img} hidden />
+          ))}
+          <ProductImage image={selectedImage} />
+        </div>
+        <div className="product-main">
+          <div className="product-main-details">
+            <nav className="breadcrumbs" aria-label="Breadcrumb">
+              <Link style={{color: '#BFC0C1'}} to="/products">
+                Rework
+              </Link>
+              <span className="breadcrumb-separator" style={{color: '#BFC0C1'}}>
+                {' '}
+                -{' '}
+              </span>
+              <span aria-current="page">This</span>
+            </nav>
+            <p className="product-title">{title}</p>
+            <ProductPrice
+              price={selectedVariant?.price}
+              compareAtPrice={selectedVariant?.compareAtPrice}
+            />
+            <div
+              className="product-description"
+              dangerouslySetInnerHTML={{__html: descriptionHtml}}
+            />
+          </div>
+          <ProductForm
+            productOptions={reorderedOptions}
+            selectedVariant={selectedVariant}
           />
         </div>
-        <ProductForm
-          productOptions={reorderedOptions}
-          selectedVariant={selectedVariant}
+        <Analytics.ProductView
+          data={{
+            products: [
+              {
+                id: product.id,
+                title: product.title,
+                price: selectedVariant?.price.amount || '0',
+                vendor: product.vendor,
+                variantId: selectedVariant?.id || '',
+                variantTitle: selectedVariant?.title || '',
+                quantity: 1,
+              },
+            ],
+          }}
         />
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
-    </div>
+      <FAQSection data={faqs} />
+    </>
+  );
+}
+
+function FAQSection({data}) {
+  const isFirstRender = useIsFirstRender();
+  const [openSection, setOpenSection] = useState(null);
+
+  const toggleSection = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">FREQUENTLY ASKED QUESTIONS</p>
+      </div>
+      <div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Await resolve={data}>
+            {(faq) => {
+              const {faqs} = normalizeMetaobject(faq.metaobject);
+
+              return faqs.references.nodes.map((field) => {
+                const {question, answer} = normalizeMetaobject(field);
+                return (
+                  <Expandable
+                    key={field.id}
+                    openSection={openSection}
+                    toggleSection={toggleSection}
+                    title={question.value}
+                    details={mapRichText(JSON.parse(answer.value))}
+                    isFirstRender={isFirstRender}
+                  />
+                );
+              });
+            }}
+          </Await>
+        </Suspense>
+      </div>
+    </section>
   );
 }
 
@@ -242,6 +319,15 @@ const PRODUCT_FRAGMENT = `#graphql
       description
       title
     }
+    images(first: 30) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
 `;
@@ -262,3 +348,42 @@ const PRODUCT_QUERY = `#graphql
 
 /** @typedef {import('./+types/products.$handle').Route} Route */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+
+export const FAQ_QUERY = `#graphql
+query GetFAQ() {
+  metaobject(
+    handle: {
+      type: "faq_section"
+      handle: "faq-section-xp0vokbs"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      references(first: 50) {
+        nodes{
+          ... on Metaobject{
+            id
+            fields{
+              key
+              value
+              reference{
+                ... on MediaImage {
+                  image {
+                    id
+                    url
+                    height
+                    width
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
