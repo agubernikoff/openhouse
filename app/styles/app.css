@@ -769,7 +769,6 @@ div:has(> .testimonials-container) {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.9;
 }
 /* Seamless Infinite Scroll */
 @keyframes scroll {
@@ -792,7 +791,8 @@ div:has(> .testimonials-container) {
 .footer .home-featured-collection h3,
 .collection h1,
 .pagination-link,
-.contact h3 {
+.contact h3,
+.page .home-featured-collection h3 {
   font-weight: normal;
   font-size: 36px;
   line-height: 36px;
@@ -1711,6 +1711,32 @@ body:has(.contact) .footer-newsletter-button:hover {
   color: var(--color-oh-white);
   outline: 1px solid var(--color-oh-white);
 }
+
+/*
+* --------------------------------------------------
+* routes/pages
+* --------------------------------------------------
+*/
+
+.home-featured-collection:has(.partners-wall-container) {
+  row-gap: 60px;
+}
+.partners-wall-container {
+  grid-column: span 4;
+  grid-template-columns: subgrid;
+  grid-template-rows: repeat(5, 1fr);
+  display: grid;
+  max-height: calc(100vh - 2rem);
+}
+.partners-wall-container > div {
+  max-height: calc((100vh - 2rem) / 5);
+}
+
+/*
+* --------------------------------------------------
+* media queries
+* --------------------------------------------------
+*/
 @media (min-width: 768px) {
   .footer-newsletter-wrapper {
     position: absolute;
