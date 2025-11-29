@@ -104,6 +104,19 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
+  // Reorder options: Color and Embellishment Type first
+  const optionOrder = ['Color', 'Embellishment Type', 'Order Type'];
+  const reorderedOptions = [...productOptions].sort((a, b) => {
+    const indexA = optionOrder.indexOf(a.name);
+    const indexB = optionOrder.indexOf(b.name);
+
+    // If not in optionOrder array, push to end
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+
+    return indexA - indexB;
+  });
+
   const {title, descriptionHtml} = product;
 
   return (
@@ -131,9 +144,8 @@ export default function Product() {
             dangerouslySetInnerHTML={{__html: descriptionHtml}}
           />
         </div>
-        {/* ALEXANDER PICK UP HERE!!! */}
         <ProductForm
-          productOptions={productOptions}
+          productOptions={reorderedOptions}
           selectedVariant={selectedVariant}
         />
       </div>

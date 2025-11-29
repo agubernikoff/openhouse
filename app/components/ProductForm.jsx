@@ -1,6 +1,7 @@
 import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
+import {useState} from 'react';
 
 /**
  * @param {{
@@ -11,15 +12,70 @@ import {useAside} from './Aside';
 export function ProductForm({productOptions, selectedVariant}) {
   const navigate = useNavigate();
   const {open} = useAside();
+
+  // Filter out "Order Type" from the options
+  const filteredOptions = productOptions.filter(
+    (option) => option.name !== 'Order Type',
+  );
+
+  // Get the minimum order quantity from variant metafield or default to 22
+  const minimumQuantity = selectedVariant?.minimumQuantity?.value
+    ? parseInt(selectedVariant.minimumQuantity.value)
+    : 22;
+
+  // State for quantity selector
+  const [quantity, setQuantity] = useState(minimumQuantity);
+
+  // Calculate total price for bulk order
+  const bulkPrice = selectedVariant?.price?.amount
+    ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
+    : '0.00';
+
+  // Handle quantity decrease
+  const decreaseQuantity = () => {
+    if (quantity > minimumQuantity) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  // Handle quantity increase
+  const increaseQuantity = () => {
+    setQuantity(quantity + 1);
+  };
+
+  // Handle direct input
+  const handleQuantityChange = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value >= minimumQuantity) {
+      setQuantity(value);
+    }
+  };
+
   return (
     <div className="product-form">
-      {productOptions.map((option) => {
+      {filteredOptions.map((option, index) => {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
+        const isColorOption = option.name === 'Color';
+
+        // Get the selected value name
+        const selectedValue = option.optionValues.find((v) => v.selected);
+        const selectedName = selectedValue?.name || '';
+
         return (
-          <div className="product-options" key={option.name}>
-            <h5>{option.name}</h5>
+          <div
+            className={`product-options ${isColorOption ? 'product-options-color' : ''}`}
+            key={option.name}
+          >
+            <div className="product-options-header">
+              <h5>
+                <span className="option-bullet">●</span>
+                <span className="option-number">{index + 1}.</span>{' '}
+                {option.name.toUpperCase()}: {selectedName.toUpperCase()}
+              </h5>
+              <span className="option-required">REQUIRED</span>
+            </div>
             <div className="product-options-grid">
               {option.optionValues.map((value) => {
                 const {
@@ -34,10 +90,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                 } = value;
 
                 if (isDifferentProduct) {
-                  // SEO
-                  // When the variant is a combined listing child product
-                  // that leads to a different url, we need to render it
-                  // as an anchor tag
                   return (
                     <Link
                       className="product-options-item"
@@ -57,11 +109,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                     </Link>
                   );
                 } else {
-                  // SEO
-                  // When the variant is an update to the search param,
-                  // render it as a button with javascript navigating to
-                  // the variant so that SEO bots do not index these as
-                  // duplicated links
                   return (
                     <button
                       type="button"
@@ -91,10 +138,69 @@ export function ProductForm({productOptions, selectedVariant}) {
                 }
               })}
             </div>
-            <br />
           </div>
         );
       })}
+
+      {/* Quantity selector */}
+      <div className="quantity-selector">
+        <div className="quantity-controls">
+          <span>QTY</span>
+          <button
+            type="button"
+            onClick={decreaseQuantity}
+            disabled={quantity <= minimumQuantity}
+          >
+            -
+          </button>
+          <input
+            type="number"
+            value={quantity}
+            onChange={handleQuantityChange}
+            min={minimumQuantity}
+          />
+          <button type="button" onClick={increaseQuantity}>
+            +
+          </button>
+        </div>
+      </div>
+
+      {/* Quantity display and bulk order info */}
+      <div className="product-quantity-info">
+        <p>Minimum Order Quantity: {minimumQuantity} units</p>
+        <p>Ready to ship. when?</p>
+      </div>
+
+      {/* Bulk order button */}
+      <AddToCartButton
+        className="add-cart"
+        disabled={!selectedVariant || !selectedVariant.availableForSale}
+        onClick={() => {
+          open('cart');
+        }}
+        lines={
+          selectedVariant
+            ? [
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: quantity,
+                  selectedVariant,
+                },
+              ]
+            : []
+        }
+      >
+        {selectedVariant?.availableForSale
+          ? `ADD TO CART - $${bulkPrice}`
+          : 'Sold out'}
+      </AddToCartButton>
+
+      {/* Divider */}
+      <div className="button-divider">
+        <span>OR</span>
+      </div>
+
+      {/* Sample order button */}
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
@@ -111,8 +217,9 @@ export function ProductForm({productOptions, selectedVariant}) {
               ]
             : []
         }
+        className="sample-button"
       >
-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+        PURCHASE SAMPLE
       </AddToCartButton>
     </div>
   );
