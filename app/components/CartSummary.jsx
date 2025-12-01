@@ -11,7 +11,6 @@ export function CartSummary({cart, layout}) {
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
       <dl className="cart-subtotal">
         <dt>Subtotal</dt>
         <dd>
@@ -22,8 +21,8 @@ export function CartSummary({cart, layout}) {
           )}
         </dd>
       </dl>
-      <CartDiscounts discountCodes={cart?.discountCodes} />
-      <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
+      {/* <CartDiscounts discountCodes={cart?.discountCodes} />
+      <CartGiftCard giftCardCodes={cart?.appliedGiftCards} /> */}
       <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
     </div>
   );
@@ -36,11 +35,13 @@ function CartCheckoutActions({checkoutUrl}) {
   if (!checkoutUrl) return null;
 
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
+    <div className="cart-checkout-actions">
+      <button className="cart-special-instructions">
+        ORDER SPECIAL INSTRUCTIONS
+      </button>
+      <a href={checkoutUrl} target="_self" className="cart-checkout-button">
+        PROCEED TO CHECKOUT
       </a>
-      <br />
     </div>
   );
 }

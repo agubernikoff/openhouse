@@ -148,26 +148,15 @@ function SearchToggle() {
  * @param {{count: number | null}}
  */
 function CartBadge({count}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
-
   return (
-    <a
-      href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
-        open('cart');
-        publish('cart_viewed', {
-          cart,
-          prevCart,
-          shop,
-          url: window.location.href || '',
-        });
-      }}
+    <NavLink
+      to="/cart"
+      prefetch="intent"
+      style={activeLinkStyle}
       className="cart-link"
     >
       Cart <span>{count === null ? 0 : count}</span>
-    </a>
+    </NavLink>
   );
 }
 
@@ -187,7 +176,10 @@ function CartToggle({cart}) {
 function CartBanner() {
   const originalCart = useAsyncValue();
   const cart = useOptimisticCart(originalCart);
-  return <CartBadge count={cart?.totalQuantity ?? 0} />;
+  // Count unique line items instead of total quantity
+  // Try different possible cart structures
+  const itemCount = cart?.lines?.nodes?.length ?? cart?.lines?.length ?? 0;
+  return <CartBadge count={itemCount} />;
 }
 
 const FALLBACK_HEADER_MENU = {
@@ -240,7 +232,7 @@ const FALLBACK_HEADER_MENU = {
  */
 function activeLinkStyle({isActive, isPending}) {
   return {
-    fontWeight: isActive ? 'bold' : undefined,
+    fontWeight: isActive ? null : undefined,
     color: isPending ? 'var(--color-oh-grey)' : 'var(--color-oh-black)',
   };
 }

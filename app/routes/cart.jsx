@@ -1,6 +1,8 @@
 import {useLoaderData, data} from 'react-router';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
+import {ProductItem} from '~/components/ProductItem';
+import {useState, useEffect} from 'react';
 
 /**
  * @type {Route.MetaFunction}
@@ -107,19 +109,89 @@ export async function action({request, context}) {
  * @param {Route.LoaderArgs}
  */
 export async function loader({context}) {
-  const {cart} = context;
-  return await cart.get();
+  const {cart, storefront} = context;
+
+  // Get cart data
+  const cartData = await cart.get();
+
+  // Get product recommendations based on cart items
+  let productHandles = [];
+  if (cartData?.lines?.nodes?.length > 0) {
+    productHandles = cartData.lines.nodes
+      .map((line) => line.merchandise?.product?.handle)
+      .filter(Boolean)
+      .slice(0, 3); // Get handles from first 3 items
+  }
+
+  // Fetch recommendations for cart products
+  const recommendationsPromises = productHandles.map((handle) =>
+    storefront.query(PRODUCT_RECOMMENDATIONS_QUERY, {
+      variables: {handle},
+    }),
+  );
+
+  const recommendations = await Promise.all(recommendationsPromises);
+
+  return {
+    cart: cartData,
+    recommendations,
+  };
 }
 
 export default function Cart() {
   /** @type {LoaderReturnData} */
-  const cart = useLoaderData();
+  const {cart, recommendations} = useLoaderData();
 
   return (
-    <div className="cart">
-      <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
-    </div>
+    <>
+      <section className="home-featured-collection">
+        <div>
+          <p className="red-dot">CART</p>
+        </div>
+        <div className="subgrid home-featured-products-grid">
+          <CartMain layout="page" cart={cart} />
+        </div>
+      </section>
+      <YouMayAlsoLike recommendations={recommendations} />
+    </>
+  );
+}
+
+function YouMayAlsoLike({recommendations}) {
+  const [uniqueProducts, setUniqueProducts] = useState([]);
+
+  useEffect(() => {
+    // Flatten all recommendations and remove duplicates
+    const allProducts = recommendations
+      .flatMap((rec) => rec?.productRecommendations || [])
+      .filter((p) => p?.id);
+
+    const unique = [
+      ...new Map(allProducts.map((p) => [p.id, p])).values(),
+    ].slice(0, 3);
+
+    setUniqueProducts(unique);
+  }, [recommendations]);
+
+  if (uniqueProducts.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">YOU MAY ALSO LIKE</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        {uniqueProducts.map((product, index) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 3 ? 'eager' : undefined}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -128,3 +200,49 @@ export default function Cart() {
 /** @typedef {import('@shopify/hydrogen').CartQueryDataReturn} CartQueryDataReturn */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */
+
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    featuredImage {
+      id
+      altText
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+      maxVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    variants(first: 1) {
+      nodes {
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+  }
+`;
+
+const PRODUCT_RECOMMENDATIONS_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
+  query ProductRecommendations(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    productRecommendations(productHandle: $handle) {
+      ...ProductItem
+    }
+  }
+`;

@@ -12,7 +12,6 @@ import {AnimatePresence, motion} from 'motion/react';
  */
 export function ProductForm({productOptions, selectedVariant}) {
   const navigate = useNavigate();
-  const {open} = useAside();
 
   // Filter out "Order Type" from the options
   const filteredOptions = productOptions.filter(
@@ -26,6 +25,10 @@ export function ProductForm({productOptions, selectedVariant}) {
 
   // State for quantity selector
   const [quantity, setQuantity] = useState(minimumQuantity);
+
+  // State for "added to cart" feedback
+  const [bulkAdded, setBulkAdded] = useState(false);
+  const [sampleAdded, setSampleAdded] = useState(false);
 
   // Calculate total price for bulk order
   const bulkPrice = selectedVariant?.price?.amount
@@ -50,6 +53,18 @@ export function ProductForm({productOptions, selectedVariant}) {
     if (!isNaN(value) && value >= minimumQuantity) {
       setQuantity(value);
     }
+  };
+
+  // Handle bulk add to cart
+  const handleBulkAddToCart = () => {
+    setBulkAdded(true);
+    setTimeout(() => setBulkAdded(false), 2000);
+  };
+
+  // Handle sample add to cart
+  const handleSampleAddToCart = () => {
+    setSampleAdded(true);
+    setTimeout(() => setSampleAdded(false), 2000);
   };
 
   return (
@@ -194,9 +209,7 @@ export function ProductForm({productOptions, selectedVariant}) {
       <AddToCartButton
         className="add-cart"
         disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
+        onClick={handleBulkAddToCart}
         lines={
           selectedVariant
             ? [
@@ -209,9 +222,11 @@ export function ProductForm({productOptions, selectedVariant}) {
             : []
         }
       >
-        {selectedVariant?.availableForSale
-          ? `ADD TO CART - $${bulkPrice}`
-          : 'Sold out'}
+        {bulkAdded
+          ? 'ADDED TO CART'
+          : selectedVariant?.availableForSale
+            ? `ADD TO CART - $${bulkPrice}`
+            : 'Sold out'}
       </AddToCartButton>
 
       {/* Divider */}
@@ -222,9 +237,7 @@ export function ProductForm({productOptions, selectedVariant}) {
       {/* Sample order button */}
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
+        onClick={handleSampleAddToCart}
         lines={
           selectedVariant
             ? [
@@ -238,7 +251,7 @@ export function ProductForm({productOptions, selectedVariant}) {
         }
         className="sample-button"
       >
-        PURCHASE SAMPLE
+        {sampleAdded ? 'ADDED TO CART' : 'PURCHASE SAMPLE'}
       </AddToCartButton>
     </div>
   );
