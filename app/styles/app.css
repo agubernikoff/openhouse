@@ -275,6 +275,7 @@ button.reset:hover:not(:has(> *)) {
 .header-menu-desktop {
   display: none;
   grid-gap: 1rem;
+  margin-right: auto;
   @media (min-width: 45em) {
     display: flex;
     grid-gap: 1rem;
