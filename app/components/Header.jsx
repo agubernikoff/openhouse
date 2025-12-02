@@ -15,7 +15,16 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
 
   return (
     <>
-      <header className="header">
+      <motion.header
+        className="header"
+        initial={{borderRadius: '0px 0px 0px 0px'}}
+        animate={{
+          borderRadius: isCartOpen
+            ? '10px 10px 0px 0px'
+            : '10px 10px 10px 10px',
+        }}
+        transition={{duration: 0.2, ease: 'easeInOut'}}
+      >
         <HeaderMenu
           menu={menu}
           viewport="desktop"
@@ -26,7 +35,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
           <Logo />
         </NavLink>
         <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-      </header>
+      </motion.header>
       <AnimatePresence>
         {isCartOpen && (
           <div className="cart-dropdown-overlay">
