@@ -73,43 +73,46 @@ aside {
   position: fixed;
   right: calc(-1 * var(--aside-width));
   top: 0;
-  transition: transform 200ms ease-in-out;
+  transition: all 200ms ease-in-out;
 }
-
+.cart-aside-dropdown-container {
+  position: fixed;
+  overflow: hidden;
+  inset: 0;
+  top: 60px;
+  display: flex;
+  justify-content: center;
+}
 aside.cart-aside-dropdown {
   right: auto;
-  left: 50%;
-  top: calc(0.5rem + var(--header-height) + 16px);
-  transform: translateX(-50%) translateY(-100%);
+  transform: translate(0, -100%);
+  top: 0;
   height: auto;
   max-height: 80vh;
   width: 100%;
   max-width: 690px;
   border-radius: 0 0 10px 10px;
-  transition: transform 300ms ease-out;
   background: rgba(236, 232, 218, 0.5);
   backdrop-filter: blur(5px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: none;
   padding: 16px 20px;
+  overflow: auto;
+  position: absolute;
 }
 
 .overlay.cart-dropdown.expanded aside.cart-aside-dropdown {
-  transform: translateX(-50%) translateY(0);
+  transform: translate(0, 0);
+}
+body:has(.overlay.cart-dropdown.expanded) .header {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 aside.cart-aside-dropdown main {
   margin: 0;
   overflow-y: auto;
   max-height: calc(80vh - 32px);
-}
-
-aside.cart-aside-dropdown {
-  transition: transform 300ms ease-out;
-}
-
-.overlay.cart-dropdown:not(.expanded) aside.cart-aside-dropdown {
-  transition: transform 250ms ease-in;
 }
 
 aside header {
@@ -174,6 +177,9 @@ aside li {
   visibility: hidden;
   z-index: 10;
 }
+.overlay:has(.cart-aside-dropdown) {
+  background: transparent;
+}
 
 .overlay .close-outside {
   background: transparent;
@@ -207,10 +213,6 @@ aside li {
   visibility: visible;
 }
 
-.overlay.expanded aside {
-  transform: translateX(calc(var(--aside-width) * -1));
-}
-/* reveal aside */
 .overlay.expanded aside {
   transform: translateX(calc(var(--aside-width) * -1));
 }
@@ -255,6 +257,7 @@ button.reset:hover:not(:has(> *)) {
   left: 50%;
   transform: translateX(-50%);
   backdrop-filter: blur(5px);
+  transition: border-radius 200ms ease-in-out;
 }
 
 .header-menu-mobile-toggle {

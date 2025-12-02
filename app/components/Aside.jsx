@@ -44,17 +44,23 @@ export function Aside({children, heading, type}) {
       role="dialog"
     >
       <button className="close-outside" onClick={close} />
-      <aside className={isCartDropdown ? 'cart-aside-dropdown' : ''}>
-        {!isCartDropdown && (
-          <header>
-            <h3>{heading}</h3>
-            <button className="close reset" onClick={close} aria-label="Close">
-              &times;
-            </button>
-          </header>
-        )}
-        <main>{children}</main>
-      </aside>
+      <div className={isCartDropdown ? 'cart-aside-dropdown-container' : ''}>
+        <aside className={isCartDropdown ? 'cart-aside-dropdown' : ''}>
+          {!isCartDropdown && (
+            <header>
+              <h3>{heading}</h3>
+              <button
+                className="close reset"
+                onClick={close}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </header>
+          )}
+          <main>{children}</main>
+        </aside>
+      </div>
     </div>
   );
 }
