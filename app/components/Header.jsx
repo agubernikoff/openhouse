@@ -148,15 +148,35 @@ function SearchToggle() {
  * @param {{count: number | null}}
  */
 function CartBadge({count}) {
+  const {open, close, type} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
+  const isCartOpen = type === 'cart';
+
   return (
-    <NavLink
-      to="/cart"
-      prefetch="intent"
-      style={activeLinkStyle}
+    <a
+      href="/cart"
+      onClick={(e) => {
+        if (window.location.pathname === '/cart') {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        if (isCartOpen) {
+          close();
+        } else {
+          open('cart');
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          });
+        }
+      }}
       className="cart-link"
     >
       Cart <span>{count === null ? 0 : count}</span>
-    </NavLink>
+    </a>
   );
 }
 
@@ -176,8 +196,6 @@ function CartToggle({cart}) {
 function CartBanner() {
   const originalCart = useAsyncValue();
   const cart = useOptimisticCart(originalCart);
-  // Count unique line items instead of total quantity
-  // Try different possible cart structures
   const itemCount = cart?.lines?.nodes?.length ?? cart?.lines?.length ?? 0;
   return <CartBadge count={itemCount} />;
 }

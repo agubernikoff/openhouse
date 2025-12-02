@@ -23,7 +23,7 @@ export function CartSummary({cart, layout}) {
       </dl>
       {/* <CartDiscounts discountCodes={cart?.discountCodes} />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} /> */}
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} layout={layout} />
     </div>
   );
 }
@@ -31,14 +31,22 @@ export function CartSummary({cart, layout}) {
 /**
  * @param {{checkoutUrl?: string}}
  */
-function CartCheckoutActions({checkoutUrl}) {
+function CartCheckoutActions({checkoutUrl, layout}) {
   if (!checkoutUrl) return null;
+
+  const isCartPage = layout === 'page';
 
   return (
     <div className="cart-checkout-actions">
-      <button className="cart-special-instructions">
-        ORDER SPECIAL INSTRUCTIONS
-      </button>
+      {isCartPage ? (
+        <button className="cart-special-instructions">
+          ORDER SPECIAL INSTRUCTIONS
+        </button>
+      ) : (
+        <a href="/cart" className="cart-special-instructions">
+          VIEW CART
+        </a>
+      )}
       <a href={checkoutUrl} target="_self" className="cart-checkout-button">
         PROCEED TO CHECKOUT
       </a>

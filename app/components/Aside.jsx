@@ -18,6 +18,7 @@ import {createContext, useContext, useEffect, useState} from 'react';
 export function Aside({children, heading, type}) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
+  const isCartDropdown = type === 'cart';
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -39,17 +40,19 @@ export function Aside({children, heading, type}) {
   return (
     <div
       aria-modal
-      className={`overlay ${expanded ? 'expanded' : ''}`}
+      className={`overlay ${expanded ? 'expanded' : ''} ${isCartDropdown ? 'cart-dropdown' : ''}`}
       role="dialog"
     >
       <button className="close-outside" onClick={close} />
-      <aside>
-        <header>
-          <h3>{heading}</h3>
-          <button className="close reset" onClick={close} aria-label="Close">
-            &times;
-          </button>
-        </header>
+      <aside className={isCartDropdown ? 'cart-aside-dropdown' : ''}>
+        {!isCartDropdown && (
+          <header>
+            <h3>{heading}</h3>
+            <button className="close reset" onClick={close} aria-label="Close">
+              &times;
+            </button>
+          </header>
+        )}
         <main>{children}</main>
       </aside>
     </div>

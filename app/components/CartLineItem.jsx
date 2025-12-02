@@ -66,7 +66,6 @@ export function CartLineItem({layout, line}) {
       {/* Actions div for delete and edit */}
       <div className="cart-line-actions">
         <CartLineRemoveButton lineIds={[id]} disabled={!!line.isOptimistic} />
-        <button>Edit</button>
       </div>
     </li>
   );

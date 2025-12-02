@@ -12,6 +12,7 @@ import {AnimatePresence, motion} from 'motion/react';
  */
 export function ProductForm({productOptions, selectedVariant}) {
   const navigate = useNavigate();
+  const {open} = useAside();
 
   // Filter out "Order Type" from the options
   const filteredOptions = productOptions.filter(
@@ -58,13 +59,19 @@ export function ProductForm({productOptions, selectedVariant}) {
   // Handle bulk add to cart
   const handleBulkAddToCart = () => {
     setBulkAdded(true);
-    setTimeout(() => setBulkAdded(false), 2000);
+    setTimeout(() => {
+      setBulkAdded(false);
+      open('cart');
+    }, 500);
   };
 
   // Handle sample add to cart
   const handleSampleAddToCart = () => {
     setSampleAdded(true);
-    setTimeout(() => setSampleAdded(false), 2000);
+    setTimeout(() => {
+      setSampleAdded(false);
+      open('cart');
+    }, 500);
   };
 
   return (
