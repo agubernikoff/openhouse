@@ -3,6 +3,7 @@ import {Await, NavLink, useAsyncValue} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {CartMain} from '~/components/CartMain';
+import {AnimatePresence, motion} from 'motion/react';
 
 /**
  * @param {HeaderProps}
@@ -26,20 +27,32 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         </NavLink>
         <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
       </header>
-      {isCartOpen && (
-        <div className="cart-dropdown-overlay" onClick={close}>
-          <div
-            className="cart-dropdown-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Suspense fallback={<p>Loading cart...</p>}>
-              <Await resolve={cart}>
-                {(cart) => <CartMain layout="aside" cart={cart} />}
-              </Await>
-            </Suspense>
+      <AnimatePresence>
+        {isCartOpen && (
+          <div className="cart-dropdown-overlay">
+            <button onClick={close} />
+            <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
+              <motion.div
+                key="cart-dropdown-content"
+                className="cart-dropdown-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                initial={{opacity: 0, y: '-100%'}}
+                animate={{opacity: 1, y: 0}}
+                exit={{opacity: 0, y: '-100%'}}
+                transition={{duration: 0.2, ease: 'easeInOut'}}
+              >
+                <Suspense fallback={<p>Loading cart...</p>}>
+                  <Await resolve={cart}>
+                    {(cart) => <CartMain layout="aside" cart={cart} />}
+                  </Await>
+                </Suspense>
+              </motion.div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }

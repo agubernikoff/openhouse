@@ -269,10 +269,20 @@ body:has(.cart-dropdown-overlay) .header {
 .cart-dropdown-overlay {
   position: fixed;
   inset: 0;
-  top: 76px; /* Height of header + top margin */
+  top: 60px; /* Height of header + top margin */
   z-index: 9;
   display: flex;
   justify-content: center;
+}
+.cart-dropdown-overlay > button {
+  position: absolute;
+  inset: 0;
+  transform: translateY(-60px);
+  background: transparent;
+  border: none;
+  width: 100%;
+  height: calc(100% + 60px);
+  cursor: pointer;
 }
 
 .cart-dropdown-content {
@@ -284,19 +294,7 @@ body:has(.cart-dropdown-overlay) .header {
   border-radius: 0 0 10px 10px;
   padding: 16px 20px;
   overflow-y: auto;
-  animation: slideDown 200ms ease-out;
   height: fit-content;
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 .header-menu-mobile-toggle {
@@ -2006,8 +2004,11 @@ body:has(.contact) .footer-newsletter-button:hover {
   .header {
     top: 0;
     left: 0;
+    right: 0;
+    max-width: none;
     transform: none;
     border-radius: 0;
+    box-sizing: border-box;
   }
   .home h3 {
     font-size: 28px;
