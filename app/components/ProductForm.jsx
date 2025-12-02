@@ -31,6 +31,12 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [bulkAdded, setBulkAdded] = useState(false);
   const [sampleAdded, setSampleAdded] = useState(false);
 
+  // NEW: State for file upload
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
   // Calculate total price for bulk order
   const bulkPrice = selectedVariant?.price?.amount
     ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
@@ -56,6 +62,69 @@ export function ProductForm({productOptions, selectedVariant}) {
     }
   };
 
+  // NEW: Handle file selection
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'application/pdf',
+    ];
+    if (!validTypes.includes(file.type)) {
+      setUploadError(
+        'Please upload an image file (JPG, PNG, GIF, WebP) or PDF',
+      );
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB');
+      return;
+    }
+
+    setUploadError('');
+    setIsUploading(true);
+
+    try {
+      // Upload to your server/S3
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('productId', selectedVariant?.product?.id || '');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setUploadedFile(file);
+      setUploadedFileUrl(data.url); // S3 URL returned from server
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload file. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // NEW: Handle file removal
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setUploadedFileUrl('');
+    setUploadError('');
+  };
+
   // Handle bulk add to cart
   const handleBulkAddToCart = () => {
     setBulkAdded(true);
@@ -73,6 +142,10 @@ export function ProductForm({productOptions, selectedVariant}) {
       open('cart');
     }, 500);
   };
+
+  // Calculate which number this upload option should be
+  const uploadOptionNumber =
+    filteredOptions.filter((opt) => opt.optionValues.length > 1).length + 1;
 
   return (
     <div className="product-form">
@@ -128,7 +201,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                   isDifferentProduct,
                   swatch,
                 } = value;
-                console.log(name, selected, !isColorOption);
+
                 if (isDifferentProduct) {
                   return (
                     <Link
@@ -190,6 +263,79 @@ export function ProductForm({productOptions, selectedVariant}) {
         );
       })}
 
+      {/* NEW: Upload Artwork Section */}
+      <div className="product-options product-options-upload">
+        <div className="product-options-header">
+          <h5>
+            <span className="option-bullet">●</span>
+            <span className="option-number">{uploadOptionNumber}.</span> UPLOAD
+            ARTWORK:{' '}
+            {uploadedFile ? uploadedFile.name.toUpperCase() : 'NO FILE'}
+          </h5>
+          <span className="option-optional">OPTIONAL</span>
+        </div>
+
+        <div className="upload-container">
+          <div className="upload-preview">
+            {!uploadedFile ? (
+              <>
+                <input
+                  type="file"
+                  id="artwork-upload"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf"
+                  onChange={handleFileSelect}
+                  disabled={isUploading}
+                  style={{display: 'none'}}
+                />
+                <label htmlFor="artwork-upload" className="upload-button">
+                  {isUploading ? 'UPLOADING...' : 'CHOOSE FILE'}
+                </label>
+                <p className="upload-hint">
+                  Accepted formats: JPG, PNG, PDF (Max 10MB)
+                </p>
+              </>
+            ) : (
+              <>
+                {uploadedFile.type.startsWith('image/') ? (
+                  <img
+                    src={URL.createObjectURL(uploadedFile)}
+                    alt="Uploaded artwork preview"
+                    className="upload-preview-image"
+                  />
+                ) : (
+                  <div
+                    className="upload-preview-image"
+                    style={{
+                      background: '#666',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                      color: 'white',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    📄
+                  </div>
+                )}
+                <div className="upload-info">
+                  <p className="upload-filename">{uploadedFile.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="upload-remove-button"
+                >
+                  Remove Artwork
+                </button>
+              </>
+            )}
+          </div>
+
+          {uploadError && <p className="upload-error">{uploadError}</p>}
+        </div>
+      </div>
+
       {/* Quantity selector */}
       <div className="quantity-selector">
         <div className="quantity-controls">
@@ -231,6 +377,18 @@ export function ProductForm({productOptions, selectedVariant}) {
                   merchandiseId: selectedVariant.id,
                   quantity: quantity,
                   selectedVariant,
+                  attributes: uploadedFileUrl
+                    ? [
+                        {
+                          key: 'Upload Artwork',
+                          value: uploadedFileUrl,
+                        },
+                        {
+                          key: '_Artwork Filename',
+                          value: uploadedFile?.name || '',
+                        },
+                      ]
+                    : [],
                 },
               ]
             : []
@@ -259,6 +417,18 @@ export function ProductForm({productOptions, selectedVariant}) {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
                   selectedVariant,
+                  attributes: uploadedFileUrl
+                    ? [
+                        {
+                          key: 'Upload Artwork',
+                          value: uploadedFileUrl,
+                        },
+                        {
+                          key: '_Artwork Filename',
+                          value: uploadedFile?.name || '',
+                        },
+                      ]
+                    : [],
                 },
               ]
             : []

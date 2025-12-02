@@ -13,6 +13,7 @@
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.943.0",
     "@shopify/hydrogen": "2025.7.0",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
