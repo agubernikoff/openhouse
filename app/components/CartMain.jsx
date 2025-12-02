@@ -48,15 +48,28 @@ function CartEmpty({hidden = false}) {
   const {close} = useAside();
   return (
     <div hidden={hidden}>
+      <p style={{color: 'var(--color-oh-black'}}>Your cart is empty.</p>
       <br />
-      <p>
-        Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-        started!
-      </p>
       <br />
-      <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
-      </Link>
+      <br />
+      <br />
+      <div aria-labelledby="cart-summary" className="cart-summary-aside">
+        <dl className="cart-subtotal">
+          <dt>Subtotal:</dt>
+          <dd style={{display: 'flex', gap: '3.5px'}}>
+            <div>$0.00</div> USD
+          </dd>
+        </dl>
+        <div className="cart-checkout-actions">
+          <Link
+            to="/collections/frontpage"
+            className="cart-checkout-button"
+            onClick={close}
+          >
+            CONTINUE SHOPPING
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
