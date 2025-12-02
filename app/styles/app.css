@@ -769,6 +769,7 @@ div:has(> .testimonials-container) {
   line-height: 36px;
   font-size: 36px;
   margin: 0;
+  margin-inline-start: 10px;
 }
 
 .cart-aside-dropdown .cart-checkout-actions {

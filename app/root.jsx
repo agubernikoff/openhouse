@@ -101,7 +101,7 @@ async function loadCriticalData({context}) {
     storefront.query(HEADER_QUERY, {
       cache: storefront.CacheLong(),
       variables: {
-        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+        headerMenuHandle: 'main-menu-auw', // Adjust to your header menu handle
       },
     }),
     // Add other queries here, so that they are loaded in parallel
