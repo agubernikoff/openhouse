@@ -82,9 +82,16 @@ export function ProductForm({productOptions, selectedVariant}) {
 
         const isColorOption = option.name === 'Color';
         const isEmbroideryOption = option.name === 'Embellishment Type';
+
         // Get the selected value name
         const selectedValue = option.optionValues.find((v) => v.selected);
         const selectedName = selectedValue?.name || '';
+
+        // Calculate the actual display number by counting how many options are actually shown before this one
+        const displayNumber =
+          filteredOptions
+            .slice(0, index)
+            .filter((opt) => opt.optionValues.length > 1).length + 1;
 
         return (
           <div
@@ -94,7 +101,7 @@ export function ProductForm({productOptions, selectedVariant}) {
             <div className="product-options-header">
               <h5>
                 <span className="option-bullet">●</span>
-                <span className="option-number">{index + 1}.</span>{' '}
+                <span className="option-number">{displayNumber}.</span>{' '}
                 {option.name.toUpperCase()}:{' '}
                 <AnimatePresence mode="popLayout">
                   <motion.span
