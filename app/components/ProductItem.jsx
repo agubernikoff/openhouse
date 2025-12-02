@@ -39,15 +39,29 @@ export function ProductItem({product, loading}) {
       to={variantUrl}
     >
       <div className="product-image-container">
-        {displayImage && (
-          <Image
-            alt={displayImage.altText || product.title}
-            aspectRatio="1/1"
-            data={displayImage}
-            loading={loading}
-            sizes="(min-width: 45em) 400px, 100vw"
-          />
-        )}
+        <Image
+          alt={displayImage.altText || product.title}
+          aspectRatio="1/1"
+          data={displayImage}
+          loading={loading}
+          sizes="(min-width: 45em) 400px, 100vw"
+        />
+        {visibleSwatches.map((optionValue) => {
+          const variantImage = optionValue.firstSelectableVariant?.image;
+
+          return (
+            variantImage && (
+              <Image
+                alt={variantImage.altText || product.title}
+                aspectRatio="1/1"
+                data={variantImage}
+                loading={loading}
+                style={{opacity: 0, position: 'absolute', zIndex: '-1'}}
+                sizes="(min-width: 45em) 400px, 100vw"
+              />
+            )
+          );
+        })}
         {badgeText && <p className="product-badge">{badgeText}</p>}
       </div>
       <div className="product-title-container">
