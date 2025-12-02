@@ -2,27 +2,49 @@ import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
+import {CartMain} from '~/components/CartMain';
 
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
+  const {type, close} = useAside();
+  const isCartOpen = type === 'cart';
+
   return (
-    <header className="header">
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <Logo />
-      </NavLink>
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-    </header>
+    <>
+      <header className="header">
+        <HeaderMenu
+          menu={menu}
+          viewport="desktop"
+          primaryDomainUrl={header.shop.primaryDomain.url}
+          publicStoreDomain={publicStoreDomain}
+        />
+        <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+          <Logo />
+        </NavLink>
+        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      </header>
+      {isCartOpen && (
+        <div className="cart-dropdown-overlay" onClick={close}>
+          <div
+            className="cart-dropdown-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Suspense fallback={<p>Loading cart...</p>}>
+              <Await resolve={cart}>
+                {(cart) => <CartMain layout="aside" cart={cart} />}
+              </Await>
+            </Suspense>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
+
+// ... rest of the header code stays the same
 
 /**
  * @param {{
