@@ -157,7 +157,17 @@ export default function Product() {
                 else return true;
               })
               .map((img) => (
-                <button key={img.id} onClick={() => setSelectedImage(img)}>
+                <button
+                  key={img.id}
+                  onClick={() => setSelectedImage(img)}
+                  style={{
+                    border:
+                      selectedImage.id === img.id
+                        ? '1px solid var(--color-oh-black)'
+                        : '1px solid var(--color-oh-gray)',
+                    transition: 'border 200ms ease-in-out',
+                  }}
+                >
                   <ProductImage image={img} />
                 </button>
               ))}
