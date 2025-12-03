@@ -68,15 +68,15 @@ export async function action({request, context}) {
     const fileExtension = file.name.split('.').pop();
     const fileName = `artwork/${timestamp}-${randomString}.${fileExtension}`;
 
-    // Convert file to buffer
+    // Convert file to Uint8Array (works in Workers runtime)
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const uint8Array = new Uint8Array(arrayBuffer);
 
     // Upload to S3
     const command = new PutObjectCommand({
       Bucket: AWS_S3_BUCKET,
       Key: fileName,
-      Body: buffer,
+      Body: uint8Array,
       ContentType: file.type,
       // Make the file publicly readable
       ACL: 'public-read',

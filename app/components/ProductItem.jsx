@@ -56,7 +56,12 @@ export function ProductItem({product, loading}) {
                 aspectRatio="1/1"
                 data={variantImage}
                 loading={loading}
-                style={{opacity: 0, position: 'absolute', zIndex: '-1'}}
+                style={{
+                  opacity: 0,
+                  position: 'absolute',
+                  zIndex: '-1',
+                  inset: 0,
+                }}
                 sizes="(min-width: 45em) 400px, 100vw"
               />
             )

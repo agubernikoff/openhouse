@@ -23,6 +23,13 @@ export default async function handleRequest(
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
     mediaSrc: ['https://openhouse.store'],
+    imgSrc: [
+      "'self'",
+      'https://cdn.shopify.com',
+      'https://openhouse.store',
+      'blob:',
+      'data:',
+    ],
   });
 
   const body = await renderToReadableStream(

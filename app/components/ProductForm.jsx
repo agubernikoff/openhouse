@@ -31,11 +31,12 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [bulkAdded, setBulkAdded] = useState(false);
   const [sampleAdded, setSampleAdded] = useState(false);
 
-  // NEW: State for file upload
+  // State for file upload
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   // Calculate total price for bulk order
   const bulkPrice = selectedVariant?.price?.amount
@@ -62,7 +63,7 @@ export function ProductForm({productOptions, selectedVariant}) {
     }
   };
 
-  // NEW: Handle file selection
+  // Handle file selection
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -118,11 +119,89 @@ export function ProductForm({productOptions, selectedVariant}) {
     }
   };
 
-  // NEW: Handle file removal
+  // Handle file removal
   const handleRemoveFile = () => {
     setUploadedFile(null);
     setUploadedFileUrl('');
     setUploadError('');
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      // Validate file type
+      const validTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'application/pdf',
+      ];
+      if (!validTypes.includes(file.type)) {
+        setUploadError(
+          'Please upload an image file (JPG, PNG, GIF, WebP) or PDF',
+        );
+        return;
+      }
+
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError('File size must be less than 10MB');
+        return;
+      }
+
+      setUploadError('');
+      setIsUploading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('productId', selectedVariant?.product?.id || '');
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        setUploadedFile(file);
+        setUploadedFileUrl(data.url);
+      } catch (error) {
+        console.error('Upload error:', error);
+        setUploadError('Failed to upload file. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
 
   // Handle bulk add to cart
@@ -263,7 +342,7 @@ export function ProductForm({productOptions, selectedVariant}) {
         );
       })}
 
-      {/* NEW: Upload Artwork Section */}
+      {/* Upload Artwork Section */}
       <div className="product-options product-options-upload">
         <div className="product-options-header">
           <h5>
@@ -276,7 +355,13 @@ export function ProductForm({productOptions, selectedVariant}) {
         </div>
 
         <div className="upload-container">
-          <div className="upload-preview">
+          <div
+            className={`upload-preview ${isDragging ? 'dragging' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             {!uploadedFile ? (
               <>
                 <input
@@ -290,6 +375,11 @@ export function ProductForm({productOptions, selectedVariant}) {
                 <label htmlFor="artwork-upload" className="upload-button">
                   {isUploading ? 'UPLOADING...' : 'CHOOSE FILE'}
                 </label>
+                <p className="upload-hint">
+                  {isDragging
+                    ? 'Drop file here...'
+                    : 'Or drag and drop a file here'}
+                </p>
                 <p className="upload-hint">
                   Accepted formats: JPG, PNG, PDF (Max 10MB)
                 </p>
@@ -380,12 +470,13 @@ export function ProductForm({productOptions, selectedVariant}) {
                   attributes: uploadedFileUrl
                     ? [
                         {
-                          key: 'Upload Artwork',
-                          value: uploadedFileUrl,
+                          key: 'Artwork',
+                          value:
+                            uploadedFile?.name.replace(/\.[^/.]+$/, '') || '',
                         },
                         {
-                          key: '_Artwork Filename',
-                          value: uploadedFile?.name || '',
+                          key: '_Upload Artwork',
+                          value: uploadedFileUrl,
                         },
                       ]
                     : [],
@@ -420,12 +511,13 @@ export function ProductForm({productOptions, selectedVariant}) {
                   attributes: uploadedFileUrl
                     ? [
                         {
-                          key: 'Upload Artwork',
-                          value: uploadedFileUrl,
+                          key: 'Artwork',
+                          value:
+                            uploadedFile?.name.replace(/\.[^/.]+$/, '') || '',
                         },
                         {
-                          key: '_Artwork Filename',
-                          value: uploadedFile?.name || '',
+                          key: '_Upload Artwork',
+                          value: uploadedFileUrl,
                         },
                       ]
                     : [],

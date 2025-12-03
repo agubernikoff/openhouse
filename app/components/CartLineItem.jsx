@@ -13,7 +13,7 @@ import {useAside} from './Aside';
  * }}
  */
 export function CartLineItem({layout, line}) {
-  const {id, merchandise} = line;
+  const {id, merchandise, attributes} = line; // Add attributes here
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
@@ -53,11 +53,25 @@ export function CartLineItem({layout, line}) {
 
         <div className="cart-line-options">
           <ul>
-            {selectedOptions.map((option) => (
-              <li key={option.name}>
-                {option.name}: {option.value}
-              </li>
-            ))}
+            {selectedOptions
+              .filter((option) => option.name !== 'Order Type') // Filter out Order Type
+              .map((option) => (
+                <li key={option.name}>
+                  {option.name}: {option.value}
+                </li>
+              ))}
+            {/* Add attributes display here */}
+            {attributes?.map((attribute) => {
+              // Only show attributes that don't start with underscore
+              if (!attribute.key.startsWith('_')) {
+                return (
+                  <li key={attribute.key}>
+                    {attribute.key}: {attribute.value}
+                  </li>
+                );
+              }
+              return null;
+            })}
           </ul>
           <CartLineQuantity line={line} />
         </div>

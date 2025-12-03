@@ -1402,10 +1402,12 @@ div:has(.products-grid) {
 }
 .product-images-gallery {
   width: 45%;
-  position: relative;
   border: 1px solid var(--color-oh-gray);
   border-radius: 20px;
   overflow: hidden;
+  height: fit-content;
+  position: sticky;
+  top: 90px;
 }
 .product-image {
   width: 100%;
@@ -1606,7 +1608,7 @@ div:has(.products-grid) {
   padding: 3rem 2rem;
   border: 2.5px dashed var(--color-oh-gray);
   border-radius: 8px;
-  gap: 8px;
+  gap: 6px;
   min-height: 200px;
 }
 
@@ -1647,7 +1649,8 @@ div:has(.products-grid) {
 
 .upload-filename {
   font-weight: 400;
-  font-size: 1rem;
+  font-size: 14px;
+  line-height: 14px;
   margin: 0;
   color: var(--color-oh-black);
   text-align: center;
@@ -1657,17 +1660,11 @@ div:has(.products-grid) {
   padding: 0;
   background: transparent;
   border: none;
-  color: #999;
+  color: #737373;
   cursor: pointer;
-  font-size: 0.875rem;
-  text-decoration: underline;
-  transition: color 0.2s;
-  text-transform: none;
+  font-size: 14px;
+  line-height: 14px;
   font-weight: 400;
-}
-
-.upload-remove-button:hover {
-  color: var(--color-oh-black);
 }
 
 .upload-error {
@@ -1675,6 +1672,11 @@ div:has(.products-grid) {
   font-size: 0.875rem;
   margin-top: 0.5rem;
   text-align: center;
+}
+
+.upload-preview.dragging {
+  border-color: var(--color-oh-black);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .product-quantity-info {
