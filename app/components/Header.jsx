@@ -31,7 +31,13 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
           primaryDomainUrl={header.shop.primaryDomain.url}
           publicStoreDomain={publicStoreDomain}
         />
-        <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+        <NavLink
+          prefetch="intent"
+          to="/"
+          style={activeLinkStyle}
+          end
+          className="header-logo-desktop"
+        >
           <Logo />
         </NavLink>
         <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
@@ -65,8 +71,6 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
     </>
   );
 }
-
-// ... rest of the header code stays the same
 
 /**
  * @param {{
@@ -131,19 +135,33 @@ export function HeaderMenu({
  */
 function HeaderCtas({isLoggedIn, cart}) {
   return (
-    <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/contact" style={activeLinkStyle}>
-        {/* <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense> */}
-        Contact
-      </NavLink>
-      <CartToggle cart={cart} />
-      <SearchToggle />
-    </nav>
+    <>
+      {/* Mobile layout - 3 divs */}
+      <div className="header-mobile-layout">
+        <div className="header-mobile-left">
+          <HeaderMenuMobileToggle />
+          <SearchToggle />
+        </div>
+        <div className="header-mobile-center">
+          <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+            <Logo />
+          </NavLink>
+        </div>
+        <div className="header-mobile-right">
+          <CartToggle cart={cart} />
+        </div>
+      </div>
+
+      {/* Desktop layout */}
+      <nav className="header-ctas header-desktop-layout" role="navigation">
+        <HeaderMenuMobileToggle />
+        <NavLink prefetch="intent" to="/contact" style={activeLinkStyle}>
+          Contact
+        </NavLink>
+        <CartToggle cart={cart} />
+        <SearchToggle />
+      </nav>
+    </>
   );
 }
 
@@ -163,7 +181,7 @@ function SearchToggle() {
   const {open} = useAside();
   return (
     <button className="reset" onClick={() => open('search')}>
-      Search
+      <span className="search-text">Search</span>
       <svg
         width="13"
         height="14"
