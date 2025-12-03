@@ -2595,4 +2595,29 @@ body:has(.contact) .footer-newsletter-button:hover {
     padding-top: 0px;
     padding-bottom: 0;
   }
+
+  .carousel-item .product-badge {
+    position: absolute;
+    font-family: 'apfel';
+    top: 15px;
+    left: 15px;
+    background-color: #d8240c;
+    color: white;
+    padding: 6px 8px;
+    font-weight: 400;
+    border-radius: 10px;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: 0.5px;
+    bottom: inherit;
+    width: fit-content;
+  }
+
+  .product-badge {
+    width: 90%;
+    bottom: 15px;
+    top: initial;
+    left: 10px;
+    text-align: CENTER;
+  }
 }
