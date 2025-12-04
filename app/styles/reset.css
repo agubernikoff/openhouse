@@ -112,7 +112,8 @@ form {
   } */
 }
 
-input {
+input,
+textarea {
   border-radius: 4px;
   border: 1px solid #000;
   font-size: 1rem;

@@ -1,8 +1,11 @@
-import {redirect, useLoaderData, NavLink} from 'react-router';
+import {redirect, useLoaderData, NavLink, useSearchParams} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
+import {useState} from 'react';
+import {motion} from 'motion/react';
+import Filter from '~/components/Filter';
 
 /**
  * @type {Route.MetaFunction}
@@ -32,17 +35,33 @@ export async function loader(args) {
 async function loadCriticalData({context, params, request}) {
   const {handle} = params;
   const {storefront} = context;
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 12,
-  });
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.search);
+
+  const filters = [];
+  let reverse = false;
+  let sortKey = 'BEST_SELLING';
 
   if (!handle) {
     throw redirect('/collections');
   }
 
+  if (searchParams.has('filter')) {
+    filters.push(...searchParams.getAll('filter').map((x) => JSON.parse(x)));
+  }
+  if (searchParams.has('sortKey')) sortKey = searchParams.get('sortKey');
+  if (searchParams.has('reverse'))
+    reverse = searchParams.get('reverse') === 'true';
+
+  // Only use pagination if sort/filter haven't changed in the current request
+  // This prevents "Invalid cursor for current pagination sort" errors
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 12,
+  });
+
   const [{collection}] = await Promise.all([
     storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
+      variables: {handle, filters, reverse, sortKey, ...paginationVariables},
       // Add other queries here, so that they are loaded in parallel
     }),
   ]);
@@ -74,7 +93,6 @@ function loadDeferredData({context}) {
 export default function Collection() {
   /** @type {LoaderReturnData} */
   const {collection} = useLoaderData();
-  console.log(collection.products);
 
   return (
     <section className="home-featured-collection collection">
@@ -83,15 +101,17 @@ export default function Collection() {
       </div>
       <div className="subgrid home-featured-products-grid">
         <h1>{collection.title}</h1>
-        <div className="filter-container">
-          <button>filter</button>
-          {/* implementation from hosh for total products */}
-          <p>{`${1} Products`}</p>
-        </div>
-        <PAJGination
-          products={collection.products}
-          handle={collection.handle}
+        <Filter
+          filters={collection?.products?.filters}
+          isSearch={false}
+          length={collection.products.nodes.length}
         />
+        <motion.div layout="position">
+          <PAJGination
+            products={collection.products}
+            handle={collection.handle}
+          />
+        </motion.div>
       </div>
       <Analytics.CollectionView
         data={{
@@ -108,6 +128,23 @@ export default function Collection() {
 function PAJGination({products, handle}) {
   const {endCursor, hasNextPage, hasPreviousPage, startCursor} =
     products.pageInfo;
+  const [searchParams] = useSearchParams();
+
+  // Get current sort parameters to preserve them during pagination
+  const sortKey = searchParams.get('sortKey') || 'BEST_SELLING';
+  const reverse = searchParams.get('reverse') || 'false';
+  const filters = searchParams.getAll('filter');
+
+  // Build query string with sort/filter params
+  const buildPaginationUrl = (cursor, direction) => {
+    const params = new URLSearchParams();
+    params.set('direction', direction);
+    params.set('cursor', cursor);
+    params.set('sortKey', sortKey);
+    params.set('reverse', reverse);
+    filters.forEach((f) => params.append('filter', f));
+    return `/collections/${handle}?${params.toString()}`;
+  };
 
   return (
     <>
@@ -125,7 +162,7 @@ function PAJGination({products, handle}) {
           onClick={(e) => {
             if (!hasPreviousPage) e.preventDefault();
           }}
-          to={`/collections/${handle}?direction=previous&cursor=${startCursor}`}
+          to={buildPaginationUrl(startCursor, 'previous')}
           className={`pagination-link ${!hasPreviousPage ? 'disabled' : ''}`}
         >
           Previous Page
@@ -136,7 +173,7 @@ function PAJGination({products, handle}) {
             if (!hasNextPage) e.preventDefault();
           }}
           className={`pagination-link ${!hasNextPage ? 'disabled' : ''}`}
-          to={`/collections/${handle}?direction=next&cursor=${endCursor}`}
+          to={buildPaginationUrl(endCursor, 'next')}
         >
           Next Page
         </NavLink>
@@ -210,6 +247,9 @@ export const COLLECTION_QUERY = `#graphql
     $last: Int
     $startCursor: String
     $endCursor: String
+    $filters: [ProductFilter!]
+    $reverse: Boolean
+    $sortKey: ProductCollectionSortKeys
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -220,8 +260,26 @@ export const COLLECTION_QUERY = `#graphql
         first: $first,
         last: $last,
         before: $startCursor,
-        after: $endCursor
+        after: $endCursor,
+        filters: $filters,
+        reverse: $reverse,
+        sortKey: $sortKey
       ) {
+        filters{
+          id
+          label
+          presentation
+          type
+          values{
+            count
+            id
+            input
+            label
+            swatch{
+              color
+            }
+          }
+        }
         nodes {
           ...ProductItem
         }
