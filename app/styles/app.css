@@ -2041,6 +2041,22 @@ body:has(.contact) .footer-newsletter-button:hover {
   max-height: calc((100vh - 2rem) / 5);
 }
 
+.marquee-section {
+  margin-left: -1rem;
+  width: 100vw;
+  overflow: hidden;
+}
+.marquee-section > div {
+  display: flex;
+  gap: 2vw;
+}
+.marquee-section > div > img {
+  aspect-ratio: 1/1 !important;
+  width: 40vw !important;
+  height: auto;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 /*
 * --------------------------------------------------
 * media queries

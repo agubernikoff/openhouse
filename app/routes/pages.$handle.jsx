@@ -2,7 +2,7 @@ import {useLoaderData} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
-import {AnimatePresence, motion} from 'motion/react';
+import {AnimatePresence, motion, useScroll, useTransform} from 'motion/react';
 import {useState, useEffect, useRef} from 'react';
 
 /**
@@ -91,9 +91,39 @@ export function Sections({sections}) {
     switch (section.type) {
       case 'partners':
         return <Partners section={section} key={section.id} />;
+      case 'marquee':
+        return <Marquee section={section} key={section.id} />;
+      default:
+        return null;
     }
   });
   return <main>{mapped}</main>;
+}
+
+function Marquee({section}) {
+  const images = section.fields[0].references.nodes;
+  const containerRef = useRef(null);
+  const {scrollYProgress} = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  });
+  const percentHidden = (100 / (images.length * 42) - 1) * 100;
+  // Map scroll progress to horizontal scroll: 0% visible = 0% scroll, 100% visible = 100% scroll
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', `${percentHidden}%`]);
+
+  return (
+    <section className="marquee-section" ref={containerRef}>
+      <motion.div style={{x}}>
+        {images.map((i) => (
+          <Image
+            key={i.id}
+            data={i.image}
+            sizes="(min-width: 767px) 30vw, 100vw"
+          />
+        ))}
+      </motion.div>
+    </section>
+  );
 }
 
 function Partners({section}) {
@@ -285,6 +315,17 @@ const PAGE_QUERY = `#graphql
                 }
                 references(first: 200) {
                   nodes {
+                    ...on MediaImage{
+                      id
+                      __typename
+                      image{
+                        url
+                        height
+                        id
+                        width
+                        altText
+                      }
+                    }
                     ... on Metaobject {
                       id
                       fields {
