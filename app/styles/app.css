@@ -1241,12 +1241,19 @@ div:has(> .testimonials-container) {
 }
 .filter-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   align-items: center;
   height: 36px;
-  width: 100%;
+  width: calc(300% + 40px);
   overflow: hidden;
+  position: relative;
+  left: calc(-200% - 40px);
+}
+.filter-container > .filter-container {
+  width: calc(33.33% - 40px / 3);
+  position: static;
+  justify-content: space-between;
 }
 .filter-container > button {
   border: none;
@@ -1262,6 +1269,24 @@ div:has(> .testimonials-container) {
 }
 .filter-container > p {
   opacity: 0.8;
+}
+.filter-body {
+  margin-top: 2.5rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  column-gap: 20px;
+  direction: rtl;
+}
+.filter-body * {
+  direction: ltr;
+}
+.filter-body button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 150ms ease-in-out;
 }
 .collection-description {
   margin-bottom: 1rem;

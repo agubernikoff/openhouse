@@ -48,6 +48,7 @@ export default function Filter({filters, isSearch, length}) {
   }
 
   function addSort(input) {
+    console.log(input);
     const parsed = JSON.parse(input);
     setSearchParams(
       (prev) => {
@@ -128,30 +129,27 @@ export default function Filter({filters, isSearch, length}) {
 
 function FilterColumns({filters, addFilter, isChecked, removeFilter}) {
   return (
-    <div className="filter-columns-container">
-      <p className="bold-filter-header">filter</p>
-      <div className="filter-columns">
-        {filters.map((f) => (
-          <FilterColumn
-            key={f.id}
-            filter={f}
-            addFilter={addFilter}
-            isChecked={isChecked}
-            removeFilter={removeFilter}
-          />
-        ))}
-      </div>
-    </div>
+    <>
+      {filters.map((f) => (
+        <FilterColumn
+          key={f.id}
+          filter={f}
+          addFilter={addFilter}
+          isChecked={isChecked}
+          removeFilter={removeFilter}
+        />
+      ))}
+    </>
   );
 }
 
 function SortColumn({addSort, removeSort, isChecked, isSearch}) {
   return (
     <div className="sort-column-container">
-      <p className="bold-filter-header">sort</p>
+      <p className="bold-filter-header">Sort</p>
       <div className="filter-column">
         <FilterInput
-          label={'alphabetically, a-z'}
+          label={'Alphabetically, A-Z'}
           value={JSON.stringify({reverse: false, sortKey: 'TITLE'})}
           addFilter={addSort}
           isChecked={isChecked}
@@ -159,7 +157,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
-          label={'alphabetically, z-a'}
+          label={'Alphabetically, Z-A'}
           value={JSON.stringify({reverse: true, sortKey: 'TITLE'})}
           addFilter={addSort}
           isChecked={isChecked}
@@ -167,7 +165,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
-          label={'date, new to old'}
+          label={'Date, New to Old'}
           value={JSON.stringify({reverse: true, sortKey: 'CREATED'})}
           addFilter={addSort}
           isChecked={isChecked}
@@ -175,7 +173,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
-          label={'date, old to new'}
+          label={'Date, Old to New'}
           value={JSON.stringify({reverse: false, sortKey: 'CREATED'})}
           addFilter={addSort}
           isChecked={isChecked}
@@ -183,14 +181,14 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
-          label={'price, low to high'}
+          label={'Price, Low to High'}
           value={JSON.stringify({reverse: false, sortKey: 'PRICE'})}
           addFilter={addSort}
           isChecked={isChecked}
           removeFilter={removeSort}
         />
         <FilterInput
-          label={'price, high to low'}
+          label={'Price, High to Low'}
           value={JSON.stringify({reverse: true, sortKey: 'PRICE'})}
           addFilter={addSort}
           isChecked={isChecked}
@@ -227,7 +225,7 @@ function FilterColumn({filter, addFilter, isChecked, removeFilter}) {
 
   return (
     <div className="filter-column-container">
-      <p>{filter.label}:</p>
+      <p>{filter.label}</p>
       <div className="filter-column">
         {sortByStoredOrder(
           filter.values.filter(
@@ -273,32 +271,23 @@ function FilterInput({
           : null
       }
     >
-      <input
-        type="checkbox"
-        id={label}
-        name="gender"
-        value={value}
-        checked={isChecked(value)}
-        onChange={(e) => {
-          if (e.target.checked) addFilter(e.target.value);
-          else removeFilter(e.target.value);
+      <button
+        onClick={(e) => {
+          if (!isChecked(value)) addFilter(value);
+          else removeFilter(value);
         }}
         disabled={count === 0 ? true : null}
-      />
-      <label
-        htmlFor={label}
-        style={
-          count === 0
-            ? {
-                textDecoration: 'underline',
-                textUnderlineOffset: '-38%',
-                textDecorationSkipInk: 'none',
-              }
-            : null
-        }
+        style={{
+          textDecoration: count === 0 ? 'underline' : 'none',
+          textUnderlineOffset: '-38%',
+          textDecorationSkipInk: 'none',
+          color: isChecked(value)
+            ? 'var(--color-oh-red)'
+            : 'var(--color-oh-black)',
+        }}
       >
-        {label.toLowerCase()}
-      </label>
+        {label}
+      </button>
     </div>
   );
 }
