@@ -5,7 +5,7 @@ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import {useState} from 'react';
 import {motion} from 'motion/react';
-import Filter from '~/components/Filter';
+import Filter, {FilterColumns} from '~/components/Filter';
 
 /**
  * @type {Route.MetaFunction}
@@ -97,16 +97,14 @@ export default function Collection() {
   return (
     <section className="home-featured-collection collection">
       <div>
-        <div className="collection-side-menu">side menu</div>
+        <div className="collection-side-menu">
+          <FilterColumns filters={collection?.products?.filters} />
+        </div>
       </div>
       <div className="subgrid home-featured-products-grid">
         <h1>{collection.title}</h1>
-        <Filter
-          filters={collection?.products?.filters}
-          isSearch={false}
-          length={collection.products.nodes.length}
-        />
-        <motion.div layout="position">
+        <Filter isSearch={false} length={collection.products.nodes.length} />
+        <motion.div layout={false}>
           <PAJGination
             products={collection.products}
             handle={collection.handle}

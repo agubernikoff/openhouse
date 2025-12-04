@@ -52,6 +52,7 @@ export function ProductItem({product, loading}) {
           return (
             variantImage && (
               <Image
+                key={optionValue.name}
                 alt={variantImage.altText || product.title}
                 aspectRatio="1/1"
                 data={variantImage}

@@ -1,54 +1,15 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useLocation, useSearchParams} from 'react-router';
-import {motion} from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 
-export default function Filter({filters, isSearch, length}) {
+export default function Filter({isSearch, length}) {
   const [open, setOpen] = useState(false);
   function toggleOpen() {
     setOpen(!open);
   }
   const [searchParams, setSearchParams] = useSearchParams();
 
-  function addFilter(input) {
-    setSearchParams(
-      (prev) => {
-        if (prev.has('filter')) {
-          prev.append('filter', input);
-        } else prev.set('filter', input);
-        prev.delete('direction');
-        prev.delete('cursor');
-        return prev;
-      },
-      {preventScrollReset: true},
-    );
-  }
-
-  function removeFilter(input) {
-    setSearchParams(
-      (prev) => {
-        const newParams = new URLSearchParams(prev); // Clone to avoid mutation
-        const filters = newParams.getAll('filter'); // Get all filter values
-        newParams.delete('filter'); // Remove all instances
-        newParams.delete('direction');
-        newParams.delete('cursor');
-
-        // Re-add only the filters that are NOT being removed
-        filters
-          .filter((f) => f !== input)
-          .forEach((f) => newParams.append('filter', f));
-
-        return newParams;
-      },
-      {preventScrollReset: true},
-    );
-  }
-
-  function isChecked(input) {
-    return searchParams.getAll('filter').includes(input);
-  }
-
   function addSort(input) {
-    console.log(input);
     const parsed = JSON.parse(input);
     setSearchParams(
       (prev) => {
@@ -104,18 +65,12 @@ export default function Filter({filters, isSearch, length}) {
           >
             -
           </span>{' '}
-          Filter
+          Sort
         </button>
         {/* implementation from hosh for total products */}
         <p>{`${length} Product${length !== 1 ? 's' : ''}`}</p>
       </div>
       <div style={{zIndex: open ? 0 : -1}} className="filter-body">
-        <FilterColumns
-          filters={filters}
-          addFilter={addFilter}
-          removeFilter={removeFilter}
-          isChecked={isChecked}
-        />
         <SortColumn
           addSort={addSort}
           removeSort={removeSort}
@@ -127,7 +82,54 @@ export default function Filter({filters, isSearch, length}) {
   );
 }
 
-function FilterColumns({filters, addFilter, isChecked, removeFilter}) {
+export function FilterColumns({filters}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  function addFilter(input) {
+    setSearchParams(
+      (prev) => {
+        if (prev.has('filter')) {
+          const updated = prev
+            .getAll('filter')
+            .filter(
+              (f) =>
+                Object.keys(JSON.parse(f))[0] !==
+                Object.keys(JSON.parse(input))[0],
+            );
+          updated.push(input);
+          prev.set('filter', updated);
+        } else prev.set('filter', input);
+        prev.delete('direction');
+        prev.delete('cursor');
+        return prev;
+      },
+      {preventScrollReset: true},
+    );
+  }
+
+  function removeFilter(input) {
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev); // Clone to avoid mutation
+        const filters = newParams.getAll('filter'); // Get all filter values
+        newParams.delete('filter'); // Remove all instances
+        newParams.delete('direction');
+        newParams.delete('cursor');
+
+        // Re-add only the filters that are NOT being removed
+        filters
+          .filter((f) => f !== input)
+          .forEach((f) => newParams.append('filter', f));
+
+        return newParams;
+      },
+      {preventScrollReset: true},
+    );
+  }
+
+  function isChecked(input) {
+    return searchParams.getAll('filter').includes(input);
+  }
   return (
     <>
       {filters.map((f) => (
@@ -146,9 +148,10 @@ function FilterColumns({filters, addFilter, isChecked, removeFilter}) {
 function SortColumn({addSort, removeSort, isChecked, isSearch}) {
   return (
     <div className="sort-column-container">
-      <p className="bold-filter-header">Sort</p>
+      {/* <p className="bold-filter-header">Sort</p> */}
       <div className="filter-column">
         <FilterInput
+          columnKey={'sort'}
           label={'Alphabetically, A-Z'}
           value={JSON.stringify({reverse: false, sortKey: 'TITLE'})}
           addFilter={addSort}
@@ -157,6 +160,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
+          columnKey={'sort'}
           label={'Alphabetically, Z-A'}
           value={JSON.stringify({reverse: true, sortKey: 'TITLE'})}
           addFilter={addSort}
@@ -165,6 +169,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
+          columnKey={'sort'}
           label={'Date, New to Old'}
           value={JSON.stringify({reverse: true, sortKey: 'CREATED'})}
           addFilter={addSort}
@@ -173,6 +178,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
+          columnKey={'sort'}
           label={'Date, Old to New'}
           value={JSON.stringify({reverse: false, sortKey: 'CREATED'})}
           addFilter={addSort}
@@ -181,6 +187,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           count={isSearch ? 0 : null}
         />
         <FilterInput
+          columnKey={'sort'}
           label={'Price, Low to High'}
           value={JSON.stringify({reverse: false, sortKey: 'PRICE'})}
           addFilter={addSort}
@@ -188,6 +195,7 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           removeFilter={removeSort}
         />
         <FilterInput
+          columnKey={'sort'}
           label={'Price, High to Low'}
           value={JSON.stringify({reverse: true, sortKey: 'PRICE'})}
           addFilter={addSort}
@@ -227,21 +235,82 @@ function FilterColumn({filter, addFilter, isChecked, removeFilter}) {
     <div className="filter-column-container">
       <p>{filter.label}</p>
       <div className="filter-column">
-        {sortByStoredOrder(
-          filter.values.filter(
-            (v) => !(filter.label === 'category' && v.label.includes('men')),
-          ),
-        ).map((v) => (
-          <FilterInput
-            key={v.id}
-            label={v.label}
-            value={v.input}
-            count={v.count}
-            addFilter={addFilter}
-            isChecked={isChecked}
-            removeFilter={removeFilter}
-          />
-        ))}
+        {(() => {
+          // If this column is the categories column, only render the
+          // specific allowed category labels (and in the declared order).
+          const col = String(filter.label || '').toLowerCase();
+          if (col === 'categories') {
+            const allowedOrder = [
+              'headware',
+              'apparel',
+              'leather goods',
+              'uniforms',
+              'carry',
+              'accessories',
+              'drinkware',
+            ];
+            const existingMap = new Map(
+              filter.values.map((v) => [
+                String(v.label || '').toLowerCase(),
+                v,
+              ]),
+            );
+
+            function titleCase(str) {
+              return String(str || '')
+                .split(' ')
+                .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : ''))
+                .join(' ');
+            }
+
+            const ordered = allowedOrder.map((lbl) => {
+              const found = existingMap.get(lbl);
+              if (found) return found;
+
+              // Create a stand-in object for missing allowed category
+              const inputSlug = lbl; // use lowercase label as slug/input
+              return {
+                id: `missing-${lbl.replace(/\s+/g, '-')}`,
+                label: titleCase(lbl),
+                input: inputSlug,
+                count: 0,
+              };
+            });
+
+            return ordered.map((v) => (
+              <FilterInput
+                key={v.id}
+                label={v.label}
+                value={v.input}
+                count={v.count}
+                addFilter={addFilter}
+                isChecked={isChecked}
+                removeFilter={removeFilter}
+                columnKey={filter.label}
+              />
+            ));
+          }
+
+          // Default behaviour for other columns (preserve previous logic)
+          const values = sortByStoredOrder(
+            filter.values.filter(
+              (v) => !(filter.label === 'category' && v.label.includes('men')),
+            ),
+          );
+
+          return values.map((v) => (
+            <FilterInput
+              key={v.id}
+              label={v.label}
+              value={v.input}
+              count={v.count}
+              addFilter={addFilter}
+              isChecked={isChecked}
+              removeFilter={removeFilter}
+              columnKey={filter.label}
+            />
+          ));
+        })()}
       </div>
     </div>
   );
@@ -254,25 +323,36 @@ function FilterInput({
   addFilter,
   isChecked,
   removeFilter,
+  columnKey,
 }) {
   const [hide, setHide] = useState(false);
   const {pathname} = useLocation();
   useEffect(() => {
-    setHide(count === 0);
+    if (columnKey.toLowerCase() === 'sort') setHide(count === 0);
   }, [pathname]);
   return (
     <div
-      style={
-        count === 0
-          ? {
-              opacity: '33%',
-              display: hide ? 'none' : 'block',
-            }
-          : null
-      }
+      style={{
+        opacity: count === 0 ? '33%' : '100%',
+        display: hide ? 'none' : 'flex',
+        left: isChecked(value) ? '0' : '15px',
+      }}
     >
+      <AnimatePresence mode="popLayout">
+        {isChecked(value) && (
+          <motion.div
+            layoutId={columnKey}
+            className="filter-dot"
+            transition={{ease: 'easeInOut'}}
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+          />
+        )}
+      </AnimatePresence>
       <button
-        onClick={(e) => {
+        onClick={() => {
+          if (count === 0) return;
           if (!isChecked(value)) addFilter(value);
           else removeFilter(value);
         }}
@@ -281,9 +361,6 @@ function FilterInput({
           textDecoration: count === 0 ? 'underline' : 'none',
           textUnderlineOffset: '-38%',
           textDecorationSkipInk: 'none',
-          color: isChecked(value)
-            ? 'var(--color-oh-red)'
-            : 'var(--color-oh-black)',
         }}
       >
         {label}
