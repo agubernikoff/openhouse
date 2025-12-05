@@ -2390,7 +2390,7 @@ body:has(.contact) .footer-newsletter-button:hover {
     left: 0;
   }
   .filter-container > button::after {
-    content: 'Filters';
+    content: ' Filters';
   }
   .filter-body {
     display: flex;
