@@ -1,17 +1,31 @@
-import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from 'react-router';
+import {
+  Suspense,
+  useId,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  Component,
+} from 'react';
+import {Await, NavLink, useAsyncValue, Link} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {CartMain} from '~/components/CartMain';
 import {AnimatePresence, motion} from 'motion/react';
+import {
+  SEARCH_ENDPOINT,
+  SearchFormPredictive,
+} from '~/components/SearchFormPredictive';
+import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
-  const {type, close} = useAside();
+  const {type} = useAside();
   const isCartOpen = type === 'cart';
+  const isSearchOpen = type === 'search';
 
   return (
     <>
@@ -19,9 +33,8 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         className="header"
         initial={{borderRadius: '0px 0px 0px 0px'}}
         animate={{
-          borderRadius: isCartOpen
-            ? '10px 10px 0px 0px'
-            : '10px 10px 10px 10px',
+          borderRadius:
+            type !== 'closed' ? '10px 10px 0px 0px' : '10px 10px 10px 10px',
         }}
         transition={{duration: 0.2, ease: 'easeInOut'}}
       >
@@ -43,32 +56,206 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
       </motion.header>
       <AnimatePresence>
-        {isCartOpen && (
-          <div className="cart-dropdown-overlay">
-            <button onClick={close} />
-            <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
-              <motion.div
-                key="cart-dropdown-content"
-                className="cart-dropdown-content"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                initial={{opacity: 0, y: '-100%'}}
-                animate={{opacity: 1, y: 0}}
-                exit={{opacity: 0, y: '-100%'}}
-                transition={{duration: 0.2, ease: 'easeInOut'}}
-              >
-                <Suspense fallback={<p>Loading cart...</p>}>
-                  <Await resolve={cart}>
-                    {(cart) => <CartMain layout="aside" cart={cart} />}
-                  </Await>
-                </Suspense>
-              </motion.div>
-            </div>
-          </div>
-        )}
+        {isCartOpen && <Cart cart={cart} />}
+        {isSearchOpen && <Search />}
       </AnimatePresence>
     </>
+  );
+}
+function Search() {
+  const {type} = useAside();
+  const queriesDatalistId = useId();
+  const inputContainerRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    if (type !== 'search') return;
+    const input = inputContainerRef.current?.querySelector(
+      'input[type="search"]',
+    );
+    const t = setTimeout(() => {
+      input?.focus();
+    }, 180); // matches the header aside open animation (~0.18-0.2s)
+    return () => clearTimeout(t);
+  }, [type]);
+
+  return (
+    <HeaderAside>
+      <div className="predictive-search" ref={inputContainerRef}>
+        <SearchFormPredictive>
+          {({fetchResults, goToSearch, inputRef}) => (
+            <>
+              <input
+                name="q"
+                onChange={fetchResults}
+                onFocus={fetchResults}
+                placeholder="Search for products..."
+                ref={inputRef}
+                type="search"
+                list={queriesDatalistId}
+              />
+              <button onClick={goToSearch}>ENTER</button>
+            </>
+          )}
+        </SearchFormPredictive>
+
+        <SearchResultsPredictive>
+          {({items, total, term, state, closeSearch}) => {
+            const {articles, collections, pages, products, queries} = items;
+
+            if (state === 'loading' && term.current) {
+              return <div>Loading...</div>;
+            }
+
+            if (!total) {
+              return <SearchResultsPredictive.Empty term={term} />;
+            }
+
+            return (
+              <>
+                <SearchResultsPredictive.Products
+                  products={products}
+                  closeSearch={closeSearch}
+                  term={term}
+                  hovered={hovered}
+                  setHovered={setHovered}
+                />
+                {term.current && total ? (
+                  <Link
+                    onClick={closeSearch}
+                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                  >
+                    <p className="header-search-results-footer-text">
+                      PRESS ENTER TO SEE ALL RESULTS
+                    </p>
+                  </Link>
+                ) : null}
+              </>
+            );
+          }}
+        </SearchResultsPredictive>
+      </div>
+    </HeaderAside>
+  );
+}
+function Cart({cart}) {
+  return (
+    <HeaderAside>
+      <Suspense fallback={<p>Loading cart...</p>}>
+        <AwaitErrorBoundary>
+          <Await resolve={cart}>
+            {(cart) => <CartMain layout="aside" cart={cart} />}
+          </Await>
+        </AwaitErrorBoundary>
+      </Suspense>
+    </HeaderAside>
+  );
+}
+
+class AwaitErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {error: null};
+  }
+  static getDerivedStateFromError(error) {
+    return {error};
+  }
+  componentDidCatch(error, info) {
+    // Log to console for now — can be hooked to analytics
+    // Include a marker so it's easy to find in logs
+    // eslint-disable-next-line no-console
+    console.error('[AwaitErrorBoundary] caught', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{padding: 16}}>
+          <p>Unable to load cart.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function HeaderAside({children}) {
+  const {close, type} = useAside();
+
+  // Refs and state for measuring children and animating height
+  const measuredRef = useRef(null);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+
+  // update measured height on mount/layout changes
+  useLayoutEffect(() => {
+    if (!measuredRef.current) return;
+    setMeasuredHeight(measuredRef.current.scrollHeight || 0);
+  }, [children]);
+
+  // observe size changes of the inner content
+  useEffect(() => {
+    if (!measuredRef.current || typeof ResizeObserver === 'undefined') return;
+    const el = measuredRef.current;
+    const ro = new ResizeObserver(() => {
+      setMeasuredHeight(el.scrollHeight || 0);
+    });
+    ro.observe(el);
+    // initialize
+    setMeasuredHeight(el.scrollHeight || 0);
+    return () => ro.disconnect();
+  }, []);
+
+  // Close on Escape: for search aside only close when the search input is empty.
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key !== 'Escape') return;
+      if (type === 'search') {
+        try {
+          const input = measuredRef.current?.querySelector(
+            'input[name="q"], input[type="search"][name="q"]',
+          );
+          if (input && String(input.value).trim().length > 0) {
+            // If there's a value, don't close the aside; allow child to handle ESC.
+            return;
+          }
+        } catch (err) {
+          // If something goes wrong reading the DOM, fall back to closing.
+        }
+      }
+      close();
+    }
+
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [close, type]);
+
+  return (
+    <div className="header-dropdown-overlay">
+      <button onClick={close} />
+      <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
+        <motion.div
+          key="header-dropdown-content"
+          className="header-dropdown-content"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          initial={{opacity: 0, y: '-100%'}}
+          animate={{opacity: 1, y: 0}}
+          exit={{opacity: 0, y: '-100%'}}
+          transition={{duration: 0.2, ease: 'easeInOut'}}
+        >
+          <motion.div
+            className="header-dropdown-inner"
+            initial={{height: 0}}
+            animate={{height: measuredHeight}}
+            exit={{height: 0}}
+            transition={{duration: 0.18, ease: 'easeInOut'}}
+            style={{overflow: 'hidden'}}
+          >
+            <div ref={measuredRef}>{children}</div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -178,9 +365,18 @@ function HeaderMenuMobileToggle() {
 }
 
 function SearchToggle() {
-  const {open} = useAside();
+  const {open, close, type} = useAside();
   return (
-    <button className="reset" onClick={() => open('search')}>
+    <button
+      className="reset"
+      onClick={() => {
+        if (type === 'search') {
+          close();
+        } else {
+          open('search');
+        }
+      }}
+    >
       <span className="search-text">Search</span>
       <svg
         width="13"

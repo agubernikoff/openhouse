@@ -19,9 +19,6 @@ export function Aside({children, heading, type}) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
 
-  // Don't render cart in Aside anymore
-  if (type === 'cart') return null;
-
   useEffect(() => {
     const abortController = new AbortController();
 

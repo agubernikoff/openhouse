@@ -1,11 +1,12 @@
 import {Link, useFetcher} from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useState} from 'react';
 import {
   getEmptyPredictiveSearchResult,
   urlWithTrackingParams,
 } from '~/lib/search';
 import {useAside} from './Aside';
+import {motion} from 'framer-motion';
 
 /**
  * Component that renders predictive search results
@@ -166,12 +167,17 @@ function SearchResultsPredictivePages({term, pages, closeSearch}) {
 /**
  * @param {PartialPredictiveSearchResult<'products'>}
  */
-function SearchResultsPredictiveProducts({term, products, closeSearch}) {
+function SearchResultsPredictiveProducts({
+  term,
+  products,
+  closeSearch,
+  hovered,
+  setHovered,
+}) {
   if (!products.length) return null;
 
   return (
     <div className="predictive-search-result" key="products">
-      <h5>Products</h5>
       <ul>
         {products.map((product) => {
           const productUrl = urlWithTrackingParams({
@@ -183,8 +189,20 @@ function SearchResultsPredictiveProducts({term, products, closeSearch}) {
           const price = product?.selectedOrFirstAvailableVariant?.price;
           const image = product?.selectedOrFirstAvailableVariant?.image;
           return (
-            <li className="predictive-search-result-item" key={product.id}>
+            <li
+              className="predictive-search-result-item"
+              key={product.id}
+              onMouseEnter={() => setHovered(product.id)}
+              onMouseLeave={() => setHovered('false')}
+            >
               <Link to={productUrl} onClick={closeSearch}>
+                {hovered === product.id && (
+                  <motion.div
+                    layoutId="predictive-search-result-item-hovered"
+                    className="predictive-search-result-item-hovered"
+                    transition={{duration: 0.15, ease: 'easeInOut'}}
+                  />
+                )}
                 {image && (
                   <Image
                     alt={image.altText ?? ''}
@@ -195,7 +213,34 @@ function SearchResultsPredictiveProducts({term, products, closeSearch}) {
                 )}
                 <div>
                   <p>{product.title}</p>
-                  <small>{price && <Money data={price} />}</small>
+                  {price && <Money data={price} />}
+                </div>
+                <div>
+                  <svg
+                    width="20"
+                    height="16"
+                    viewBox="0 0 20 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g clipPath="url(#clip0_2322_1637)">
+                      <path
+                        d="M12 15L19 8L12 1"
+                        stroke="#2D2D2B"
+                        strokeMiterlimit="10"
+                      />
+                      <path
+                        d="M19 8H0"
+                        stroke="#2D2D2B"
+                        strokeMiterlimit="10"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_2322_1637">
+                        <rect width="20" height="16" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
                 </div>
               </Link>
             </li>

@@ -162,7 +162,7 @@ export default function Product() {
                   onClick={() => setSelectedImage(img)}
                   style={{
                     border:
-                      selectedImage.id === img.id
+                      selectedImage?.id === img.id
                         ? '1px solid var(--color-oh-black)'
                         : '1px solid var(--color-oh-gray)',
                     transition: 'border 200ms ease-in-out',
