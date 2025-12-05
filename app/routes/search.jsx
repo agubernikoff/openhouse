@@ -3,6 +3,9 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
 import {getEmptyPredictiveSearchResult} from '~/lib/search';
+import Filter, {FilterColumns} from '~/components/Filter';
+import {motion} from 'motion/react';
+import {PAJGination} from './collections.$handle';
 
 /**
  * @type {Route.MetaFunction}
@@ -38,39 +41,26 @@ export default function SearchPage() {
   if (type === 'predictive') return null;
 
   return (
-    <div className="search">
-      <h1>Search</h1>
-      <SearchForm>
-        {({inputRef}) => (
-          <>
-            <input
-              defaultValue={term}
-              name="q"
-              placeholder="Search…"
-              ref={inputRef}
-              type="search"
-            />
-            &nbsp;
-            <button type="submit">Search</button>
-          </>
-        )}
-      </SearchForm>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {!term || !result?.total ? (
-        <SearchResults.Empty />
-      ) : (
-        <SearchResults result={result} term={term}>
-          {({articles, pages, products, term}) => (
-            <div>
-              <SearchResults.Products products={products} term={term} />
-              <SearchResults.Pages pages={pages} term={term} />
-              <SearchResults.Articles articles={articles} term={term} />
-            </div>
+    <section className="home-featured-collection collection">
+      <div>
+        <div className="collection-side-menu">
+          <FilterColumns filters={result?.items?.products?.productFilters} />
+        </div>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <h1>{`Search Results for "${term}"`}</h1>
+        <Filter isSearch={true} length={result?.total} />
+        <motion.div layout={false}>
+          {!term || !result?.total ? (
+            <SearchResults.Empty />
+          ) : (
+            <PAJGination products={result?.items?.products} isSearch={true} />
           )}
-        </SearchResults>
-      )}
+        </motion.div>
+      </div>
       <Analytics.SearchView data={{searchTerm: term, searchResults: result}} />
-    </div>
+    </section>
+    // {error && <p style={{color: 'red'}}>{error}</p>}
   );
 }
 
@@ -79,42 +69,55 @@ export default function SearchPage() {
  * (adjust as needed)
  */
 const SEARCH_PRODUCT_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
   fragment SearchProduct on Product {
-    __typename
-    handle
     id
-    publishedAt
+    handle
     title
-    trackingParameters
-    vendor
-    selectedOrFirstAvailableVariant(
-      selectedOptions: []
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
+    featuredImage {
       id
-      image {
-        url
-        altText
-        width
-        height
+      altText
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
       }
-      price {
-        amount
-        currencyCode
+      maxVariantPrice {
+        ...MoneyProductItem
       }
-      compareAtPrice {
-        amount
-        currencyCode
-      }
-      selectedOptions {
+    }
+    options {
+      name
+      optionValues {
         name
-        value
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
+        firstSelectableVariant {
+          id
+          availableForSale
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
       }
-      product {
-        handle
-        title
-      }
+    }
+    badgeText: metafield(namespace: "custom", key: "badge_text") {
+      value
     }
   }
 `;
@@ -158,39 +161,37 @@ export const SEARCH_QUERY = `#graphql
     $last: Int
     $term: String!
     $startCursor: String
+    $filters: [ProductFilter!]
+    $reverse: Boolean
+    $sortKey: SearchSortKeys
   ) @inContext(country: $country, language: $language) {
-    articles: search(
-      query: $term,
-      types: [ARTICLE],
-      first: $first,
-    ) {
-      nodes {
-        ...on Article {
-          ...SearchArticle
-        }
-      }
-    }
-    pages: search(
-      query: $term,
-      types: [PAGE],
-      first: $first,
-    ) {
-      nodes {
-        ...on Page {
-          ...SearchPage
-        }
-      }
-    }
     products: search(
       after: $endCursor,
       before: $startCursor,
       first: $first,
       last: $last,
       query: $term,
-      sortKey: RELEVANCE,
+      reverse: $reverse,
+      sortKey: $sortKey,
       types: [PRODUCT],
       unavailableProducts: HIDE,
+      productFilters: $filters,
     ) {
+      productFilters{
+        id
+        label
+        presentation
+        type
+        values{
+          count
+          id
+          input
+          label
+          swatch{
+            color
+          }
+        }
+      }
       nodes {
         ...on Product {
           ...SearchProduct
@@ -202,8 +203,6 @@ export const SEARCH_QUERY = `#graphql
     }
   }
   ${SEARCH_PRODUCT_FRAGMENT}
-  ${SEARCH_PAGE_FRAGMENT}
-  ${SEARCH_ARTICLE_FRAGMENT}
   ${PAGE_INFO_FRAGMENT}
 `;
 
@@ -218,7 +217,7 @@ export const SEARCH_QUERY = `#graphql
 async function regularSearch({request, context}) {
   const {storefront} = context;
   const url = new URL(request.url);
-  const variables = getPaginationVariables(request, {pageBy: 8});
+  const variables = getPaginationVariables(request, {pageBy: 12});
   const term = String(url.searchParams.get('q') || '');
 
   // Search articles, pages, and products for the `q` term

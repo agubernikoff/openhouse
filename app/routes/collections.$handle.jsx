@@ -123,7 +123,7 @@ export default function Collection() {
   );
 }
 
-function PAJGination({products, handle}) {
+export function PAJGination({products, handle, isSearch}) {
   const {endCursor, hasNextPage, hasPreviousPage, startCursor} =
     products.pageInfo;
   const [searchParams] = useSearchParams();
@@ -132,6 +132,7 @@ function PAJGination({products, handle}) {
   const sortKey = searchParams.get('sortKey') || 'BEST_SELLING';
   const reverse = searchParams.get('reverse') || 'false';
   const filters = searchParams.getAll('filter');
+  const search = searchParams.get('q') || '';
 
   // Build query string with sort/filter params
   const buildPaginationUrl = (cursor, direction) => {
@@ -141,6 +142,10 @@ function PAJGination({products, handle}) {
     params.set('sortKey', sortKey);
     params.set('reverse', reverse);
     filters.forEach((f) => params.append('filter', f));
+    if (isSearch) {
+      params.set('q', search);
+      return `/search?${params.toString()}`;
+    }
     return `/collections/${handle}?${params.toString()}`;
   };
 

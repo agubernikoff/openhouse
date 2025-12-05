@@ -51,22 +51,27 @@ export default function Filter({isSearch, length}) {
       animate={{height: open ? 'auto' : '36px'}}
       className="filter-container"
     >
-      <div className="filter-container">
-        <button onClick={toggleOpen}>
-          <span style={{opacity: open ? 0 : 1}}>+</span>
-          <span
-            style={{
-              position: 'absolute',
-              left: '2px',
-              fontSize: '115%',
-              top: '-3px',
-              opacity: open ? 1 : 0,
-            }}
-          >
-            -
-          </span>{' '}
-          Sort
-        </button>
+      <div
+        className="filter-container"
+        style={{justifyContent: length > 0 ? 'space-between' : 'flex-end'}}
+      >
+        {length > 0 && (
+          <button onClick={toggleOpen}>
+            <span style={{opacity: open ? 0 : 1}}>+</span>
+            <span
+              style={{
+                position: 'absolute',
+                left: '2px',
+                fontSize: '115%',
+                top: '-3px',
+                opacity: open ? 1 : 0,
+              }}
+            >
+              -
+            </span>{' '}
+            Sort
+          </button>
+        )}
         {/* implementation from hosh for total products */}
         <p>{`${length} Product${length !== 1 ? 's' : ''}`}</p>
       </div>
