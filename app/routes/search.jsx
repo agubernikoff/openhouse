@@ -48,8 +48,15 @@ export default function SearchPage() {
         </div>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h1>{`Search Results for "${term}"`}</h1>
-        <Filter isSearch={true} length={result?.total} />
+        <div className="plp-title-container">
+          <h1>{`Search Results for "${term}"`}</h1>
+          <p>{`${result?.total} Product${result?.total !== 1 ? 's' : ''}`}</p>
+        </div>
+        <Filter
+          isSearch={true}
+          length={result?.total}
+          filters={result?.items?.products?.productFilters}
+        />
         <motion.div layout={false}>
           {!term || !result?.total ? (
             <SearchResults.Empty />

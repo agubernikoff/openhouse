@@ -102,8 +102,15 @@ export default function Collection() {
         </div>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h1>{collection.title}</h1>
-        <Filter isSearch={false} length={collection.products.nodes.length} />
+        <div className="plp-title-container">
+          <h1>{collection.title}</h1>
+          <p>{`${collection.products.nodes.length} Product${collection.products.nodes.length !== 1 ? 's' : ''}`}</p>
+        </div>
+        <Filter
+          isSearch={false}
+          length={collection.products.nodes.length}
+          filters={collection?.products?.filters}
+        />
         <motion.div layout={false}>
           <PAJGination
             products={collection.products}

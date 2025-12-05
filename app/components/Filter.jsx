@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {useLocation, useSearchParams} from 'react-router';
 import {AnimatePresence, motion} from 'framer-motion';
 
-export default function Filter({isSearch, length}) {
+export default function Filter({isSearch, length, filters}) {
   const [open, setOpen] = useState(false);
   function toggleOpen() {
     setOpen(!open);
@@ -60,22 +60,20 @@ export default function Filter({isSearch, length}) {
             <span style={{opacity: open ? 0 : 1}}>+</span>
             <span
               style={{
-                position: 'absolute',
-                left: '2px',
+                position: 'relative',
                 fontSize: '115%',
-                top: '-3px',
                 opacity: open ? 1 : 0,
               }}
             >
               -
-            </span>{' '}
-            Sort
+            </span>
           </button>
         )}
         {/* implementation from hosh for total products */}
         <p>{`${length} Product${length !== 1 ? 's' : ''}`}</p>
       </div>
       <div style={{zIndex: open ? 0 : -1}} className="filter-body">
+        <FilterColumns filters={filters} />
         <SortColumn
           addSort={addSort}
           removeSort={removeSort}
@@ -153,7 +151,7 @@ export function FilterColumns({filters}) {
 function SortColumn({addSort, removeSort, isChecked, isSearch}) {
   return (
     <div className="sort-column-container">
-      {/* <p className="bold-filter-header">Sort</p> */}
+      <p className="bold-filter-header">Sort</p>
       <div className="filter-column">
         <FilterInput
           columnKey={'sort'}

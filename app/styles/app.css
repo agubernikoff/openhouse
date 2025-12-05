@@ -1286,8 +1286,14 @@ div:has(> .testimonials-container) {
   position: sticky;
   top: 1rem;
 }
-.collection h1 {
+.plp-title-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
   grid-column: span 2;
+}
+.plp-title-container p {
+  display: none;
 }
 .filter-container {
   height: 36px;
@@ -1315,10 +1321,18 @@ div:has(> .testimonials-container) {
   color: var(--color-oh-black);
   position: relative;
 }
+.filter-container > button > span:last-of-type {
+  top: -1px;
+  left: -8px;
+}
+.filter-container > button::after {
+  content: ' Sort';
+}
 .filter-container > button > span {
   transition: opacity 300ms ease-in-out;
 }
-.filter-container > p {
+.filter-container > p,
+.plp-title-container > p {
   opacity: 0.8;
 }
 .filter-body {
@@ -1332,9 +1346,11 @@ div:has(> .testimonials-container) {
 /* .filter-body * {
   direction: ltr;
 } */
-/* .bold-filter-header, */
+.bold-filter-header {
+  display: none;
+}
+.bold-filter-header,
 .filter-column-container > p:first-of-type {
-  /* color: #737373; */
   margin-bottom: 1rem;
 }
 .filter-body div:has(> button),
@@ -2341,6 +2357,54 @@ body:has(.contact) .footer-newsletter-button:hover {
     display: none;
   }
 
+  .collection > div:has(> .collection-side-menu) {
+    display: none;
+  }
+  .plp-title-container p {
+    display: block;
+    text-wrap: nowrap;
+  }
+  .filter-container > p {
+    display: none;
+  }
+  .filter-container:has(> .filter-container) {
+    width: calc(100% - 2px);
+  }
+  .filter-container > button {
+    border: 1px solid var(--color-oh-black);
+    border-radius: 5px;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    padding-right: 11px;
+    font-family: 'mono';
+  }
+  .filter-container > button > span:first-of-type {
+    position: relative;
+    top: 0;
+    left: 11px;
+  }
+  .filter-container > button > span:last-of-type {
+    top: 0;
+    left: 0;
+  }
+  .filter-container > button::after {
+    content: 'Filters';
+  }
+  .filter-body {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 15px;
+    box-sizing: border-box;
+  }
+  .bold-filter-header {
+    display: block;
+  }
+  .bold-filter-header,
+  .filter-column-container > p:first-of-type {
+    color: #737373;
+  }
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
