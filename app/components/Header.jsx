@@ -2,7 +2,7 @@ import {
   Suspense,
   useId,
   useEffect,
-  useLayoutEffect,
+  startTransition,
   useRef,
   useState,
   Component,
@@ -186,9 +186,19 @@ function HeaderAside({children}) {
   const [measuredHeight, setMeasuredHeight] = useState(0);
 
   // update measured height on mount/layout changes
-  useLayoutEffect(() => {
+  // useEffect instead of useLayoutEffect to avoid triggering a sync
+  // update during hydration which can flip a Suspense boundary to
+  // client rendering. Schedule the state update as a non-urgent
+  // transition so it won't interrupt hydration.
+  useEffect(() => {
     if (!measuredRef.current) return;
-    setMeasuredHeight(measuredRef.current.scrollHeight || 0);
+    const h = measuredRef.current.scrollHeight || 0;
+    try {
+      startTransition(() => setMeasuredHeight(h));
+    } catch (e) {
+      // startTransition may not be available in some envs; fall back
+      setMeasuredHeight(h);
+    }
   }, [children]);
 
   // observe size changes of the inner content
@@ -196,7 +206,12 @@ function HeaderAside({children}) {
     if (!measuredRef.current || typeof ResizeObserver === 'undefined') return;
     const el = measuredRef.current;
     const ro = new ResizeObserver(() => {
-      setMeasuredHeight(el.scrollHeight || 0);
+      const h = el.scrollHeight || 0;
+      try {
+        startTransition(() => setMeasuredHeight(h));
+      } catch (e) {
+        setMeasuredHeight(h);
+      }
     });
     ro.observe(el);
     // initialize

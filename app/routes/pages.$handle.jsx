@@ -5,6 +5,15 @@ import {Image} from '@shopify/hydrogen';
 import {AnimatePresence, motion, useScroll, useTransform} from 'motion/react';
 import {useState, useEffect, useRef} from 'react';
 import mapRichText from '~/helpers/mapRichText';
+import Expandable from '~/components/Expandable';
+
+function useIsFirstRender() {
+  const isFirst = useRef(true);
+  useEffect(() => {
+    isFirst.current = false;
+  }, []);
+  return isFirst.current;
+}
 
 /**
  * @type {Route.MetaFunction}
@@ -96,11 +105,91 @@ export function Sections({sections}) {
         return <Marquee section={section} key={section.id} />;
       case 'hero_section':
         return <PageHero section={section} key={section.id} />;
+      case 'title_and_blurb':
+        return <TitleAndBlurb section={section} key={section.id} />;
+      case 'multi_title_and_blurb':
+        return <MultiTitleAndBlurb section={section} key={section.id} />;
+      case 'faq_section':
+        return <FAQSection section={section} key={section.id} />;
       default:
         return null;
     }
   });
   return <main>{mapped}</main>;
+}
+
+function FAQSection({section}) {
+  const {faqs} = normalizeMetaobject(section);
+  const isFirstRender = useIsFirstRender();
+  const [openSection, setOpenSection] = useState(null);
+
+  const toggleSection = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">FREQUENTLY ASKED QUESTIONS</p>
+      </div>
+      <div>
+        {faqs.references.nodes.map((field) => {
+          const {question, answer} = normalizeMetaobject(field);
+          return (
+            <Expandable
+              key={field.id}
+              openSection={openSection}
+              toggleSection={toggleSection}
+              title={question.value}
+              details={mapRichText(JSON.parse(answer.value))}
+              isFirstRender={isFirstRender}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function MultiTitleAndBlurb({section}) {
+  const {title, titles_and_blurbs} = normalizeMetaobject(section);
+  const content = titles_and_blurbs.references.nodes.map((node) => {
+    const {title, blurb} = normalizeMetaobject(node);
+    return (
+      <div key={node.id} className="title-and-blurb-item">
+        <h3>{title.value}</h3>
+        {mapRichText(JSON.parse(blurb.value))}
+      </div>
+    );
+  });
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">{title.value.toUpperCase()}</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <div className="page-subgrid-content-container multi-title-and-blurb">
+          {content}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TitleAndBlurb({section}) {
+  const {title, blurb} = normalizeMetaobject(section);
+
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">{title.value.toUpperCase()}</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <div className="page-subgrid-content-container">
+          {mapRichText(JSON.parse(blurb.value))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function PageHero({section}) {

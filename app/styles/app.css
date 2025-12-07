@@ -1066,7 +1066,8 @@ div:has(> .testimonials-container) {
 .pagination-link,
 .contact h3,
 .page .home-featured-collection h3,
-.page .hero-section h4 {
+.page .hero-section h4,
+.page-subgrid-content-container > .rich-text-div * {
   font-weight: normal;
   font-size: 36px;
   line-height: 36px;
@@ -2205,6 +2206,23 @@ body:has(.contact) .footer-newsletter-button:hover {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+.page-subgrid-content-container {
+  grid-column: span 2;
+}
+.page-subgrid-content-container > .rich-text-div p {
+  margin-bottom: 36px;
+}
+.multi-title-and-blurb {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 50px;
+}
+.title-and-blurb-item {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 /*
 * --------------------------------------------------
 * media queries
@@ -2312,7 +2330,8 @@ body:has(.contact) .footer-newsletter-button:hover {
   }
 
   .home h3,
-  .collection h1 {
+  .collection h1,
+  .page-subgrid-content-container > .rich-text-div * {
     font-size: 28px;
     line-height: 28px;
   }
@@ -2449,6 +2468,12 @@ body:has(.contact) .footer-newsletter-button:hover {
   .page .hero-section img,
   .page .hero-section::before {
     border-radius: 0;
+  }
+  .page-subgrid-content-container > .rich-text-div p {
+    margin-bottom: 28px;
+  }
+  .multi-title-and-blurb {
+    display: block;
   }
 
   .footer-hero-content {
