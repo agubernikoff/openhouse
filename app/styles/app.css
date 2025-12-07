@@ -1065,7 +1065,8 @@ div:has(> .testimonials-container) {
 .collection h1,
 .pagination-link,
 .contact h3,
-.page .home-featured-collection h3 {
+.page .home-featured-collection h3,
+.page .hero-section h4 {
   font-weight: normal;
   font-size: 36px;
   line-height: 36px;
@@ -2152,7 +2153,28 @@ body:has(.contact) .footer-newsletter-button:hover {
 * routes/pages
 * --------------------------------------------------
 */
-
+.page .hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #2d2d2b66;
+  border-radius: 20px;
+}
+.page .hero-section {
+  overflow: hidden;
+}
+.page .hero-section > div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: normal;
+  width: 100%;
+  max-width: 884px;
+  bottom: auto;
+  display: block;
+  text-align: center;
+}
 .home-featured-collection:has(.partners-wall-container) {
   row-gap: 60px;
 }
@@ -2414,6 +2436,19 @@ body:has(.contact) .footer-newsletter-button:hover {
   }
   .pagination-link {
     font-size: 1rem;
+  }
+
+  .page .hero-section > div {
+    bottom: 1rem;
+    transform: none;
+    left: 1rem;
+    top: auto;
+    text-align: left;
+    max-width: calc(100vw - 1rem);
+  }
+  .page .hero-section img,
+  .page .hero-section::before {
+    border-radius: 0;
   }
 
   .footer-hero-content {

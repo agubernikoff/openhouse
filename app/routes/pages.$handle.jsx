@@ -4,6 +4,7 @@ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
 import {AnimatePresence, motion, useScroll, useTransform} from 'motion/react';
 import {useState, useEffect, useRef} from 'react';
+import mapRichText from '~/helpers/mapRichText';
 
 /**
  * @type {Route.MetaFunction}
@@ -93,11 +94,38 @@ export function Sections({sections}) {
         return <Partners section={section} key={section.id} />;
       case 'marquee':
         return <Marquee section={section} key={section.id} />;
+      case 'hero_section':
+        return <PageHero section={section} key={section.id} />;
       default:
         return null;
     }
   });
   return <main>{mapped}</main>;
+}
+
+function PageHero({section}) {
+  const {background, headline} = normalizeMetaobject(section);
+
+  return (
+    <section className="hero-section">
+      <Image data={background.reference.image} sizes="100vw" />
+      <div>
+        <svg
+          width="66"
+          height="28"
+          viewBox="0 0 66 28"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M65.0455 0.440001C65.0455 0.440001 13.3597 0 13.0581 0C5.48226 0 0 5.72355 0 13.5815C0 21.4394 5.48048 27.1629 13.0581 27.1629C20.6356 27.1629 26.1161 21.4411 26.1161 13.5815C26.1161 10.9663 25.5058 8.59064 24.4182 6.58226L36.7542 6.67274V21.2495C36.7542 21.6469 37.0753 21.9681 37.4727 21.9681H42.3624C42.7598 21.9681 43.081 21.6469 43.081 21.2495V18.5066C43.081 18.1092 43.4021 17.7881 43.7995 17.7881H53.3074C53.7048 17.7881 54.026 18.1092 54.026 18.5066V21.6913C54.026 22.0887 54.3471 22.4098 54.7445 22.4098H59.6342C60.0316 22.4098 60.3527 22.0887 60.3527 21.6913V6.75258L65.0402 6.76145C65.4731 6.765 65.8261 6.41371 65.8261 5.98258V1.22065C65.8261 0.789516 65.4766 0.440001 65.0455 0.440001ZM13.0581 21.3595C9.14952 21.3595 6.28774 18.0152 6.28774 13.5016C6.28774 8.98806 9.14952 5.64194 13.0581 5.64194C16.9666 5.64194 19.8284 8.90645 19.8284 13.5016C19.8284 18.0968 16.9666 21.3595 13.0581 21.3595ZM54.026 11.9403C54.026 12.3377 53.7048 12.6589 53.3074 12.6589H43.7995C43.4021 12.6589 43.081 12.3377 43.081 11.9403V6.71887L54.0242 6.74016V11.9403H54.026Z"
+            fill="#F4F2EA"
+          />
+        </svg>
+        {mapRichText(JSON.parse(headline.value))}
+      </div>
+    </section>
+  );
 }
 
 function Marquee({section}) {
