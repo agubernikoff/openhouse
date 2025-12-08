@@ -76,14 +76,14 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         {isCartOpen && <Cart cart={cart} />}
         {isSearchOpen && <Search />}
         {isMobileOpen && (
-          <Aside type="mobile" heading="MENU">
+          <HeaderAside isMobileMenu={true}>
             <MobileMenu
               menu={menu}
               mobileMenuImage={header.mobileMenuImage}
               primaryDomainUrl={header.shop.primaryDomain.url}
               publicStoreDomain={publicStoreDomain}
             />
-          </Aside>
+          </HeaderAside>
         )}
       </AnimatePresence>
     </>
@@ -351,6 +351,7 @@ function MobileMenu({
           }}
         </SearchResultsPredictive>
       </div>
+      <div className="mobile-menu-search-border"></div>
 
       <div className="mobile-menu-section">
         <div className="mobile-menu-header">
@@ -513,7 +514,7 @@ class AwaitErrorBoundary extends Component {
   }
 }
 
-function HeaderAside({children}) {
+function HeaderAside({children, isMobileMenu}) {
   const {close, type} = useAside();
 
   const measuredRef = useRef(null);
@@ -566,17 +567,25 @@ function HeaderAside({children}) {
   }, [close, type]);
 
   return (
-    <div className="header-dropdown-overlay">
-      <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
+    <div
+      className={`header-dropdown-overlay ${isMobileMenu ? 'mobile-menu-overlay' : ''}`}
+    >
+      <div
+        style={{
+          overflow: 'hidden',
+          width: '100%',
+          maxWidth: isMobileMenu ? '100%' : '730px',
+        }}
+      >
         <motion.div
           key="header-dropdown-content"
           className="header-dropdown-content"
           onClick={(e) => {
             e.stopPropagation();
           }}
-          initial={{opacity: 0, y: '-100%'}}
-          animate={{opacity: 1, y: 0}}
-          exit={{opacity: 0, y: '-100%'}}
+          initial={{y: '-100%'}}
+          animate={{y: 0}}
+          exit={{y: '-100%'}}
           transition={{duration: 0.2, ease: 'easeInOut'}}
         >
           <motion.div
@@ -630,7 +639,8 @@ export function HeaderMenu({
         const isShop = item.title.toLowerCase() === 'shop';
         const isAbout = item.title.toLowerCase() === 'about';
 
-        if (isShop || isAbout) {
+        // Only use dropdown behavior on desktop
+        if ((isShop || isAbout) && viewport === 'desktop') {
           const dropdownType = isShop ? 'shop' : 'about';
           return (
             <div
@@ -658,7 +668,10 @@ export function HeaderMenu({
             key={item.id}
             onClick={close}
             onMouseEnter={() => {
-              if (type === 'shop' || type === 'about') {
+              if (
+                viewport === 'desktop' &&
+                (type === 'shop' || type === 'about')
+              ) {
                 close();
               }
             }}
@@ -705,11 +718,19 @@ function HeaderCtas({isLoggedIn, cart}) {
 }
 
 function HeaderMenuMobileToggle() {
-  const {open} = useAside();
+  const {open, close, type} = useAside();
+  const isMobileOpen = type === 'mobile';
+
   return (
     <button
       className="header-menu-mobile-toggle reset"
-      onClick={() => open('mobile')}
+      onClick={() => {
+        if (isMobileOpen) {
+          close();
+        } else {
+          open('mobile');
+        }
+      }}
     >
       <h3>☰</h3>
     </button>

@@ -37,7 +37,6 @@ export function Aside({children, heading, type}) {
     return () => abortController.abort();
   }, [close, expanded]);
 
-  // Mobile menu renders differently
   if (isMobileMenu) {
     return (
       <div
@@ -45,7 +44,6 @@ export function Aside({children, heading, type}) {
         className={`overlay mobile-menu-overlay ${expanded ? 'expanded' : ''}`}
         role="dialog"
       >
-        <button className="close-outside" onClick={close} />
         <aside className="mobile-menu-aside">
           <main>{children}</main>
         </aside>
