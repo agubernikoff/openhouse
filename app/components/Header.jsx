@@ -59,46 +59,67 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
             style={activeLinkStyle}
             end
             className="header-logo-desktop"
+            onMouseEnter={handleHeaderMouseLeave}
+            onClick={close}
           >
             <Logo />
           </NavLink>
-          <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+          <HeaderCtas
+            isLoggedIn={isLoggedIn}
+            cart={cart}
+            handleHeaderMouseLeave={handleHeaderMouseLeave}
+          />
         </motion.header>
-
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {isDropdownOpen && (
-            <MegaDropdown key="mega-dropdown" type={type} menu={menu} />
+            <MegaDropdown
+              key="mega-dropdown"
+              type={type}
+              menu={menu}
+              primaryDomainUrl={header.shop.primaryDomain.url}
+              publicStoreDomain={publicStoreDomain}
+              close={close}
+            />
+          )}
+          {isCartOpen && <Cart cart={cart} />}
+          {isSearchOpen && <Search />}
+          {isMobileOpen && (
+            <Aside type="mobile" heading="MENU">
+              <MobileMenu
+                menu={menu}
+                mobileMenuImage={header.mobileMenuImage}
+                primaryDomainUrl={header.shop.primaryDomain.url}
+                publicStoreDomain={publicStoreDomain}
+              />
+            </Aside>
           )}
         </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {isCartOpen && <Cart cart={cart} />}
-        {isSearchOpen && <Search />}
-        {isMobileOpen && (
-          <Aside type="mobile" heading="MENU">
-            <MobileMenu
-              menu={menu}
-              mobileMenuImage={header.mobileMenuImage}
-              primaryDomainUrl={header.shop.primaryDomain.url}
-              publicStoreDomain={publicStoreDomain}
-            />
-          </Aside>
-        )}
-      </AnimatePresence>
     </>
   );
 }
 
-function MegaDropdown({type, menu}) {
-  const shopMenuItem = menu?.items?.find(
-    (item) => item.title.toLowerCase() === 'shop',
+function MegaDropdown({
+  type,
+  menu,
+  primaryDomainUrl,
+  publicStoreDomain,
+  close,
+}) {
+  const menuItem = menu?.items?.find(
+    (item) => item.title.toLowerCase() === type,
   );
 
-  const shopSubItems = shopMenuItem?.items || [];
-
-  const [hoveredCollection, setHoveredCollection] = useState(null);
-  const [hoveredAbout, setHoveredAbout] = useState(null);
+  const subItems =
+    menuItem?.items.filter(
+      (link) =>
+        link.title.toLowerCase() !== 'categories' && link.items.length === 0,
+    ) || [];
+  const categoryLink = menuItem?.items.find(
+    (link) =>
+      link.title.toLowerCase() === 'categories' && link.items.length > 0,
+  );
+  const [hovered, setHovered] = useState(null);
 
   // Hardcoded about items with placeholder image URLs
   const aboutItems = [
@@ -124,146 +145,112 @@ function MegaDropdown({type, menu}) {
 
   return (
     <HeaderAside>
-      <AnimatePresence mode="wait">
-        {type === 'shop' && (
-          <motion.div
-            key="shop-content"
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-            transition={{duration: 0.15}}
-          >
-            <div className="shop-dropdown-content">
-              <div className="shop-section-with-image">
-                <div className="shop-dropdown-label">
-                  <div className="red-dot">SHOP</div>
-                </div>
+      <div className={`${type}-dropdown-content`}>
+        <div className={`${type}-section-with-image`}>
+          <div className={`${type}-dropdown-label`}>
+            <div className="red-dot">{type.toUpperCase()}</div>
+          </div>
 
-                <div className="shop-menu-links">
-                  {shopSubItems.length > 0 ? (
-                    <div className="collections-links">
-                      {shopSubItems.map((subItem) => {
-                        const url = subItem.url.includes('myshopify.com')
-                          ? new URL(subItem.url).pathname
-                          : subItem.url;
-                        return (
-                          <Link
-                            key={subItem.id}
-                            to={url}
-                            className="collection-link"
-                            onMouseEnter={() => setHoveredCollection(subItem)}
-                          >
-                            {subItem.title}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="shop-dropdown-image">
-                  {hoveredCollection?.resource?.image?.url ? (
-                    <motion.img
-                      key={hoveredCollection.id}
-                      src={hoveredCollection.resource.image.url}
-                      alt={
-                        hoveredCollection.resource.image.altText ||
-                        hoveredCollection.title
-                      }
-                      initial={{opacity: 0}}
-                      animate={{opacity: 1}}
-                      exit={{opacity: 0}}
-                      transition={{duration: 0.2}}
-                    />
-                  ) : (
-                    <div className="image-placeholder"></div>
-                  )}
-                </div>
+          <div className={`${type}-menu-links`}>
+            {subItems.length > 0 ? (
+              <div className="collections-links">
+                {subItems.map((link) => {
+                  const url =
+                    link.url.includes('myshopify.com') ||
+                    link.url.includes(publicStoreDomain) ||
+                    link.url.includes(primaryDomainUrl)
+                      ? new URL(link.url).pathname + new URL(link.url).hash
+                      : link.url;
+                  return (
+                    <Link
+                      key={link.id}
+                      to={url}
+                      className="collection-link"
+                      onMouseEnter={() => setHovered(link)}
+                      onFocus={() => setHovered(link)}
+                      onClick={close}
+                    >
+                      {link.title}
+                    </Link>
+                  );
+                })}
               </div>
-
-              <div className="categories-section">
-                <div className="red-dot">CATEGORIES</div>
-                <div className="collections-links">
-                  <Link to="/collections/headwear" className="collection-link">
-                    Headwear
-                  </Link>
-                  <Link to="/collections/apparel" className="collection-link">
-                    Apparel
-                  </Link>
-                  <Link
-                    to="/collections/leather-goods"
-                    className="collection-link"
-                  >
-                    Leather Goods
-                  </Link>
-                  <Link to="/collections/uniforms" className="collection-link">
-                    Uniforms
-                  </Link>
-                  <Link to="/collections/carry" className="collection-link">
-                    Carry
-                  </Link>
-                  <Link
-                    to="/collections/accessories"
-                    className="collection-link"
-                  >
-                    Accessories
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {type === 'about' && (
-          <motion.div
-            key="about-content"
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-            transition={{duration: 0.15}}
-          >
-            <div className="about-dropdown-content">
-              <div className="about-section-with-image">
-                <div className="about-dropdown-label">
-                  <div className="red-dot">ABOUT</div>
-                </div>
-
-                <div className="about-menu-links">
-                  <div className="collections-links">
-                    {aboutItems.map((item) => (
-                      <Link
-                        key={item.id}
-                        to={item.url}
-                        className="collection-link"
-                        onMouseEnter={() => setHoveredAbout(item)}
-                      >
-                        {item.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="about-dropdown-image">
-                  {hoveredAbout?.image ? (
-                    <motion.img
-                      key={hoveredAbout.id}
-                      src={hoveredAbout.image}
-                      alt={hoveredAbout.title}
-                      initial={{opacity: 0}}
-                      animate={{opacity: 1}}
-                      exit={{opacity: 0}}
-                      transition={{duration: 0.2}}
-                    />
-                  ) : (
-                    <div className="image-placeholder"></div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ) : null}
+          </div>
+          <div className={`${type}-dropdown-image`}>
+            {hovered?.resource?.image ? (
+              <motion.img
+                key={hovered?.id ?? `${type}-placeholder`}
+                src={hovered.resource?.image?.url}
+                alt={(hovered && (hovered.title || hovered.id)) || type}
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                exit={{opacity: 0}}
+                transition={{duration: 0.2}}
+              />
+            ) : (
+              <div className="image-placeholder"></div>
+            )}
+          </div>
+          {categoryLink && (
+            <CategoriesSection
+              items={categoryLink.items}
+              publicStoreDomain={publicStoreDomain}
+              primaryDomainUrl={primaryDomainUrl}
+              close={close}
+            />
+          )}
+        </div>
+      </div>
     </HeaderAside>
+  );
+}
+
+function CategoriesSection({
+  items,
+  publicStoreDomain,
+  primaryDomainUrl,
+  close,
+}) {
+  return (
+    <div className="categories-section">
+      <div className="red-dot">CATEGORIES</div>
+      <div className="collections-links">
+        {items.map((link) => {
+          let pathname =
+            link.url.includes('myshopify.com') ||
+            link.url.includes(publicStoreDomain) ||
+            link.url.includes(primaryDomainUrl)
+              ? new URL(link.url).pathname
+              : link.url;
+
+          // Strip the last segment from pathname
+          pathname = pathname.split('/').slice(0, -1).join('/');
+
+          // Build filter object from link.tags (use first tag only)
+          if (link.tags && link.tags.length > 0) {
+            const filterObject = {
+              productType: link.tags[0],
+            };
+
+            const params = new URLSearchParams();
+            params.set('filter', JSON.stringify(filterObject));
+            pathname = `${pathname}?${params.toString()}`;
+          }
+
+          return (
+            <Link
+              key={link.id}
+              to={pathname}
+              className="collection-link"
+              onClick={close}
+            >
+              {link.title}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -377,9 +364,12 @@ function MobileMenu({
           {shopSubItems.length > 0 ? (
             <>
               {shopSubItems.map((subItem) => {
-                const url = subItem.url.includes('myshopify.com')
-                  ? new URL(subItem.url).pathname
-                  : subItem.url;
+                const url =
+                  subItem.url.includes('myshopify.com') ||
+                  subItem.url.includes(publicStoreDomain) ||
+                  subItem.url.includes(primaryDomainUrl)
+                    ? new URL(subItem.url).pathname
+                    : subItem.url;
                 return (
                   <Link
                     key={subItem.id}
@@ -630,26 +620,7 @@ export function HeaderMenu({
         const isShop = item.title.toLowerCase() === 'shop';
         const isAbout = item.title.toLowerCase() === 'about';
 
-        if (isShop || isAbout) {
-          const dropdownType = isShop ? 'shop' : 'about';
-          return (
-            <div
-              key={item.id}
-              className="header-menu-item-dropdown"
-              onMouseEnter={() => open(dropdownType)}
-            >
-              <NavLink
-                className="header-menu-item"
-                end
-                prefetch="intent"
-                style={activeLinkStyle}
-                to={url}
-              >
-                {item.title}
-              </NavLink>
-            </div>
-          );
-        }
+        const dropdownType = isShop ? 'shop' : 'about';
 
         return (
           <NavLink
@@ -658,9 +629,9 @@ export function HeaderMenu({
             key={item.id}
             onClick={close}
             onMouseEnter={() => {
-              if (type === 'shop' || type === 'about') {
-                close();
-              }
+              if (isShop || isAbout) {
+                open(dropdownType);
+              } else close();
             }}
             prefetch="intent"
             style={activeLinkStyle}
@@ -674,7 +645,8 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({isLoggedIn, cart}) {
+function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
+  const {close} = useAside();
   return (
     <>
       <div className="header-mobile-layout">
@@ -694,29 +666,41 @@ function HeaderCtas({isLoggedIn, cart}) {
 
       <nav className="header-ctas header-desktop-layout" role="navigation">
         <HeaderMenuMobileToggle />
-        <NavLink prefetch="intent" to="/contact" style={activeLinkStyle}>
+        <NavLink
+          prefetch="intent"
+          to="/contact"
+          style={activeLinkStyle}
+          onMouseEnter={handleHeaderMouseLeave}
+          onClick={close}
+        >
           Contact
         </NavLink>
-        <CartToggle cart={cart} />
-        <SearchToggle />
+        <CartToggle
+          cart={cart}
+          handleHeaderMouseLeave={handleHeaderMouseLeave}
+        />
+        <SearchToggle handleHeaderMouseLeave={handleHeaderMouseLeave} />
       </nav>
     </>
   );
 }
 
 function HeaderMenuMobileToggle() {
-  const {open} = useAside();
+  const {open, type, close} = useAside();
   return (
     <button
       className="header-menu-mobile-toggle reset"
-      onClick={() => open('mobile')}
+      onClick={() => {
+        if (type === 'mobile') close();
+        else open('mobile');
+      }}
     >
       <h3>☰</h3>
     </button>
   );
 }
 
-function SearchToggle() {
+function SearchToggle({handleHeaderMouseLeave}) {
   const {open, close, type} = useAside();
   return (
     <button
@@ -728,6 +712,7 @@ function SearchToggle() {
           open('search');
         }
       }}
+      onMouseEnter={handleHeaderMouseLeave}
     >
       <span className="search-text">Search</span>
       <svg
@@ -754,7 +739,7 @@ function SearchToggle() {
   );
 }
 
-function CartBadge({count}) {
+function CartBadge({count, handleHeaderMouseLeave}) {
   const {open, close, type} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
   const isCartOpen = type === 'cart';
@@ -780,6 +765,7 @@ function CartBadge({count}) {
           });
         }
       }}
+      onMouseEnter={handleHeaderMouseLeave}
       className="cart-link"
     >
       Cart <span>{count === null ? 0 : count}</span>
@@ -787,21 +773,26 @@ function CartBadge({count}) {
   );
 }
 
-function CartToggle({cart}) {
+function CartToggle({cart, handleHeaderMouseLeave}) {
   return (
     <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
-        <CartBanner />
+        <CartBanner handleHeaderMouseLeave={handleHeaderMouseLeave} />
       </Await>
     </Suspense>
   );
 }
 
-function CartBanner() {
+function CartBanner({handleHeaderMouseLeave}) {
   const originalCart = useAsyncValue();
   const cart = useOptimisticCart(originalCart);
   const itemCount = cart?.lines?.nodes?.length ?? cart?.lines?.length ?? 0;
-  return <CartBadge count={itemCount} />;
+  return (
+    <CartBadge
+      count={itemCount}
+      handleHeaderMouseLeave={handleHeaderMouseLeave}
+    />
+  );
 }
 
 const FALLBACK_HEADER_MENU = {

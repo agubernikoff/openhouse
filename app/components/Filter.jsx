@@ -85,7 +85,7 @@ export default function Filter({isSearch, length, filters}) {
   );
 }
 
-export function FilterColumns({filters}) {
+export function FilterColumns({filters, isSideMenu}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   function addFilter(input) {
@@ -142,6 +142,7 @@ export function FilterColumns({filters}) {
           addFilter={addFilter}
           isChecked={isChecked}
           removeFilter={removeFilter}
+          isSideMenu={isSideMenu}
         />
       ))}
     </>
@@ -210,7 +211,13 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
   );
 }
 
-function FilterColumn({filter, addFilter, isChecked, removeFilter}) {
+function FilterColumn({
+  filter,
+  addFilter,
+  isChecked,
+  removeFilter,
+  isSideMenu,
+}) {
   const filterOrderRef = useRef(new Map()); // Persist across renders
 
   function storeInitialOrder(filters) {
@@ -289,7 +296,7 @@ function FilterColumn({filter, addFilter, isChecked, removeFilter}) {
                 addFilter={addFilter}
                 isChecked={isChecked}
                 removeFilter={removeFilter}
-                columnKey={filter.label}
+                columnKey={filter.label + isSideMenu}
               />
             ));
           }
@@ -332,7 +339,7 @@ function FilterInput({
   const {pathname} = useLocation();
   useEffect(() => {
     if (columnKey.toLowerCase() === 'sort') setHide(count === 0);
-  }, [pathname]);
+  }, [pathname, columnKey, count]);
   return (
     <div
       style={{

@@ -98,7 +98,10 @@ export default function Collection() {
     <section className="home-featured-collection collection">
       <div>
         <div className="collection-side-menu">
-          <FilterColumns filters={collection?.products?.filters} />
+          <FilterColumns
+            filters={collection?.products?.filters}
+            isSideMenu={true}
+          />
         </div>
       </div>
       <div className="subgrid home-featured-products-grid">
