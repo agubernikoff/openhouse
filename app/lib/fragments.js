@@ -228,6 +228,22 @@ export const HEADER_QUERY = `#graphql
     menu(handle: $headerMenuHandle) {
       ...Menu
     }
+    mobileMenuImage: metaobject(handle: {handle: "auw-mobile-menu-image-3uoplscp", type: "auw_mobile_menu_image"}) {
+      id
+      handle
+      image: field(key: "image") {
+        reference {
+          ... on MediaImage {
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+        }
+      }
+    }
   }
   ${MENU_FRAGMENT}
 `;

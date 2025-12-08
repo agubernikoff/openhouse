@@ -10,6 +10,7 @@ import {
 import {Await, NavLink, useAsyncValue, Link} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
+import {Aside} from '~/components/Aside';
 import {CartMain} from '~/components/CartMain';
 import {AnimatePresence, motion} from 'motion/react';
 import {
@@ -25,6 +26,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const isSearchOpen = type === 'search';
   const isShopOpen = type === 'shop';
   const isAboutOpen = type === 'about';
+  const isMobileOpen = type === 'mobile';
   const isDropdownOpen = isShopOpen || isAboutOpen;
 
   const handleHeaderMouseLeave = () => {
@@ -73,6 +75,16 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
       <AnimatePresence>
         {isCartOpen && <Cart cart={cart} />}
         {isSearchOpen && <Search />}
+        {isMobileOpen && (
+          <Aside type="mobile" heading="MENU">
+            <MobileMenu
+              menu={menu}
+              mobileMenuImage={header.mobileMenuImage}
+              primaryDomainUrl={header.shop.primaryDomain.url}
+              publicStoreDomain={publicStoreDomain}
+            />
+          </Aside>
+        )}
       </AnimatePresence>
     </>
   );
@@ -252,6 +264,138 @@ function MegaDropdown({type, menu}) {
         )}
       </AnimatePresence>
     </HeaderAside>
+  );
+}
+
+function MobileMenu({
+  menu,
+  mobileMenuImage,
+  primaryDomainUrl,
+  publicStoreDomain,
+}) {
+  const {close} = useAside();
+  const queriesDatalistId = useId();
+  const inputContainerRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  const shopMenuItem = menu?.items?.find(
+    (item) => item.title.toLowerCase() === 'shop',
+  );
+  const shopSubItems = shopMenuItem?.items || [];
+
+  const imageUrl = mobileMenuImage?.image?.reference?.image?.url;
+
+  useEffect(() => {
+    const input = inputContainerRef.current?.querySelector(
+      'input[type="search"]',
+    );
+    const t = setTimeout(() => {
+      input?.focus();
+    }, 180);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="mobile-menu-container">
+      <div className="mobile-menu-search" ref={inputContainerRef}>
+        <SearchFormPredictive>
+          {({fetchResults, goToSearch, inputRef}) => (
+            <div className="mobile-search-form">
+              <input
+                name="q"
+                onChange={fetchResults}
+                onFocus={fetchResults}
+                placeholder="Search for products..."
+                ref={inputRef}
+                type="search"
+                list={queriesDatalistId}
+              />
+              <button onClick={goToSearch}>ENTER</button>
+            </div>
+          )}
+        </SearchFormPredictive>
+
+        <SearchResultsPredictive>
+          {({items, total, term, state, closeSearch}) => {
+            const {products} = items;
+
+            if (state === 'loading' && term.current) {
+              return <div>Loading...</div>;
+            }
+
+            if (!total) {
+              return null;
+            }
+
+            return (
+              <>
+                <SearchResultsPredictive.Products
+                  products={products}
+                  closeSearch={closeSearch}
+                  term={term}
+                  hovered={hovered}
+                  setHovered={setHovered}
+                />
+                {term.current && total ? (
+                  <Link
+                    onClick={closeSearch}
+                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                  >
+                    <p className="header-search-results-footer-text">
+                      PRESS ENTER TO SEE ALL RESULTS
+                    </p>
+                  </Link>
+                ) : null}
+              </>
+            );
+          }}
+        </SearchResultsPredictive>
+      </div>
+
+      <div className="mobile-menu-section">
+        <div className="mobile-menu-header">
+          <div className="red-dot">MENU</div>
+        </div>
+        <div className="mobile-menu-items">
+          <HeaderMenu
+            menu={menu}
+            viewport="mobile"
+            primaryDomainUrl={primaryDomainUrl}
+            publicStoreDomain={publicStoreDomain}
+          />
+        </div>
+      </div>
+
+      <div className="mobile-shop-section">
+        {imageUrl && (
+          <img src={imageUrl} alt="Shop" className="mobile-shop-image" />
+        )}
+        <div className="mobile-shop-header">
+          <div className="red-dot">SHOP</div>
+        </div>
+        <div className="mobile-shop-items">
+          {shopSubItems.length > 0 ? (
+            <>
+              {shopSubItems.map((subItem) => {
+                const url = subItem.url.includes('myshopify.com')
+                  ? new URL(subItem.url).pathname
+                  : subItem.url;
+                return (
+                  <Link
+                    key={subItem.id}
+                    to={url}
+                    className="mobile-shop-link"
+                    onClick={close}
+                  >
+                    {subItem.title}
+                  </Link>
+                );
+              })}
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }
 
