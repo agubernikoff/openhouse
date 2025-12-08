@@ -66,7 +66,7 @@ body {
 }
 
 aside {
-  background: var(--color-light);
+  background: transparent;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
   height: 100vh;
   width: min(var(--aside-width), 100vw);
@@ -369,7 +369,6 @@ button.reset:hover:not(:has(> *)) {
   font-size: 36px;
   line-height: 36px;
   transition: color 0.2s;
-  cursor: pointer;
 }
 
 .collection-link:hover {
@@ -409,44 +408,12 @@ button:has(.search-text) {
   top: -12px;
 }
 .mobile-menu-overlay {
-  background: transparent;
-  pointer-events: none;
-}
-
-.mobile-menu-overlay.expanded {
-  pointer-events: auto;
-}
-
-.mobile-menu-overlay .close-outside {
-  display: none;
-}
-
-.mobile-menu-aside {
-  position: fixed;
   top: 56px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #ece8da;
-  transform: translateY(-100%);
-  transition: transform 200ms ease-in-out;
-  overflow-y: auto;
-  box-shadow: none;
-  width: 100%;
-  height: calc(100vh - 56px);
-  pointer-events: auto;
-  border-top: 1px solid #bfc0c1;
+  height: calc(100dvh - 56px);
 }
 
-.mobile-menu-overlay.expanded .mobile-menu-aside {
-  transform: translateY(0);
-}
-
-.mobile-menu-aside main {
-  margin: 0;
-  padding: 0;
-  max-height: none;
-  overflow-y: visible;
+.mobile-menu-overlay .header-dropdown-content {
+  max-height: calc(100dvh - 56px);
 }
 
 .mobile-menu-container {
@@ -455,11 +422,11 @@ button:has(.search-text) {
   gap: 0;
 }
 
-.mobile-menu-search {
-  padding: 10px 16px;
-  border-bottom: 1px solid #bfc0c1;
+.mobile-menu-search-border {
+  width: 100%;
+  height: 1px;
+  background: #bfc0c1;
 }
-
 .mobile-search-form {
   display: flex;
   justify-content: space-between;
@@ -507,7 +474,6 @@ button:has(.search-text) {
 .mobile-menu-section {
   margin-top: 30px;
   margin-bottom: 30px;
-  padding: 0 16px;
 }
 
 .mobile-menu-header {
@@ -542,7 +508,6 @@ button:has(.search-text) {
 }
 
 .mobile-shop-section {
-  padding: 0 16px;
   margin-bottom: 30px;
 }
 
@@ -1606,9 +1571,6 @@ div:has(> .testimonials-container) {
   align-items: center;
   position: static;
   justify-content: space-between;
-}
-.filter-body .filter-column-container {
-  display: none;
 }
 .filter-container > button {
   border: none;
@@ -2735,9 +2697,6 @@ body:has(.contact) .footer-newsletter-button:hover {
     padding-right: 15px;
     box-sizing: border-box;
   }
-  .filter-body .filter-column-container {
-    display: block;
-  }
   .bold-filter-header {
     display: block;
   }
@@ -2811,16 +2770,16 @@ body:has(.contact) .footer-newsletter-button:hover {
     display: none;
   }
   .footer-menu-column:nth-child(1) {
-    order: 1; /* Shop stays first  */
+    order: 1;
   }
   .footer-menu-column:nth-child(2) {
-    order: 3; /* About becomes third */
+    order: 3;
   }
   .footer-menu-column:nth-child(3) {
-    order: 2; /* Resources becomes second */
+    order: 2;
   }
   .footer-menu-column:nth-child(4) {
-    order: 4; /* Support stays fourth */
+    order: 4;
   }
   .footer-newsletter-wrapper {
     position: relative;
@@ -3101,7 +3060,7 @@ body:has(.contact) .footer-newsletter-button:hover {
 
   .header-dropdown-content {
     background: #ece8da;
-    padding: 0 20px;
+    padding: 0;
     box-sizing: border-box;
     border-radius: 0;
   }
@@ -3109,6 +3068,8 @@ body:has(.contact) .footer-newsletter-button:hover {
   .cart-details {
     padding-top: 30px;
     padding-bottom: 20px;
+    padding-left: 16px;
+    padding-right: 16px;
     width: 100%;
     box-sizing: border-box;
   }
@@ -3170,5 +3131,60 @@ body:has(.contact) .footer-newsletter-button:hover {
     top: initial;
     left: 10px;
     text-align: CENTER;
+  }
+
+  /* Mobile menu specific padding */
+  .mobile-menu-container > * {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .mobile-menu-search-border {
+    padding: 0;
+  }
+
+  /* Style standalone search to match mobile menu search */
+  .predictive-search {
+    padding: 0;
+  }
+
+  .predictive-search-form {
+    padding: 10px 0;
+    gap: 12px;
+    border: none;
+    border-radius: 0;
+  }
+
+  .predictive-search-form:has(> input:focus-visible) {
+    border: none;
+  }
+
+  .predictive-search-form > input {
+    text-align: left;
+    font-size: 14px;
+    padding: 0;
+  }
+
+  .predictive-search-form > input:focus-visible {
+    padding: 0;
+  }
+
+  .predictive-search-form > button {
+    padding: 8px 24px;
+    border-radius: 10px;
+  }
+
+  .predictive-search-form:has(> input:focus-visible) > button {
+    border: 1px solid var(--color-oh-black);
+    border-radius: 10px;
+  }
+
+  .predictive-search > * {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .predictive-search .mobile-menu-search-border {
+    padding: 0;
   }
 }

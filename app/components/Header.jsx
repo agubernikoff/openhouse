@@ -338,6 +338,7 @@ function MobileMenu({
           }}
         </SearchResultsPredictive>
       </div>
+      <div className="mobile-menu-search-border"></div>
 
       <div className="mobile-menu-section">
         <div className="mobile-menu-header">
@@ -503,7 +504,7 @@ class AwaitErrorBoundary extends Component {
   }
 }
 
-function HeaderAside({children}) {
+function HeaderAside({children, isMobileMenu}) {
   const {close, type} = useAside();
 
   const measuredRef = useRef(null);
@@ -556,17 +557,25 @@ function HeaderAside({children}) {
   }, [close, type]);
 
   return (
-    <div className="header-dropdown-overlay">
-      <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
+    <div
+      className={`header-dropdown-overlay ${isMobileMenu ? 'mobile-menu-overlay' : ''}`}
+    >
+      <div
+        style={{
+          overflow: 'hidden',
+          width: '100%',
+          maxWidth: isMobileMenu ? '100%' : '730px',
+        }}
+      >
         <motion.div
           key="header-dropdown-content"
           className="header-dropdown-content"
           onClick={(e) => {
             e.stopPropagation();
           }}
-          initial={{opacity: 0, y: '-100%'}}
-          animate={{opacity: 1, y: 0}}
-          exit={{opacity: 0, y: '-100%'}}
+          initial={{y: '-100%'}}
+          animate={{y: 0}}
+          exit={{y: '-100%'}}
           transition={{duration: 0.2, ease: 'easeInOut'}}
         >
           <motion.div
