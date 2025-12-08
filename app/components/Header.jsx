@@ -513,6 +513,11 @@ export function HeaderMenu({
             end
             key={item.id}
             onClick={close}
+            onMouseEnter={() => {
+              if (type === 'shop' || type === 'about') {
+                close();
+              }
+            }}
             prefetch="intent"
             style={activeLinkStyle}
             to={url}
