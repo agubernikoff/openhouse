@@ -18,43 +18,58 @@ import {
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 
-/**
- * @param {HeaderProps}
- */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
-  const {type} = useAside();
+  const {type, close} = useAside();
   const isCartOpen = type === 'cart';
   const isSearchOpen = type === 'search';
+  const isShopOpen = type === 'shop';
+  const isAboutOpen = type === 'about';
+  const isDropdownOpen = isShopOpen || isAboutOpen;
+
+  const handleHeaderMouseLeave = () => {
+    if (type === 'shop' || type === 'about') {
+      close();
+    }
+  };
 
   return (
     <>
-      <motion.header
-        className="header"
-        initial={{borderRadius: '0px 0px 0px 0px'}}
-        animate={{
-          borderRadius:
-            type !== 'closed' ? '10px 10px 0px 0px' : '10px 10px 10px 10px',
-        }}
-        transition={{duration: 0.2, ease: 'easeInOut'}}
-      >
-        <HeaderMenu
-          menu={menu}
-          viewport="desktop"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-        <NavLink
-          prefetch="intent"
-          to="/"
-          style={activeLinkStyle}
-          end
-          className="header-logo-desktop"
+      <div className="header-hover-zone" onMouseLeave={handleHeaderMouseLeave}>
+        <motion.header
+          className="header"
+          initial={{borderRadius: '0px 0px 0px 0px'}}
+          animate={{
+            borderRadius:
+              type !== 'closed' ? '10px 10px 0px 0px' : '10px 10px 10px 10px',
+          }}
+          transition={{duration: 0.2, ease: 'easeInOut'}}
         >
-          <Logo />
-        </NavLink>
-        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-      </motion.header>
+          <HeaderMenu
+            menu={menu}
+            viewport="desktop"
+            primaryDomainUrl={header.shop.primaryDomain.url}
+            publicStoreDomain={publicStoreDomain}
+          />
+          <NavLink
+            prefetch="intent"
+            to="/"
+            style={activeLinkStyle}
+            end
+            className="header-logo-desktop"
+          >
+            <Logo />
+          </NavLink>
+          <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+        </motion.header>
+
+        <AnimatePresence mode="wait">
+          {isDropdownOpen && (
+            <MegaDropdown key="mega-dropdown" type={type} menu={menu} />
+          )}
+        </AnimatePresence>
+      </div>
+
       <AnimatePresence>
         {isCartOpen && <Cart cart={cart} />}
         {isSearchOpen && <Search />}
@@ -62,6 +77,184 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
     </>
   );
 }
+
+function MegaDropdown({type, menu}) {
+  const shopMenuItem = menu?.items?.find(
+    (item) => item.title.toLowerCase() === 'shop',
+  );
+
+  const shopSubItems = shopMenuItem?.items || [];
+
+  const [hoveredCollection, setHoveredCollection] = useState(null);
+  const [hoveredAbout, setHoveredAbout] = useState(null);
+
+  // Hardcoded about items with placeholder image URLs
+  const aboutItems = [
+    {
+      id: 'our-story',
+      title: 'Our Story',
+      url: '/pages/about#our-story',
+      image: null,
+    },
+    {
+      id: 'partners',
+      title: 'Partners',
+      url: '/pages/about#partners',
+      image: null,
+    },
+    {
+      id: 'faq',
+      title: 'Frequently Asked Questions',
+      url: '/pages/about#faq',
+      image: null,
+    },
+  ];
+
+  return (
+    <HeaderAside>
+      <AnimatePresence mode="wait">
+        {type === 'shop' && (
+          <motion.div
+            key="shop-content"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            transition={{duration: 0.15}}
+          >
+            <div className="shop-dropdown-content">
+              <div className="shop-section-with-image">
+                <div className="shop-dropdown-label">
+                  <div className="red-dot">SHOP</div>
+                </div>
+
+                <div className="shop-menu-links">
+                  {shopSubItems.length > 0 ? (
+                    <div className="collections-links">
+                      {shopSubItems.map((subItem) => {
+                        const url = subItem.url.includes('myshopify.com')
+                          ? new URL(subItem.url).pathname
+                          : subItem.url;
+                        return (
+                          <Link
+                            key={subItem.id}
+                            to={url}
+                            className="collection-link"
+                            onMouseEnter={() => setHoveredCollection(subItem)}
+                          >
+                            {subItem.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="shop-dropdown-image">
+                  {hoveredCollection?.resource?.image?.url ? (
+                    <motion.img
+                      key={hoveredCollection.id}
+                      src={hoveredCollection.resource.image.url}
+                      alt={
+                        hoveredCollection.resource.image.altText ||
+                        hoveredCollection.title
+                      }
+                      initial={{opacity: 0}}
+                      animate={{opacity: 1}}
+                      exit={{opacity: 0}}
+                      transition={{duration: 0.2}}
+                    />
+                  ) : (
+                    <div className="image-placeholder"></div>
+                  )}
+                </div>
+              </div>
+
+              <div className="categories-section">
+                <div className="red-dot">CATEGORIES</div>
+                <div className="collections-links">
+                  <Link to="/collections/headwear" className="collection-link">
+                    Headwear
+                  </Link>
+                  <Link to="/collections/apparel" className="collection-link">
+                    Apparel
+                  </Link>
+                  <Link
+                    to="/collections/leather-goods"
+                    className="collection-link"
+                  >
+                    Leather Goods
+                  </Link>
+                  <Link to="/collections/uniforms" className="collection-link">
+                    Uniforms
+                  </Link>
+                  <Link to="/collections/carry" className="collection-link">
+                    Carry
+                  </Link>
+                  <Link
+                    to="/collections/accessories"
+                    className="collection-link"
+                  >
+                    Accessories
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {type === 'about' && (
+          <motion.div
+            key="about-content"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            transition={{duration: 0.15}}
+          >
+            <div className="about-dropdown-content">
+              <div className="about-section-with-image">
+                <div className="about-dropdown-label">
+                  <div className="red-dot">ABOUT</div>
+                </div>
+
+                <div className="about-menu-links">
+                  <div className="collections-links">
+                    {aboutItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        to={item.url}
+                        className="collection-link"
+                        onMouseEnter={() => setHoveredAbout(item)}
+                      >
+                        {item.title}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="about-dropdown-image">
+                  {hoveredAbout?.image ? (
+                    <motion.img
+                      key={hoveredAbout.id}
+                      src={hoveredAbout.image}
+                      alt={hoveredAbout.title}
+                      initial={{opacity: 0}}
+                      animate={{opacity: 1}}
+                      exit={{opacity: 0}}
+                      transition={{duration: 0.2}}
+                    />
+                  ) : (
+                    <div className="image-placeholder"></div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </HeaderAside>
+  );
+}
+
 function Search() {
   const {type} = useAside();
   const queriesDatalistId = useId();
@@ -75,7 +268,7 @@ function Search() {
     );
     const t = setTimeout(() => {
       input?.focus();
-    }, 180); // matches the header aside open animation (~0.18-0.2s)
+    }, 180);
     return () => clearTimeout(t);
   }, [type]);
 
@@ -138,6 +331,7 @@ function Search() {
     </HeaderAside>
   );
 }
+
 function Cart({cart}) {
   return (
     <HeaderAside>
@@ -161,9 +355,6 @@ class AwaitErrorBoundary extends Component {
     return {error};
   }
   componentDidCatch(error, info) {
-    // Log to console for now — can be hooked to analytics
-    // Include a marker so it's easy to find in logs
-    // eslint-disable-next-line no-console
     console.error('[AwaitErrorBoundary] caught', error, info);
   }
   render() {
@@ -181,27 +372,19 @@ class AwaitErrorBoundary extends Component {
 function HeaderAside({children}) {
   const {close, type} = useAside();
 
-  // Refs and state for measuring children and animating height
   const measuredRef = useRef(null);
   const [measuredHeight, setMeasuredHeight] = useState(0);
 
-  // update measured height on mount/layout changes
-  // useEffect instead of useLayoutEffect to avoid triggering a sync
-  // update during hydration which can flip a Suspense boundary to
-  // client rendering. Schedule the state update as a non-urgent
-  // transition so it won't interrupt hydration.
   useEffect(() => {
     if (!measuredRef.current) return;
     const h = measuredRef.current.scrollHeight || 0;
     try {
       startTransition(() => setMeasuredHeight(h));
     } catch (e) {
-      // startTransition may not be available in some envs; fall back
       setMeasuredHeight(h);
     }
   }, [children]);
 
-  // observe size changes of the inner content
   useEffect(() => {
     if (!measuredRef.current || typeof ResizeObserver === 'undefined') return;
     const el = measuredRef.current;
@@ -214,12 +397,10 @@ function HeaderAside({children}) {
       }
     });
     ro.observe(el);
-    // initialize
     setMeasuredHeight(el.scrollHeight || 0);
     return () => ro.disconnect();
   }, []);
 
-  // Close on Escape: for search aside only close when the search input is empty.
   useEffect(() => {
     function onKey(e) {
       if (e.key !== 'Escape') return;
@@ -229,12 +410,9 @@ function HeaderAside({children}) {
             'input[name="q"], input[type="search"][name="q"]',
           );
           if (input && String(input.value).trim().length > 0) {
-            // If there's a value, don't close the aside; allow child to handle ESC.
             return;
           }
-        } catch (err) {
-          // If something goes wrong reading the DOM, fall back to closing.
-        }
+        } catch (err) {}
       }
       close();
     }
@@ -245,7 +423,6 @@ function HeaderAside({children}) {
 
   return (
     <div className="header-dropdown-overlay">
-      <button onClick={close} />
       <div style={{overflow: 'hidden', width: '100%', maxWidth: '730px'}}>
         <motion.div
           key="header-dropdown-content"
@@ -274,14 +451,6 @@ function HeaderAside({children}) {
   );
 }
 
-/**
- * @param {{
- *   menu: HeaderProps['header']['menu'];
- *   primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
- *   viewport: Viewport;
- *   publicStoreDomain: HeaderProps['publicStoreDomain'];
- * }}
- */
 export function HeaderMenu({
   menu,
   primaryDomainUrl,
@@ -289,7 +458,7 @@ export function HeaderMenu({
   publicStoreDomain,
 }) {
   const className = `header-menu-${viewport}`;
-  const {close} = useAside();
+  const {close, open, type} = useAside();
 
   return (
     <nav className={className} role="navigation">
@@ -307,13 +476,37 @@ export function HeaderMenu({
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
 
-        // if the url is internal, we strip the domain
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
           item.url.includes(primaryDomainUrl)
             ? new URL(item.url).pathname
             : item.url;
+
+        const isShop = item.title.toLowerCase() === 'shop';
+        const isAbout = item.title.toLowerCase() === 'about';
+
+        if (isShop || isAbout) {
+          const dropdownType = isShop ? 'shop' : 'about';
+          return (
+            <div
+              key={item.id}
+              className="header-menu-item-dropdown"
+              onMouseEnter={() => open(dropdownType)}
+            >
+              <NavLink
+                className="header-menu-item"
+                end
+                prefetch="intent"
+                style={activeLinkStyle}
+                to={url}
+              >
+                {item.title}
+              </NavLink>
+            </div>
+          );
+        }
+
         return (
           <NavLink
             className="header-menu-item"
@@ -332,13 +525,9 @@ export function HeaderMenu({
   );
 }
 
-/**
- * @param {Pick<HeaderProps, 'isLoggedIn' | 'cart'>}
- */
 function HeaderCtas({isLoggedIn, cart}) {
   return (
     <>
-      {/* Mobile layout - 3 divs */}
       <div className="header-mobile-layout">
         <div className="header-mobile-left">
           <HeaderMenuMobileToggle />
@@ -354,7 +543,6 @@ function HeaderCtas({isLoggedIn, cart}) {
         </div>
       </div>
 
-      {/* Desktop layout */}
       <nav className="header-ctas header-desktop-layout" role="navigation">
         <HeaderMenuMobileToggle />
         <NavLink prefetch="intent" to="/contact" style={activeLinkStyle}>
@@ -417,9 +605,6 @@ function SearchToggle() {
   );
 }
 
-/**
- * @param {{count: number | null}}
- */
 function CartBadge({count}) {
   const {open, close, type} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
@@ -453,9 +638,6 @@ function CartBadge({count}) {
   );
 }
 
-/**
- * @param {Pick<HeaderProps, 'cart'>}
- */
 function CartToggle({cart}) {
   return (
     <Suspense fallback={<CartBadge count={null} />}>
@@ -515,31 +697,12 @@ const FALLBACK_HEADER_MENU = {
   ],
 };
 
-/**
- * @param {{
- *   isActive: boolean;
- *   isPending: boolean;
- * }}
- */
 function activeLinkStyle({isActive, isPending}) {
   return {
     fontWeight: isActive ? null : undefined,
     color: isPending ? 'var(--color-oh-grey)' : 'var(--color-oh-black)',
   };
 }
-
-/** @typedef {'desktop' | 'mobile'} Viewport */
-/**
- * @typedef {Object} HeaderProps
- * @property {HeaderQuery} header
- * @property {Promise<CartApiQueryFragment|null>} cart
- * @property {Promise<boolean>} isLoggedIn
- * @property {string} publicStoreDomain
- */
-
-/** @typedef {import('@shopify/hydrogen').CartViewPayload} CartViewPayload */
-/** @typedef {import('storefrontapi.generated').HeaderQuery} HeaderQuery */
-/** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */
 
 function Logo() {
   return (
