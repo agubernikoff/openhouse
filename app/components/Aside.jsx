@@ -18,6 +18,7 @@ import {createContext, useContext, useEffect, useState} from 'react';
 export function Aside({children, heading, type}) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
+  const isMobileMenu = type === 'mobile';
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -35,6 +36,22 @@ export function Aside({children, heading, type}) {
     }
     return () => abortController.abort();
   }, [close, expanded]);
+
+  // Mobile menu renders differently
+  if (isMobileMenu) {
+    return (
+      <div
+        aria-modal
+        className={`overlay mobile-menu-overlay ${expanded ? 'expanded' : ''}`}
+        role="dialog"
+      >
+        <button className="close-outside" onClick={close} />
+        <aside className="mobile-menu-aside">
+          <main>{children}</main>
+        </aside>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -82,7 +99,7 @@ export function useAside() {
   return aside;
 }
 
-/** @typedef {'search' | 'cart' | 'mobile' | 'closed'} AsideType */
+/** @typedef {'search' | 'cart' | 'mobile' | 'shop' | 'about' | 'closed'} AsideType */
 /**
  * @typedef {{
  *   type: AsideType;
