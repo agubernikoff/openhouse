@@ -121,28 +121,6 @@ function MegaDropdown({
   );
   const [hovered, setHovered] = useState(null);
 
-  // Hardcoded about items with placeholder image URLs
-  const aboutItems = [
-    {
-      id: 'our-story',
-      title: 'Our Story',
-      url: '/pages/about#our-story',
-      image: null,
-    },
-    {
-      id: 'partners',
-      title: 'Partners',
-      url: '/pages/about#partners',
-      image: null,
-    },
-    {
-      id: 'faq',
-      title: 'Frequently Asked Questions',
-      url: '/pages/about#faq',
-      image: null,
-    },
-  ];
-
   return (
     <HeaderAside>
       <div className={`${type}-dropdown-content`}>
