@@ -249,6 +249,7 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .header-menu-mobile-toggle {
+  padding: 0;
   @media (min-width: 48em) {
     display: none;
   }
@@ -407,9 +408,14 @@ button:has(.search-text) {
   position: relative;
   top: -12px;
 }
+
+.mobile-menu-aside {
+  display: none;
+}
+
 .mobile-menu-overlay {
-  top: 56px;
-  height: calc(100dvh - 56px);
+  top: 50px;
+  height: calc(100dvh - 50px);
 }
 
 .mobile-menu-overlay .header-dropdown-content {
@@ -459,6 +465,7 @@ button:has(.search-text) {
   background: transparent;
   font-size: 14px;
   cursor: pointer;
+  color: var(--color-oh-black);
   font-family: 'mono';
   flex-shrink: 0;
   transition:
@@ -2566,6 +2573,7 @@ body:has(.contact) .footer-newsletter-button:hover {
 
   .header-mobile-left {
     justify-content: flex-start;
+    gap: 12px;
   }
 
   .header-mobile-left button {
@@ -3048,7 +3056,7 @@ body:has(.contact) .footer-newsletter-button:hover {
   }
 
   .header-dropdown-overlay {
-    top: 56px;
+    top: 50px;
     border-top: 1px solid #bfc0c1;
     z-index: 100000;
     padding-top: 0px;
@@ -3075,6 +3083,11 @@ body:has(.contact) .footer-newsletter-button:hover {
     padding-right: 16px;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .cart-main > div:first-of-type {
+    padding: 30px 20px;
+    padding-bottom: 0;
   }
 
   .cart-line {

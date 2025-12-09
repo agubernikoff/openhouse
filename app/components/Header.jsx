@@ -18,6 +18,8 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import hamburgerIcon from '../assets/mobile-menu.png';
+import closeIcon from '../assets/x.png';
 
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
@@ -681,6 +683,8 @@ function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
 
 function HeaderMenuMobileToggle() {
   const {open, type, close} = useAside();
+  const isMobileOpen = type === 'mobile';
+
   return (
     <button
       className="header-menu-mobile-toggle reset"
@@ -689,7 +693,31 @@ function HeaderMenuMobileToggle() {
         else open('mobile');
       }}
     >
-      <h3>☰</h3>
+      <AnimatePresence mode="wait">
+        {isMobileOpen ? (
+          <motion.img
+            key="x-icon"
+            src={closeIcon}
+            alt="Close menu"
+            initial={{opacity: 0, rotate: -90}}
+            animate={{opacity: 1, rotate: 0}}
+            exit={{opacity: 0, rotate: 90}}
+            transition={{duration: 0.2}}
+            style={{width: '20px'}}
+          />
+        ) : (
+          <motion.img
+            key="hamburger-icon"
+            src={hamburgerIcon}
+            alt="Open menu"
+            initial={{opacity: 0, rotate: 90}}
+            animate={{opacity: 1, rotate: 0}}
+            exit={{opacity: 0, rotate: -90}}
+            transition={{duration: 0.2}}
+            style={{width: '20px'}}
+          />
+        )}
+      </AnimatePresence>
     </button>
   );
 }
