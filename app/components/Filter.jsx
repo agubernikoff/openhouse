@@ -275,7 +275,7 @@ function FilterColumn({
 
             const ordered = allowedOrder.map((lbl) => {
               const found = existingMap.get(lbl);
-              if (found) return found;
+              if (found) return {...found, label: titleCase(found.label)};
 
               // Create a stand-in object for missing allowed category
               const inputSlug = lbl; // use lowercase label as slug/input

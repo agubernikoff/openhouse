@@ -215,7 +215,7 @@ function CategoriesSection({
           // Build filter object from link.tags (use first tag only)
           if (link.tags && link.tags.length > 0) {
             const filterObject = {
-              productType: link.tags[0],
+              tag: link.tags[0],
             };
 
             const params = new URLSearchParams();
