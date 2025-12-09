@@ -20,6 +20,7 @@ import {PRODUCT_ITEM_FRAGMENT} from './collections.$handle';
 import {ProductItem} from '~/components/ProductItem';
 import {FilterInput} from '~/components/Filter';
 import {AnimatePresence, motion} from 'motion/react';
+import {useNavigationContext} from '~/context/NavigationContext';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -148,6 +149,40 @@ export default function Product() {
     setSelectedImage(selectedVariant.image);
   }, [selectedVariant]);
 
+  const {lastCollectionPath} = useNavigationContext();
+  console.log(lastCollectionPath);
+
+  function capitalizeFirstLetter(word) {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }
+
+  function formatCollectionTitle(slug) {
+    if (!slug) return '';
+    const cleaned = slug.replace(/-1$/, '').replace(/-/g, ' ');
+    return cleaned
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  // Prefer a non-"New Arrivals" collection if available
+  const notNewArrivalsCollection = product.collections?.nodes.find(
+    (col) => col.title !== 'New Arrivals',
+  );
+
+  // Determine if lastCollectionPath is a valid collection path
+  const isValidCollectionPath = lastCollectionPath?.includes('/collections/');
+
+  // Choose the fallback collection if needed
+  const fallbackCollection =
+    notNewArrivalsCollection || product.collections?.nodes[0];
+
+  // Final path for breadcrumb
+  const to = isValidCollectionPath
+    ? lastCollectionPath
+    : `/collections/${fallbackCollection?.handle}`;
+
   return (
     <>
       <div className="product">
@@ -190,7 +225,15 @@ export default function Product() {
                 {' '}
                 -{' '}
               </span>
-              <span aria-current="page">This</span>
+              <Link className="crumb" to={to}>
+                {to.includes('new-arrivals')
+                  ? 'New Arrivals'
+                  : to.includes('best-sellers')
+                    ? 'Best Sellers'
+                    : to.includes('frontpage')
+                      ? 'All Products'
+                      : formatCollectionTitle(to.split('/collections/')[1])}
+              </Link>
             </nav>
             <p className="product-title">{title}</p>
             <ProductPrice
@@ -258,9 +301,13 @@ function AdditionalInfo({product}) {
   function content() {
     switch (selected) {
       case 'LEAD TIME':
-        return mapRichText(JSON.parse(lead_time?.value));
+        return lead_time?.value
+          ? mapRichText(JSON.parse(lead_time?.value))
+          : null;
       case 'MATERIAL':
-        return mapRichText(JSON.parse(material?.value));
+        return material?.value
+          ? mapRichText(JSON.parse(material?.value))
+          : null;
       case 'SIZE CHART':
         return (
           <Image
@@ -456,6 +503,12 @@ const PRODUCT_FRAGMENT = `#graphql
     seo {
       description
       title
+    }
+    collections(first:2){
+      nodes{
+        handle
+        title
+      }
     }
     images(first: 30) {
       nodes {

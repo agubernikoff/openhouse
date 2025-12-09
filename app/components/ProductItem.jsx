@@ -1,7 +1,8 @@
-import {Link} from 'react-router';
+import {Link, useLocation} from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {useState} from 'react';
+import {useNavigationContext} from '~/context/NavigationContext';
 
 /**
  * @param {{
@@ -31,6 +32,9 @@ export function ProductItem({product, loading}) {
   // Get badge text from metafield
   const badgeText = product.badgeText?.value;
 
+  const {pathname} = useLocation();
+  const {setLastCollectionPath} = useNavigationContext();
+
   return (
     <Link
       className="product-item"
@@ -45,6 +49,7 @@ export function ProductItem({product, loading}) {
           data={displayImage}
           loading={loading}
           sizes="(min-width: 45em) 400px, 100vw"
+          onClick={() => setLastCollectionPath(pathname)}
         />
         {visibleSwatches.map((optionValue) => {
           const variantImage = optionValue.firstSelectableVariant?.image;

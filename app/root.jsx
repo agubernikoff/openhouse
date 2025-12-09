@@ -14,6 +14,7 @@ import {FOOTER_QUERY, HEADER_QUERY, TESTIMONIALS_QUERY} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
+import {NavigationProvider} from './context/NavigationContext';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -167,7 +168,7 @@ export function Layout({children}) {
         <Links />
       </head>
       <body>
-        {children}
+        <NavigationProvider>{children}</NavigationProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
