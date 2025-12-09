@@ -84,14 +84,14 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
           {isCartOpen && <Cart cart={cart} />}
           {isSearchOpen && <Search />}
           {isMobileOpen && (
-            <Aside type="mobile" heading="MENU">
+            <HeaderAside isMobileMenu={true}>
               <MobileMenu
                 menu={menu}
                 mobileMenuImage={header.mobileMenuImage}
                 primaryDomainUrl={header.shop.primaryDomain.url}
                 publicStoreDomain={publicStoreDomain}
               />
-            </Aside>
+            </HeaderAside>
           )}
         </AnimatePresence>
       </div>
@@ -146,7 +146,12 @@ function MegaDropdown({
                       className="collection-link"
                       onMouseEnter={() => setHovered(link)}
                       onFocus={() => setHovered(link)}
-                      onClick={close}
+                      onClick={() => {
+                        close();
+                        if (url.includes('#') && url.includes('pages'))
+                          document.documentElement.style.scrollBehavior =
+                            'smooth';
+                      }}
                     >
                       {link.title}
                     </Link>

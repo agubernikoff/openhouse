@@ -1,4 +1,4 @@
-import {useLoaderData} from 'react-router';
+import {useLoaderData, useLocation} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
@@ -96,6 +96,12 @@ export default function Page() {
 }
 
 export function Sections({sections}) {
+  const {hash} = useLocation();
+  // Disable Remix's automatic hash scrolling
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'auto';
+  }, [hash]);
+
   const mapped = sections.map((section) => {
     // console.log(section.type);
     switch (section.type) {
@@ -127,7 +133,7 @@ function FAQSection({section}) {
     setOpenSection(openSection === section ? null : section);
   };
   return (
-    <section className="home-featured-collection">
+    <section className="home-featured-collection" id="faq">
       <div>
         <p className="red-dot">FREQUENTLY ASKED QUESTIONS</p>
       </div>
@@ -179,7 +185,10 @@ function TitleAndBlurb({section}) {
   const {title, blurb} = normalizeMetaobject(section);
 
   return (
-    <section className="home-featured-collection">
+    <section
+      className="home-featured-collection"
+      id={title.value.toLowerCase().split(' ').join('_')}
+    >
       <div>
         <p className="red-dot">{title.value.toUpperCase()}</p>
       </div>

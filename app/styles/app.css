@@ -2412,6 +2412,9 @@ body:has(.contact) .footer-newsletter-button:hover {
 * routes/pages
 * --------------------------------------------------
 */
+[id] {
+  scroll-margin-top: calc(51px + 1rem);
+}
 .page .hero-section::before {
   content: '';
   position: absolute;
