@@ -621,9 +621,11 @@ export function HeaderMenu({
             key={item.id}
             onClick={close}
             onMouseEnter={() => {
-              if (isShop || isAbout) {
+              if (viewport === 'desktop' && (isShop || isAbout)) {
                 open(dropdownType);
-              } else close();
+              } else if (viewport === 'desktop') {
+                close();
+              }
             }}
             prefetch="intent"
             style={activeLinkStyle}
