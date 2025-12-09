@@ -1,4 +1,4 @@
-import {useLoaderData, useLocation} from 'react-router';
+import {useLoaderData, useLocation, Link} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
@@ -117,11 +117,39 @@ export function Sections({sections}) {
         return <MultiTitleAndBlurb section={section} key={section.id} />;
       case 'faq_section':
         return <FAQSection section={section} key={section.id} />;
+      case 'services_header':
+        return <ServicesHeader section={section} key={section.id} />;
       default:
         return null;
     }
   });
   return <main>{mapped}</main>;
+}
+
+function ServicesHeader({section}) {
+  const {header, label, subheader, button_text, link, image} =
+    normalizeMetaobject(section);
+  return (
+    <section className="hero-section services-header">
+      <div>
+        <div
+          style={{
+            aspectRatio: `${image?.reference?.image?.width}/${image?.reference?.image?.height}`,
+          }}
+        >
+          <Image data={image?.reference?.image} sizes="25vw" />
+        </div>
+        <div className="services-header-text-container">
+          <p>{label.value.toUpperCase()}</p>
+          <h2>{header.value}</h2>
+          <p>{subheader.value}</p>
+          <Link to={link.value} className="explore-all">
+            {button_text.value}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function FAQSection({section}) {
