@@ -724,10 +724,21 @@ function HeaderMenuMobileToggle() {
 
 function SearchToggle({handleHeaderMouseLeave}) {
   const {open, close, type} = useAside();
+  const searchText = useRef(null);
   return (
     <button
       className="reset"
       onClick={() => {
+        if (searchText.current) {
+          const display = window.getComputedStyle(searchText.current).display;
+          if (display === 'none')
+            if (type === 'mobile') {
+              close();
+            } else {
+              open('mobile');
+            }
+          return;
+        }
         if (type === 'search') {
           close();
         } else {
@@ -736,7 +747,9 @@ function SearchToggle({handleHeaderMouseLeave}) {
       }}
       onMouseEnter={handleHeaderMouseLeave}
     >
-      <span className="search-text">Search</span>
+      <span className="search-text" ref={searchText}>
+        Search
+      </span>
       <svg
         width="13"
         height="14"

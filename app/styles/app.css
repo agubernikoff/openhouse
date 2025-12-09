@@ -2608,6 +2608,8 @@ body:has(.contact) .footer-newsletter-button:hover {
     padding: 20px;
     background: #ece8da;
     top: 0;
+    left: -1px;
+    right: -1px;
     padding: 16px;
     z-index: 10000;
     position: fixed;
