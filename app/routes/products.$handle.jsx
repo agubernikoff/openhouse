@@ -6,6 +6,7 @@ import {
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
+  Image,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
@@ -17,6 +18,8 @@ import Expandable from '~/components/Expandable';
 import mapRichText from '~/helpers/mapRichText';
 import {PRODUCT_ITEM_FRAGMENT} from './collections.$handle';
 import {ProductItem} from '~/components/ProductItem';
+import {FilterInput} from '~/components/Filter';
+import {AnimatePresence, motion} from 'motion/react';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -220,9 +223,79 @@ export default function Product() {
           }}
         />
       </div>
+      <AdditionalInfo product={product} />
       <FAQSection data={faqs} />
       <YouMayAlsoLike recs={recs} compliments={compliments} />
     </>
+  );
+}
+
+function AdditionalInfo({product}) {
+  const {lead_time, material, size_chart} = product;
+  const [selected, setSelected] = useState('LEAD TIME');
+  function isChecked(value) {
+    if (selected === value) return true;
+    return false;
+  }
+  console.log(size_chart);
+  const btns = [
+    'LEAD TIME',
+    'MATERIAL',
+    'SIZE CHART',
+    'OUR COMMITMENT',
+    'RETURNS',
+  ].map((x) => (
+    <FilterInput
+      key={x}
+      label={x}
+      isChecked={isChecked}
+      columnKey={'x'}
+      value={x}
+      addFilter={() => setSelected(x)}
+      removeFilter={() => null}
+    />
+  ));
+  function content() {
+    switch (selected) {
+      case 'LEAD TIME':
+        return mapRichText(JSON.parse(lead_time?.value));
+      case 'MATERIAL':
+        return mapRichText(JSON.parse(material?.value));
+      case 'SIZE CHART':
+        return (
+          <Image
+            data={size_chart?.reference?.image}
+            sizes="(min-width: 45em) 45vw, 100vw"
+          />
+        );
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <section className="home-featured-collection pdp-additional-info-section">
+      <div className="filter-column-container">{btns}</div>
+      <div className="pdp-additional-info-content-container">
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={selected}
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+          >
+            <Image
+              data={size_chart?.reference?.image}
+              sizes="(min-width: 45em) 45vw, 100vw"
+            />
+            {content()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div>
+        <img alt="" src="" className="pdp-additional-info-image" />
+      </div>
+    </section>
   );
 }
 
@@ -391,6 +464,24 @@ const PRODUCT_FRAGMENT = `#graphql
         altText
         width
         height
+      }
+    }
+    lead_time: metafield(namespace: "custom", key: "lead_time") {
+      value
+    }
+    material: metafield(namespace: "custom", key: "material") {
+      value
+    }
+    size_chart: metafield(namespace: "custom", key: "size_chart") {
+      reference{
+        ... on MediaImage {
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
       }
     }
   }

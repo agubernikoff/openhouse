@@ -326,7 +326,7 @@ function FilterColumn({
   );
 }
 
-function FilterInput({
+export function FilterInput({
   label,
   value,
   count,

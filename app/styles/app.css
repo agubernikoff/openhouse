@@ -2131,6 +2131,33 @@ div:has(> .dropdown-content) {
   font-size: 1rem;
   line-height: 18px;
 }
+.pdp-additional-info-content-container {
+  position: relative;
+  grid-column: span 2;
+}
+.pdp-additional-info-section button {
+  font-family: 'mono';
+}
+.pdp-additional-info-content-container img {
+  width: 100%;
+  object-fit: cover;
+  height: auto;
+}
+.pdp-additional-info-content-container img:first-of-type {
+  position: absolute;
+  opacity: 0;
+}
+div:has(> .pdp-additional-info-image) {
+  justify-self: end;
+}
+.pdp-additional-info-image {
+  background: var(--color-oh-gray);
+  min-width: 100px;
+  min-height: 100px;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
 
 /*
 * --------------------------------------------------
