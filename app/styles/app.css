@@ -1613,6 +1613,9 @@ div:has(> .testimonials-container) {
 /* .filter-body * {
   direction: ltr;
 } */
+.filter-body .filter-column-container {
+  display: none;
+}
 .bold-filter-header {
   display: none;
 }
@@ -1628,6 +1631,10 @@ div:has(> .testimonials-container) {
   align-items: center;
   padding-block: 0.25rem;
 }
+.filter-column:has(> .Categoriestrue) {
+  left: 15px;
+  position: relative;
+}
 .filter-body button,
 .filter-column-container button {
   background: transparent;
@@ -1638,11 +1645,10 @@ div:has(> .testimonials-container) {
   font-size: 16px;
   font-family: 'apfel';
   position: relative;
-  z-index: 2;
-  background: var(--color-oh-white);
 }
 .filter-column div button {
   color: var(--color-oh-black);
+  cursor: pointer;
 }
 .filter-dot {
   width: 10px;
@@ -2155,6 +2161,8 @@ div:has(> .dropdown-content) {
 .pdp-additional-info-content-container img:first-of-type {
   position: absolute;
   opacity: 0;
+  z-index: -1;
+  pointer-events: none;
 }
 div:has(> .pdp-additional-info-image) {
   justify-self: end;
@@ -2875,6 +2883,9 @@ body:has(.contact) .footer-newsletter-button:hover {
     justify-content: space-between;
     padding-right: 15px;
     box-sizing: border-box;
+  }
+  .filter-body .filter-column-container {
+    display: block;
   }
   .bold-filter-header {
     display: block;

@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useLocation, useSearchParams} from 'react-router';
 import {AnimatePresence, motion} from 'framer-motion';
+import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
 
 export default function Filter({isSearch, length, filters}) {
   const [open, setOpen] = useState(false);
@@ -150,6 +151,20 @@ export function FilterColumns({filters, isSideMenu}) {
 }
 
 function SortColumn({addSort, removeSort, isChecked, isSearch}) {
+  const sortOptions = [
+    JSON.stringify({reverse: false, sortKey: 'TITLE'}),
+    JSON.stringify({reverse: true, sortKey: 'TITLE'}),
+    JSON.stringify({reverse: true, sortKey: 'CREATED'}),
+    JSON.stringify({reverse: false, sortKey: 'CREATED'}),
+    JSON.stringify({reverse: false, sortKey: 'PRICE'}),
+    JSON.stringify({reverse: true, sortKey: 'PRICE'}),
+  ];
+
+  const {transitioning, handleSelection} = useCascadingFilterSelection(
+    sortOptions,
+    isChecked,
+  );
+
   return (
     <div className="sort-column-container">
       <p className="bold-filter-header">Sort</p>
@@ -158,53 +173,71 @@ function SortColumn({addSort, removeSort, isChecked, isSearch}) {
           columnKey={'sort'}
           label={'Alphabetically, A-Z'}
           value={JSON.stringify({reverse: false, sortKey: 'TITLE'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: false, sortKey: 'TITLE'}),
+          )}
           count={isSearch ? 0 : null}
         />
         <FilterInput
           columnKey={'sort'}
           label={'Alphabetically, Z-A'}
           value={JSON.stringify({reverse: true, sortKey: 'TITLE'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: true, sortKey: 'TITLE'}),
+          )}
           count={isSearch ? 0 : null}
         />
         <FilterInput
           columnKey={'sort'}
           label={'Date, New to Old'}
           value={JSON.stringify({reverse: true, sortKey: 'CREATED'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: true, sortKey: 'CREATED'}),
+          )}
           count={isSearch ? 0 : null}
         />
         <FilterInput
           columnKey={'sort'}
           label={'Date, Old to New'}
           value={JSON.stringify({reverse: false, sortKey: 'CREATED'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: false, sortKey: 'CREATED'}),
+          )}
           count={isSearch ? 0 : null}
         />
         <FilterInput
           columnKey={'sort'}
           label={'Price, Low to High'}
           value={JSON.stringify({reverse: false, sortKey: 'PRICE'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: false, sortKey: 'PRICE'}),
+          )}
         />
         <FilterInput
           columnKey={'sort'}
           label={'Price, High to Low'}
           value={JSON.stringify({reverse: true, sortKey: 'PRICE'})}
-          addFilter={addSort}
+          addFilter={(value) => handleSelection(value, addSort)}
           isChecked={isChecked}
           removeFilter={removeSort}
+          isTransitioning={transitioning.has(
+            JSON.stringify({reverse: true, sortKey: 'PRICE'}),
+          )}
         />
       </div>
     </div>
@@ -218,7 +251,7 @@ function FilterColumn({
   removeFilter,
   isSideMenu,
 }) {
-  const filterOrderRef = useRef(new Map()); // Persist across renders
+  const filterOrderRef = useRef(new Map());
 
   function storeInitialOrder(filters) {
     if (filterOrderRef.current.size === 0) {
@@ -241,86 +274,79 @@ function FilterColumn({
     storeInitialOrder(filter.values);
   }, []);
 
+  // Prepare data before using hooks
+  const col = String(filter.label || '').toLowerCase();
+  const isCategories = col === 'categories';
+
+  let options = [];
+  let items = [];
+
+  if (isCategories) {
+    const allowedOrder = [
+      'headware',
+      'apparel',
+      'leather goods',
+      'uniforms',
+      'carry',
+      'accessories',
+      'drinkware',
+    ];
+    const existingMap = new Map(
+      filter.values.map((v) => [String(v.label || '').toLowerCase(), v]),
+    );
+
+    function titleCase(str) {
+      return String(str || '')
+        .split(' ')
+        .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : ''))
+        .join(' ');
+    }
+
+    items = allowedOrder.map((lbl) => {
+      const found = existingMap.get(lbl);
+      if (found) return {...found, label: titleCase(found.label)};
+
+      const inputSlug = lbl;
+      return {
+        id: `missing-${lbl.replace(/\s+/g, '-')}`,
+        label: titleCase(lbl),
+        input: inputSlug,
+        count: 0,
+      };
+    });
+    options = items.map((v) => v.input);
+  } else {
+    items = sortByStoredOrder(
+      filter.values.filter(
+        (v) => !(filter.label === 'category' && v.label.includes('men')),
+      ),
+    );
+    options = items.map((v) => v.input);
+  }
+
+  // Now call the hook with prepared data
+  const {transitioning, handleSelection} = useCascadingFilterSelection(
+    options,
+    isChecked,
+  );
+
   return (
     <div className="filter-column-container">
       <p>{filter.label}</p>
       <div className="filter-column">
-        {(() => {
-          // If this column is the categories column, only render the
-          // specific allowed category labels (and in the declared order).
-          const col = String(filter.label || '').toLowerCase();
-          if (col === 'categories') {
-            const allowedOrder = [
-              'headware',
-              'apparel',
-              'leather goods',
-              'uniforms',
-              'carry',
-              'accessories',
-              'drinkware',
-            ];
-            const existingMap = new Map(
-              filter.values.map((v) => [
-                String(v.label || '').toLowerCase(),
-                v,
-              ]),
-            );
-
-            function titleCase(str) {
-              return String(str || '')
-                .split(' ')
-                .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : ''))
-                .join(' ');
-            }
-
-            const ordered = allowedOrder.map((lbl) => {
-              const found = existingMap.get(lbl);
-              if (found) return {...found, label: titleCase(found.label)};
-
-              // Create a stand-in object for missing allowed category
-              const inputSlug = lbl; // use lowercase label as slug/input
-              return {
-                id: `missing-${lbl.replace(/\s+/g, '-')}`,
-                label: titleCase(lbl),
-                input: inputSlug,
-                count: 0,
-              };
-            });
-
-            return ordered.map((v) => (
-              <FilterInput
-                key={v.id}
-                label={v.label}
-                value={v.input}
-                count={v.count}
-                addFilter={addFilter}
-                isChecked={isChecked}
-                removeFilter={removeFilter}
-                columnKey={filter.label + isSideMenu}
-              />
-            ));
-          }
-
-          // Default behaviour for other columns (preserve previous logic)
-          const values = sortByStoredOrder(
-            filter.values.filter(
-              (v) => !(filter.label === 'category' && v.label.includes('men')),
-            ),
-          );
-
-          return values.map((v) => (
-            <FilterInput
-              key={v.id}
-              label={v.label}
-              value={v.input}
-              count={v.count}
-              addFilter={addFilter}
-              isChecked={isChecked}
-              removeFilter={removeFilter}
-              columnKey={filter.label}
-            />
-          ));
-        })()}
+        {items.map((v) => (
+          <FilterInput
+            key={v.id}
+            label={v.label}
+            value={v.input}
+            count={v.count}
+            addFilter={(value) => handleSelection(value, addFilter)}
+            isChecked={isChecked}
+            removeFilter={removeFilter}
+            isTransitioning={transitioning.has(v.input)}
+            columnKey={isCategories ? filter.label + isSideMenu : filter.label}
+          />
+        ))}
       </div>
     </div>
   );
@@ -334,19 +360,23 @@ export function FilterInput({
   isChecked,
   removeFilter,
   columnKey,
+  isTransitioning,
 }) {
   const [hide, setHide] = useState(false);
   const {pathname} = useLocation();
+
   useEffect(() => {
     if (columnKey.toLowerCase() === 'sort') setHide(count === 0);
   }, [pathname, columnKey, count]);
+
   return (
     <div
       style={{
         opacity: count === 0 ? '33%' : '100%',
         display: hide ? 'none' : 'flex',
-        left: isChecked(value) ? '0' : '15px',
+        left: isTransitioning ? 15 : 0,
       }}
+      className={columnKey}
     >
       <AnimatePresence mode="popLayout">
         {isChecked(value) && (
@@ -360,7 +390,7 @@ export function FilterInput({
           />
         )}
       </AnimatePresence>
-      <button
+      <motion.button
         onClick={() => {
           if (count === 0) return;
           if (!isChecked(value)) addFilter(value);
@@ -372,9 +402,11 @@ export function FilterInput({
           textUnderlineOffset: '-38%',
           textDecorationSkipInk: 'none',
         }}
+        transition={{ease: 'easeInOut'}}
+        layout
       >
         {label}
-      </button>
+      </motion.button>
     </div>
   );
 }

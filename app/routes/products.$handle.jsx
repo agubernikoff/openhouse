@@ -12,7 +12,13 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-import React, {useState, useEffect, Suspense, useRef} from 'react';
+import React, {
+  useState,
+  useEffect,
+  Suspense,
+  useRef,
+  startTransition,
+} from 'react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import Expandable from '~/components/Expandable';
 import mapRichText from '~/helpers/mapRichText';
@@ -21,6 +27,7 @@ import {ProductItem} from '~/components/ProductItem';
 import {FilterInput} from '~/components/Filter';
 import {AnimatePresence, motion} from 'motion/react';
 import {useNavigationContext} from '~/context/NavigationContext';
+import {useCascadingSelection} from '~/hooks/useCascadingSelection';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -150,7 +157,6 @@ export default function Product() {
   }, [selectedVariant]);
 
   const {lastCollectionPath} = useNavigationContext();
-  console.log(lastCollectionPath);
 
   function capitalizeFirstLetter(word) {
     if (!word) return '';
@@ -275,29 +281,87 @@ export default function Product() {
 
 function AdditionalInfo({product}) {
   const {lead_time, material, size_chart} = product;
-  const [selected, setSelected] = useState('LEAD TIME');
-  function isChecked(value) {
-    if (selected === value) return true;
-    return false;
-  }
-  console.log(size_chart);
-  const btns = [
+
+  const measuredRef = useRef(null);
+  const initial = useRef(null);
+  const initialHeight = useRef(0);
+  const sectionRef = useRef(null);
+  const imageRef = useRef(null);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+
+  const options = [
     'LEAD TIME',
     'MATERIAL',
     'SIZE CHART',
     'OUR COMMITMENT',
     'RETURNS',
-  ].map((x) => (
+  ];
+
+  const {selected, transitioning, handleSelection, isChecked} =
+    useCascadingSelection(options, 'LEAD TIME');
+
+  useEffect(() => {
+    if (!measuredRef.current || !initial.current) return;
+    const display = window.getComputedStyle(sectionRef.current).display;
+    const h =
+      display === 'flex'
+        ? measuredRef.current.scrollHeight +
+            imageRef.current.scrollHeight +
+            initial.current.scrollHeight +
+            56 || 0
+        : measuredRef.current.scrollHeight || 0;
+    // Ensure height doesn't go below initial height
+    const finalHeight = Math.max(h, initialHeight.current);
+    try {
+      startTransition(() => setMeasuredHeight(finalHeight));
+    } catch (e) {
+      setMeasuredHeight(finalHeight);
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    if (!initial.current) return;
+
+    // Capture initial height on mount
+    initialHeight.current = initial.current.scrollHeight;
+    setMeasuredHeight(initialHeight.current);
+
+    if (!measuredRef.current || typeof ResizeObserver === 'undefined') return;
+    const el = measuredRef.current;
+    const ro = new ResizeObserver(() => {
+      const display = window.getComputedStyle(sectionRef.current).display;
+      const h =
+        display === 'flex'
+          ? measuredRef.current.scrollHeight +
+              imageRef.current.scrollHeight +
+              initial.current.scrollHeight +
+              56 || 0
+          : measuredRef.current.scrollHeight || 0;
+      // Ensure height doesn't go below initial height
+      const finalHeight = Math.max(h, initialHeight.current);
+      try {
+        startTransition(() => setMeasuredHeight(finalHeight));
+      } catch (e) {
+        setMeasuredHeight(finalHeight);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const btns = options.map((x) => (
     <FilterInput
       key={x}
       label={x}
       isChecked={isChecked}
-      columnKey={'x'}
       value={x}
-      addFilter={() => setSelected(x)}
+      addFilter={() => handleSelection(x)}
       removeFilter={() => null}
+      isTransitioning={transitioning.has(x)}
+      columnKey={'x'}
     />
   ));
+
   function content() {
     switch (selected) {
       case 'LEAD TIME':
@@ -321,28 +385,37 @@ function AdditionalInfo({product}) {
   }
 
   return (
-    <section className="home-featured-collection pdp-additional-info-section">
-      <div className="filter-column-container">{btns}</div>
+    <motion.section
+      className="home-featured-collection pdp-additional-info-section"
+      initial={{height: 'auto'}}
+      animate={{height: measuredHeight > 0 ? measuredHeight : 'auto'}}
+      ref={sectionRef}
+    >
+      <div className="filter-column-container" ref={initial}>
+        {btns}
+      </div>
       <div className="pdp-additional-info-content-container">
         <AnimatePresence mode="popLayout">
-          <motion.div
-            key={selected}
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-          >
-            <Image
-              data={size_chart?.reference?.image}
-              sizes="(min-width: 45em) 45vw, 100vw"
-            />
-            {content()}
-          </motion.div>
+          <div ref={measuredRef}>
+            <motion.div
+              key={selected}
+              initial={{opacity: 0}}
+              animate={{opacity: 1}}
+              exit={{opacity: 0}}
+            >
+              <Image
+                data={size_chart?.reference?.image}
+                sizes="(min-width: 45em) 45vw, 100vw"
+              />
+              {content()}
+            </motion.div>
+          </div>
         </AnimatePresence>
       </div>
-      <div>
+      <div ref={imageRef}>
         <img alt="" src="" className="pdp-additional-info-image" />
       </div>
-    </section>
+    </motion.section>
   );
 }
 
