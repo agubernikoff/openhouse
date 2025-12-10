@@ -262,7 +262,7 @@ function FooterMenu({menu, primaryDomainUrl, publicStoreDomain}) {
                     item.url.includes('myshopify.com') ||
                     item.url.includes(publicStoreDomain) ||
                     item.url.includes(primaryDomainUrl)
-                      ? new URL(item.url).pathname
+                      ? new URL(item.url).pathname + new URL(item.url).hash
                       : item.url;
                   const isExternal = !url.startsWith('/');
 
@@ -273,7 +273,16 @@ function FooterMenu({menu, primaryDomainUrl, publicStoreDomain}) {
                           {item.title}
                         </a>
                       ) : (
-                        <NavLink to={url} prefetch="intent">
+                        <NavLink
+                          to={url}
+                          prefetch="intent"
+                          onClick={() => {
+                            if (url.includes('#') && url.includes('pages')) {
+                              document.documentElement.style.scrollBehavior =
+                                'smooth';
+                            }
+                          }}
+                        >
                           {item.title}
                         </NavLink>
                       )}
