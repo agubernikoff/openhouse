@@ -1706,10 +1706,12 @@ div:has(.products-grid) {
   margin-top: 8px;
   margin-bottom: 8px;
   font-size: 16px;
+  align-items: flex-start;
 }
 .product-title-container div {
   display: flex;
   align-items: center;
+  line-height: 1.4rem;
 }
 
 .product-swatches {
@@ -2103,6 +2105,10 @@ div:has(.products-grid) {
   cursor: pointer;
 }
 
+.sample-button {
+  color: black;
+}
+
 .add-cart {
   background-color: var(--color-oh-black);
   color: var(--color-oh-white);
@@ -2186,6 +2192,7 @@ div:has(> .pdp-additional-info-image) {
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
+  color: black;
 }
 
 .quantity-controls button:hover:not(:disabled) {
@@ -2206,6 +2213,8 @@ div:has(> .pdp-additional-info-image) {
   margin-bottom: 0;
   margin-top: 0;
   padding: 0;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
 }
 
 .quantity-controls input[type='number']::-webkit-inner-spin-button,
