@@ -3,7 +3,7 @@ import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
 import {AnimatePresence, motion, useScroll, useTransform} from 'motion/react';
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef, forwardRef} from 'react';
 import mapRichText from '~/helpers/mapRichText';
 import Expandable from '~/components/Expandable';
 
@@ -26,20 +26,11 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
   return {...deferredData, ...criticalData};
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {Route.LoaderArgs}
- */
 async function loadCriticalData({context, request, params}) {
   if (!params.handle) {
     throw new Error('Missing page handle');
@@ -51,7 +42,6 @@ async function loadCriticalData({context, request, params}) {
         handle: params.handle,
       },
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!page) {
@@ -60,23 +50,29 @@ async function loadCriticalData({context, request, params}) {
 
   redirectIfHandleIsLocalized(request, {handle: params.handle, data: page});
 
-  return {
-    page,
-  };
+  return {page};
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {Route.LoaderArgs}
- */
 function loadDeferredData({context}) {
   return {};
 }
 
+function ScrollToHashEffect({refsMap, offset = 80}) {
+  const {hash} = useLocation();
+
+  useEffect(() => {
+    if (!hash) return;
+    const ref = refsMap[hash.replace('#', '')];
+    if (!ref?.current) return;
+
+    const y = ref.current.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({top: y, behavior: 'smooth'});
+  }, [hash, refsMap, offset]);
+
+  return null;
+}
+
 export default function Page() {
-  /** @type {LoaderReturnData} */
   const {page} = useLoaderData();
 
   return (
@@ -96,14 +92,13 @@ export default function Page() {
 }
 
 export function Sections({sections}) {
-  const {hash} = useLocation();
-  // Disable Remix's automatic hash scrolling
-  useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'auto';
-  }, [hash]);
+  // Create refs map based on section types
+  const refsMap = ['faq', 'our_story'].reduce((acc, section) => {
+    acc[section] = useRef(null);
+    return acc;
+  }, {});
 
   const mapped = sections.map((section) => {
-    // console.log(section.type);
     switch (section.type) {
       case 'partners':
         return <Partners section={section} key={section.id} />;
@@ -112,18 +107,37 @@ export function Sections({sections}) {
       case 'hero_section':
         return <PageHero section={section} key={section.id} />;
       case 'title_and_blurb':
-        return <TitleAndBlurb section={section} key={section.id} />;
+        const ref = refsMap['our_story'];
+        const {title} = normalizeMetaobject(section);
+        return (
+          <TitleAndBlurb
+            section={section}
+            key={section.id}
+            ref={
+              title?.value.toLowerCase().split(' ').join('_') === 'our_story'
+                ? ref
+                : null
+            }
+          />
+        );
       case 'multi_title_and_blurb':
         return <MultiTitleAndBlurb section={section} key={section.id} />;
       case 'faq_section':
-        return <FAQSection section={section} key={section.id} />;
+        const reff = refsMap['faq'];
+        return <FAQSection section={section} key={section.id} ref={reff} />;
       case 'services_header':
         return <ServicesHeader section={section} key={section.id} />;
       default:
         return null;
     }
   });
-  return <main>{mapped}</main>;
+
+  return (
+    <main>
+      <ScrollToHashEffect refsMap={refsMap} />
+      {mapped}
+    </main>
+  );
 }
 
 function ServicesHeader({section}) {
@@ -152,7 +166,7 @@ function ServicesHeader({section}) {
   );
 }
 
-function FAQSection({section}) {
+const FAQSection = forwardRef(({section}, ref) => {
   const {faqs} = normalizeMetaobject(section);
   const isFirstRender = useIsFirstRender();
   const [openSection, setOpenSection] = useState(null);
@@ -160,8 +174,9 @@ function FAQSection({section}) {
   const toggleSection = (section) => {
     setOpenSection(openSection === section ? null : section);
   };
+
   return (
-    <section className="home-featured-collection" id="faq">
+    <section className="home-featured-collection" ref={ref}>
       <div>
         <p className="red-dot">FREQUENTLY ASKED QUESTIONS</p>
       </div>
@@ -182,7 +197,7 @@ function FAQSection({section}) {
       </div>
     </section>
   );
-}
+});
 
 function MultiTitleAndBlurb({section}) {
   const {title, titles_and_blurbs} = normalizeMetaobject(section);
@@ -195,6 +210,7 @@ function MultiTitleAndBlurb({section}) {
       </div>
     );
   });
+
   return (
     <section className="home-featured-collection">
       <div>
@@ -209,14 +225,11 @@ function MultiTitleAndBlurb({section}) {
   );
 }
 
-function TitleAndBlurb({section}) {
+const TitleAndBlurb = forwardRef(({section}, ref) => {
   const {title, blurb} = normalizeMetaobject(section);
 
   return (
-    <section
-      className="home-featured-collection"
-      id={title.value.toLowerCase().split(' ').join('_')}
-    >
+    <section className="home-featured-collection" ref={ref}>
       <div>
         <p className="red-dot">{title.value.toUpperCase()}</p>
       </div>
@@ -227,7 +240,7 @@ function TitleAndBlurb({section}) {
       </div>
     </section>
   );
-}
+});
 
 function PageHero({section}) {
   const {background, headline} = normalizeMetaobject(section);
@@ -262,7 +275,6 @@ function Marquee({section}) {
     offset: ['start end', 'end start'],
   });
   const percentHidden = (100 / (images.length * 42) - 1) * 100;
-  // Map scroll progress to horizontal scroll: 0% visible = 0% scroll, 100% visible = 100% scroll
   const x = useTransform(scrollYProgress, [0, 1], ['0%', `${percentHidden}%`]);
 
   return (
@@ -290,7 +302,6 @@ function Partners({section}) {
   const isPullingFromLeftoverRef = useRef(true);
   const lastReplacedIndexRef = useRef(null);
 
-  // Visibility / viewport control
   const containerRef = useRef(null);
   const [isOnScreen, setIsOnScreen] = useState(false);
   const [isTabVisible, setIsTabVisible] = useState(
@@ -299,7 +310,6 @@ function Partners({section}) {
       : true,
   );
 
-  // IntersectionObserver: track whether container is visible in viewport
   useEffect(() => {
     const node = containerRef.current;
     if (!node || typeof IntersectionObserver === 'undefined') return;
@@ -317,7 +327,6 @@ function Partners({section}) {
     return () => observer.disconnect();
   }, [containerRef]);
 
-  // Page visibility (tab hidden) handling
   useEffect(() => {
     const handleVisibility = () => {
       setIsTabVisible(document.visibilityState === 'visible');
@@ -327,14 +336,12 @@ function Partners({section}) {
       document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
-  // Rotation interval: only run when container is on screen AND tab is visible
   useEffect(() => {
     if (!isOnScreen || !isTabVisible) return;
 
     const interval = setInterval(() => {
       setDisplayed((prev) => {
         const newDisplayed = [...prev];
-        // Pick random index to replace, but avoid the last replaced index
         let randomIndex;
         let attempts = 0;
         do {
@@ -344,32 +351,25 @@ function Partners({section}) {
         lastReplacedIndexRef.current = randomIndex;
         const removedNode = newDisplayed[randomIndex];
 
-        // Determine which bucket to pull from
         let replacement = null;
-        // If currently pulling from leftover
         if (isPullingFromLeftoverRef.current) {
           if (leftoverRef.current.length > 0) {
             replacement = leftoverRef.current.shift();
           } else if (stagingRef.current.length > 0) {
-            // Switch to staging only when leftover is empty
             isPullingFromLeftoverRef.current = false;
             replacement = stagingRef.current.shift();
           }
         } else {
-          // Currently pulling from staging
           if (stagingRef.current.length > 0) {
             replacement = stagingRef.current.shift();
           } else if (leftoverRef.current.length > 0) {
-            // Switch back to leftover only when staging is empty
             isPullingFromLeftoverRef.current = true;
             replacement = leftoverRef.current.shift();
           }
         }
 
-        // If we have a replacement, swap it in and store removed node
         if (replacement) {
           newDisplayed[randomIndex] = replacement;
-          // Store removed node in the bucket we just pulled from
           if (isPullingFromLeftoverRef.current) {
             stagingRef.current.push(removedNode);
           } else {

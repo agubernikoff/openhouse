@@ -273,16 +273,7 @@ function FooterMenu({menu, primaryDomainUrl, publicStoreDomain}) {
                           {item.title}
                         </a>
                       ) : (
-                        <NavLink
-                          to={url}
-                          prefetch="intent"
-                          onClick={() => {
-                            if (url.includes('#') && url.includes('pages')) {
-                              document.documentElement.style.scrollBehavior =
-                                'smooth';
-                            }
-                          }}
-                        >
+                        <NavLink to={url} prefetch="intent">
                           {item.title}
                         </NavLink>
                       )}

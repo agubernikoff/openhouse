@@ -150,9 +150,6 @@ function MegaDropdown({
                       onFocus={() => setHovered(link)}
                       onClick={() => {
                         close();
-                        if (url.includes('#') && url.includes('pages'))
-                          document.documentElement.style.scrollBehavior =
-                            'smooth';
                       }}
                     >
                       {link.title}
