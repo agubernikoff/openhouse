@@ -2229,20 +2229,108 @@ div:has(> .pdp-additional-info-image) {
 * routes/blog._index.tsx
 * --------------------------------------------------
 */
-.blog-grid {
-  display: grid;
-  grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
-  margin-bottom: 2rem;
+
+/* Dispatch Hero Section */
+.dispatch-hero {
+  margin-top: 48px;
+  margin-bottom: 60px;
 }
 
-.blog-article-image {
-  aspect-ratio: 3/2;
+.dispatch-hero-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dispatch-hero-text {
+  display: flex;
+  flex-direction: column;
+  max-width: 750px;
+  width: 100%;
+  margin-right: -90px;
+  z-index: 1;
+}
+
+.dispatch-hero-label {
+  font-family: 'mono';
+  font-size: 14px;
+  text-transform: uppercase;
+  margin: 0;
+  margin-bottom: 20px;
+}
+
+.dispatch-hero-title {
+  font-size: 57px;
+  line-height: 57px;
+  font-weight: normal;
+  margin: 0;
+  margin-bottom: 30px;
+}
+
+.dispatch-hero-description {
+  font-size: 16px;
+  line-height: 18px;
+  margin: 0;
+  margin-bottom: 20px;
+  width: 50%;
+}
+
+.dispatch-hero-logo {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dispatch-hero-logo img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
   display: block;
 }
 
-.blog-article-image img {
+/* Dispatch Articles Section */
+.dispatch-articles-section {
+  margin-top: 120px;
+}
+
+/* Dispatch articles grid styling */
+.dispatch-articles-grid {
+  gap: 20px;
+  row-gap: 20px;
+}
+
+.dispatch-article-card {
+  color: var(--color-oh-black);
+  width: 340px;
+  display: block;
+  text-decoration: none;
+}
+
+.dispatch-article-card:hover {
+  text-decoration: none;
+}
+
+.dispatch-article-image {
+  position: relative;
+  width: 340px;
+  height: 340px;
+}
+
+.dispatch-article-image img {
   height: 100%;
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.dispatch-article-title {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 18px;
+  margin-top: 8px;
+  font-weight: normal;
 }
 
 /*
@@ -3335,5 +3423,83 @@ body:has(.contact) .footer-newsletter-button:hover {
   }
   body:has(.contact) .header-dropdown-inner {
     border-bottom: 1px solid var(--color-light);
+  }
+  .dispatch-hero {
+    margin-bottom: 90px;
+  }
+
+  .dispatch-hero-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dispatch-hero-text {
+    max-width: 100%;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: -40px;
+    z-index: 1;
+  }
+
+  .dispatch-hero-label {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .dispatch-hero-title {
+    font-size: 36px;
+    line-height: 36px;
+    margin-bottom: 20px;
+  }
+
+  .dispatch-hero-description {
+    font-size: 14px;
+    line-height: 16px;
+    margin-bottom: 16px;
+    width: 75%;
+  }
+
+  .dispatch-hero-logo {
+    width: 100%;
+    max-width: 100%;
+    margin-top: -30px;
+  }
+
+  .dispatch-hero-logo img {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Dispatch Articles Section Mobile */
+  .dispatch-articles-section {
+    margin-top: 60px;
+  }
+
+  /* Override the flex column behavior for dispatch grid specifically */
+  .dispatch-articles-section .dispatch-articles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+    row-gap: 1rem !important;
+    flex-direction: initial !important;
+  }
+
+  .dispatch-article-card {
+    width: 100%;
+  }
+
+  .dispatch-article-image {
+    width: 100%;
+    height: 220px;
+  }
+
+  .dispatch-article-image img {
+    object-fit: cover;
+  }
+
+  .dispatch-article-title {
+    font-size: 14px;
+    line-height: 16px;
+    margin-top: 8px;
   }
 }
