@@ -2205,7 +2205,7 @@ div:has(> .pdp-additional-info-image) {
 
 .quantity-controls input[type='number'] {
   text-align: center;
-  width: 17px;
+  width: 25px;
   font-size: 16px;
   border-radius: 8px;
   background-color: transparent;
@@ -2213,8 +2213,6 @@ div:has(> .pdp-additional-info-image) {
   margin-bottom: 0;
   margin-top: 0;
   padding: 0;
-  margin-left: 5px !important;
-  margin-right: 5px !important;
 }
 
 .quantity-controls input[type='number']::-webkit-inner-spin-button,
