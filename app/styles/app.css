@@ -1641,6 +1641,9 @@ div:has(> .testimonials-container) {
   z-index: 2;
   background: var(--color-oh-white);
 }
+.filter-column div button {
+  color: var(--color-oh-black);
+}
 .filter-dot {
   width: 10px;
   height: 10px;
