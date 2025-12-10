@@ -250,9 +250,15 @@ button.reset:hover:not(:has(> *)) {
 
 .header-menu-mobile-toggle {
   padding: 0;
+  color: inherit;
   @media (min-width: 48em) {
     display: none;
   }
+}
+.header-menu-mobile-toggle line {
+  transition:
+    opacity 300ms ease-in-out,
+    transform 300ms ease-in-out;
 }
 
 .header-menu-mobile {

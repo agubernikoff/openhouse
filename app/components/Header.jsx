@@ -690,31 +690,45 @@ function HeaderMenuMobileToggle() {
         else open('mobile');
       }}
     >
-      <AnimatePresence mode="wait">
-        {isMobileOpen ? (
-          <motion.img
-            key="x-icon"
-            src={closeIcon}
-            alt="Close menu"
-            initial={{opacity: 0, rotate: -90}}
-            animate={{opacity: 1, rotate: 0}}
-            exit={{opacity: 0, rotate: 90}}
-            transition={{duration: 0.2}}
-            style={{width: '20px'}}
-          />
-        ) : (
-          <motion.img
-            key="hamburger-icon"
-            src={hamburgerIcon}
-            alt="Open menu"
-            initial={{opacity: 0, rotate: 90}}
-            animate={{opacity: 1, rotate: 0}}
-            exit={{opacity: 0, rotate: -90}}
-            transition={{duration: 0.2}}
-            style={{width: '20px'}}
-          />
-        )}
-      </AnimatePresence>
+      <svg
+        width="20"
+        height="9"
+        viewBox="0 0 20 9"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <line
+          y1="0.5"
+          x2="20"
+          y2="0.5"
+          stroke="currentColor"
+          style={{
+            transformOrigin: 'center',
+            transform: isMobileOpen
+              ? 'rotate(45deg) translateY(4px)'
+              : 'rotate(0deg) translateY(0px)',
+          }}
+        />
+        <line
+          y1="4.5"
+          x2="20"
+          y2="4.5"
+          stroke="currentColor"
+          style={{opacity: isMobileOpen ? 0 : 1}}
+        />
+        <line
+          y1="8.5"
+          x2="20"
+          y2="8.5"
+          stroke="currentColor"
+          style={{
+            transformOrigin: 'center',
+            transform: isMobileOpen
+              ? 'rotate(-45deg) translateY(-4px)'
+              : 'rotate(0deg) translateY(0px)',
+          }}
+        />
+      </svg>
     </button>
   );
 }
