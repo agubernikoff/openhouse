@@ -127,6 +127,8 @@ export function Sections({sections}) {
         return <FAQSection section={section} key={section.id} ref={reff} />;
       case 'services_header':
         return <ServicesHeader section={section} key={section.id} />;
+      case 'sticky_scroll':
+        return <StickyScroll section={section} key={section.id} />;
       default:
         return null;
     }
@@ -137,6 +139,100 @@ export function Sections({sections}) {
       <ScrollToHashEffect refsMap={refsMap} />
       {mapped}
     </main>
+  );
+}
+
+function StickyScroll({section}) {
+  const first = useRef(null);
+  const last = useRef(null);
+  const containerRef = useRef(null);
+  const [topOffset, setTopOffset] = useState(0);
+  const [bottomOffset, setBottomOffset] = useState(0);
+
+  const {scrollYProgress} = useScroll({
+    target: containerRef,
+    offset: ['start center', 'end center'],
+  });
+
+  const {title, data, image} = normalizeMetaobject(section);
+  console.log(image);
+  // Calculate the offset positions based on first and last element heights
+  useEffect(() => {
+    if (!first.current || !last.current || !containerRef.current) return;
+
+    const updateOffsets = () => {
+      const firstHeight = first.current.offsetHeight;
+      const lastHeight = last.current.offsetHeight;
+
+      // Calculate offset from top of container to middle of first element
+      const firstRect = first.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const topPos = firstRect.top - containerRect.top + firstHeight / 2;
+
+      // Calculate offset to middle of last element
+      const lastRect = last.current.getBoundingClientRect();
+      const bottomPos = lastRect.top - containerRect.top + lastHeight / 2;
+
+      setTopOffset(topPos);
+      setBottomOffset(bottomPos);
+    };
+
+    updateOffsets();
+    window.addEventListener('resize', updateOffsets);
+    return () => window.removeEventListener('resize', updateOffsets);
+  }, [data.references.nodes.length]);
+
+  // Transform scroll progress to dot position
+  const dotTop = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [topOffset, bottomOffset],
+  );
+
+  const content = data.references.nodes.map((node, i) => {
+    const {title, blurb} = normalizeMetaobject(node);
+    return (
+      <div
+        key={node.id}
+        className="title-and-blurb-item"
+        ref={
+          i === 0 ? first : i === data.references.nodes.length - 1 ? last : null
+        }
+      >
+        <h3>{title.value}</h3>
+        {mapRichText(JSON.parse(blurb.value))}
+      </div>
+    );
+  });
+
+  return (
+    <section className="home-featured-collection">
+      <div>
+        <p className="red-dot">{title.value.toUpperCase()}</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <div
+          className="page-subgrid-content-container sticky-scroll-content-container"
+          ref={containerRef}
+        >
+          <div className="sticky-scroll-line" />
+          <motion.div
+            className="filter-dot"
+            style={{
+              top: dotTop,
+            }}
+          />
+          {content}
+        </div>
+        <div>
+          <Image
+            data={image?.reference?.image}
+            sizes="(min-width: 45em) 25vw, 100vw"
+            className="sticky-scroll-image"
+          />
+        </div>
+      </div>
+    </section>
   );
 }
 
