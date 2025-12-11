@@ -2467,6 +2467,13 @@ div:has(> .pdp-additional-info-image) {
   font-size: 14px;
   font-family: 'apfel';
 }
+.contact-details-container p span a {
+  color: var(--color-oh-white);
+}
+.contact-details-container p span a:hover {
+  text-decoration: none;
+  cursor: pointer;
+}
 .contact-details-container h3 {
   margin-bottom: 1rem;
 }
@@ -2558,6 +2565,14 @@ body:has(.contact) .footer-newsletter-button:hover {
   background: var(--color-oh-black);
   color: var(--color-oh-white);
   outline: 1px solid var(--color-oh-white);
+}
+body:has(.contact) .product-price div,
+body:has(.contact) .cart-line-options li,
+body:has(.contact) .cart-line-quantity p,
+body:has(.contact) .cart-subtotal,
+body:has(.contact) .cart-line-actions form button,
+body:has(.contact) .red-dot {
+  color: var(--color-oh-black);
 }
 
 /*
@@ -2652,7 +2667,7 @@ body:has(.contact) .footer-newsletter-button:hover {
 }
 .marquee-section > div {
   display: flex;
-  gap: 2vw;
+  gap: 24px;
 }
 .marquee-section > div > img {
   aspect-ratio: 1/1 !important;
@@ -3451,14 +3466,14 @@ body:has(.contact) .footer-newsletter-button:hover {
   }
   body:has(.contact) .header-mobile-center > a > svg path,
   body:has(.contact) .cart-link {
-    fill: var(--color-light) !important;
-    color: var(--color-light) !important;
-    stroke: var(--color-light) !important;
+    fill: var(--color-oh-white) !important;
+    color: var(--color-oh-white) !important;
+    stroke: var(--color-oh-white) !important;
   }
   body:has(.contact) .reset > svg path,
   body:has(.contact) .predictive-search-result-item a div svg path {
-    color: var(--color-light) !important;
-    stroke: var(--color-light) !important;
+    color: var(--color-oh-white) !important;
+    stroke: var(--color-oh-white) !important;
   }
   body:has(.contact) .header-dropdown-content {
     background-color: var(--color-oh-black);
@@ -3475,18 +3490,18 @@ body:has(.contact) .footer-newsletter-button:hover {
   body:has(.contact) .cart-line-options ul li,
   body:has(.contact) .product-price div,
   body:has(.contact) .cart-line-actions form button {
-    color: var(--color-light) !important;
+    color: var(--color-oh-white) !important;
   }
   body:has(.contact) .mobile-search-form button {
-    border: 1px solid var(--color-light) !important;
+    border: 1px solid var(--color-oh-white) !important;
   }
   body:has(.contact) .cart-checkout-button,
   body:has(.contact) .cart-special-instructions {
-    background-color: var(--color-light);
+    background-color: var(--color-oh-white);
     color: var(--color-oh-black);
   }
   body:has(.contact) .header-dropdown-inner {
-    border-bottom: 1px solid var(--color-light);
+    border-bottom: 1px solid var(--color-oh-white);
   }
   .dispatch-hero {
     margin-bottom: 90px;
@@ -3565,5 +3580,9 @@ body:has(.contact) .footer-newsletter-button:hover {
     font-size: 16px;
     line-height: 16px;
     margin-top: 8px;
+  }
+
+  .marquee-section > div {
+    gap: 16px;
   }
 }

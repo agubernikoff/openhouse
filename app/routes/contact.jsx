@@ -78,13 +78,34 @@ export default function Contact() {
         <div>
           <h3>Contact</h3>
           <p>
-            General Inquiries <span>sales@byopenhouse.com</span>
+            General Inquiries{' '}
+            <span>
+              <a href="mailto:sales@byopenhouse.com">sales@byopenhouse.com</a>
+            </span>
           </p>
           <p>
-            Instagram <span>@byopenhouse</span>
+            Instagram{' '}
+            <span>
+              <a
+                href="https://instagram.com/byopenhouse"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                @byopenhouse
+              </a>
+            </span>
           </p>
           <p>
-            LinkedIn <span>@byopenhouse</span>
+            LinkedIn{' '}
+            <span>
+              <a
+                href="https://linkedin.com/company/byopenhouse"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                @byopenhouse
+              </a>
+            </span>
           </p>
         </div>
         <p>
