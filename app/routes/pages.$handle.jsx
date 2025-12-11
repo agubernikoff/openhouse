@@ -2,8 +2,14 @@ import {useLoaderData, useLocation, Link} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Image} from '@shopify/hydrogen';
-import {AnimatePresence, motion, useScroll, useTransform} from 'motion/react';
-import {useState, useEffect, useRef, forwardRef} from 'react';
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useScroll,
+  useTransform,
+} from 'motion/react';
+import {useState, useEffect, useRef, forwardRef, useCallback} from 'react';
 import mapRichText from '~/helpers/mapRichText';
 import Expandable from '~/components/Expandable';
 
@@ -129,6 +135,8 @@ export function Sections({sections}) {
         return <ServicesHeader section={section} key={section.id} />;
       case 'sticky_scroll':
         return <StickyScroll section={section} key={section.id} />;
+      case 'animated_scroll':
+        return <AnimatedScroll section={section} key={section.id} />;
       default:
         return null;
     }
@@ -139,6 +147,229 @@ export function Sections({sections}) {
       <ScrollToHashEffect refsMap={refsMap} />
       {mapped}
     </main>
+  );
+}
+
+function AnimatedScroll({section}) {
+  const {title, blurb, data} = normalizeMetaobject(section);
+  const [selected, setSelected] = useState(data?.references?.nodes[0]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollProgresses, setScrollProgresses] = useState({});
+
+  // Update scroll progress for a specific index
+  const updateScrollProgress = useCallback(
+    (index, progress) => {
+      setScrollProgresses((prev) => ({...prev, [index]: progress}));
+
+      // Update selected when this element comes into view
+      if (progress > 0 && selectedIndex !== index) {
+        setSelectedIndex(index);
+        setSelected(data?.references?.nodes[index]);
+      }
+    },
+    [selectedIndex, data?.references?.nodes],
+  );
+
+  return (
+    <div className="home-featured-collection">
+      <div>
+        <p className="red-dot">{title?.value?.toUpperCase()}</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <h3>{mapRichText(JSON.parse(blurb?.value))}</h3>
+      </div>
+      <div className="animated-scroll-content-container-outer">
+        <div className="animated-scroll-content-container-inner">
+          <StickyScrollContent
+            images={data?.references?.nodes.map((n) => {
+              const {image} = normalizeMetaobject(n);
+              return image;
+            })}
+            data={selected}
+            index={selectedIndex + 1}
+            selectedIndex={selectedIndex}
+            scrollProgresses={scrollProgresses}
+          />
+          {data?.references?.nodes?.map((n, i) => (
+            <ScrollingContent
+              key={n.id}
+              data={n}
+              index={i + 1}
+              onScrollProgressChange={(progress) =>
+                updateScrollProgress(i, progress)
+              }
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StickyScrollContent({
+  images,
+  data,
+  index,
+  selectedIndex,
+  scrollProgresses,
+}) {
+  const {title, blurb} = normalizeMetaobject(data);
+  const containerRef = useRef(null);
+  const [scrollDirection, setScrollDirection] = useState('down');
+  const lastScrollY = useRef(0);
+
+  // Track scroll direction based on actual scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current) {
+        setScrollDirection('down');
+      } else if (currentScrollY < lastScrollY.current) {
+        setScrollDirection('up');
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const x = useMotionValue(0);
+
+  // Update progress bar based on selected scroll progress
+  useEffect(() => {
+    const progress = scrollProgresses[selectedIndex];
+    if (progress !== undefined) {
+      x.set(progress);
+    }
+  }, [scrollProgresses, selectedIndex, x]);
+
+  const barWidth = useTransform(x, [0, 1], ['0%', '100%']);
+
+  // Animation variants based on scroll direction
+  const isScrollingDown = scrollDirection === 'down';
+  const yEnter = isScrollingDown ? '50px' : '-50px';
+  const yExit = isScrollingDown ? '-50px' : '50px';
+
+  return (
+    <div className="animated-scroll-object" ref={containerRef}>
+      <div className="animated-scroll-object-image-container">
+        {images?.map((img, i) => {
+          const isSelected = i === selectedIndex;
+          const progress = scrollProgresses[i] || 0;
+          return (
+            <AnimatedImage
+              key={img.reference.id}
+              image={img}
+              progress={progress}
+              isSelected={isSelected}
+              isFirst={i === 0}
+            />
+          );
+        })}
+        <motion.div className="scroll-progress-bar" style={{width: barWidth}} />
+      </div>
+      <div className="animated-scroll-object-text-container">
+        <div>
+          <motion.p
+            className="red-dot"
+            key={title.value}
+            initial={{opacity: 0, y: yEnter}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: yExit}}
+            transition={{ease: 'easeInOut', delay: isScrollingDown ? 0 : 0.3}}
+          >{`${index <= 10 ? 0 : ''}${index}`}</motion.p>
+          <motion.h3
+            key={`${title.value}-h3`}
+            initial={{opacity: 0, y: yEnter}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: yExit}}
+            transition={{ease: 'easeInOut', delay: isScrollingDown ? 0.1 : 0.2}}
+          >
+            {title.value}
+          </motion.h3>
+        </div>
+        <motion.div
+          key={`${title.value}-blurb`}
+          initial={{opacity: 0, y: yEnter}}
+          animate={{opacity: 1, y: 0}}
+          exit={{opacity: 0, y: yExit}}
+          transition={{ease: 'easeInOut', delay: isScrollingDown ? 0.2 : 0.1}}
+        >
+          {mapRichText(JSON.parse(blurb.value))}
+        </motion.div>
+        <motion.div
+          key={`${title.value}-link`}
+          initial={{opacity: 0, y: yEnter}}
+          animate={{opacity: 1, y: 0}}
+          exit={{opacity: 0, y: yExit}}
+          transition={{ease: 'easeInOut', delay: isScrollingDown ? 0.3 : 0}}
+        >
+          <Link to="/contact" className="explore-all">
+            GET IN CONTACT
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function AnimatedImage({image, progress, isFirst, isSelected}) {
+  return (
+    <motion.div
+      animate={{scale: isFirst ? 1 : progress === 0 && !isSelected ? 0 : 1}}
+      key={image.reference.id}
+      transition={{duration: 0.5, ease: 'easeInOut'}}
+    >
+      <Image
+        data={image?.reference?.image}
+        sizes="(min-width: 45em) 40vw, 100vw"
+      />
+    </motion.div>
+  );
+}
+
+function ScrollingContent({data, index, onScrollProgressChange}) {
+  const {title, blurb, image} = normalizeMetaobject(data);
+  const containerRef = useRef(null);
+
+  const {scrollYProgress} = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  // Report scroll progress changes to parent
+  useEffect(() => {
+    if (onScrollProgressChange) {
+      const unsubscribe = scrollYProgress.on('change', (latest) => {
+        onScrollProgressChange(latest);
+      });
+      return unsubscribe;
+    }
+  }, [scrollYProgress, onScrollProgressChange]);
+
+  return (
+    <div className="animated-scroll-object" ref={containerRef}>
+      <div className="animated-scroll-object-image-container">
+        <Image
+          data={image?.reference?.image}
+          sizes="(min-width: 45em) 40vw, 100vw"
+        />
+        <motion.div className="scroll-progress-bar" style={{width: x}} />
+      </div>
+      <div className="animated-scroll-object-text-container">
+        <div>
+          <p className="red-dot">{`${index <= 10 ? 0 : ''}${index}`}</p>
+          <h3>{title.value}</h3>
+        </div>
+        {mapRichText(JSON.parse(blurb.value))}
+        <Link to="/contact" className="explore-all">
+          GET IN CONTACT
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -155,7 +386,6 @@ function StickyScroll({section}) {
   });
 
   const {title, data, image} = normalizeMetaobject(section);
-  console.log(image);
   // Calculate the offset positions based on first and last element heights
   useEffect(() => {
     if (!first.current || !last.current || !containerRef.current) return;

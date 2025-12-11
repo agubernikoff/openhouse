@@ -1339,6 +1339,7 @@ div:has(> .testimonials-container) {
 .pagination-link,
 .contact h3,
 .page .home-featured-collection h3,
+.page .home-featured-collection h3 p,
 .page .hero-section h4,
 .page-subgrid-content-container > .rich-text-div * {
   font-weight: normal;
@@ -2713,11 +2714,87 @@ body:has(.contact) .red-dot {
   left: 0;
   transform: translateX(-50%);
 }
-.sticky-scroll-image {
+.sticky-scroll-image,
+.animated-scroll-object-image-container > div > img {
   width: 100%;
   height: auto;
   object-fit: cover;
 }
+.page .home-featured-collection h3:has(> .rich-text-div) {
+  grid-column: span 2;
+}
+.animated-scroll-content-container-outer {
+  grid-column: span 4;
+  display: flex;
+  justify-content: center;
+}
+.animated-scroll-content-container-inner {
+  width: 100%;
+  max-width: 1156px;
+  position: relative;
+}
+.animated-scroll-object {
+  display: flex;
+  gap: 142px;
+  justify-content: space-between;
+  height: calc(100vh - 2rem);
+  opacity: 0;
+}
+.animated-scroll-object:first-of-type {
+  position: sticky;
+  opacity: 1;
+  top: 1rem;
+}
+.animated-scroll-object:nth-of-type(2) {
+  position: absolute;
+  top: 0;
+  z-index: -1;
+}
+.animated-scroll-object:last-of-type {
+  margin-bottom: calc(100vh - 2rem);
+}
+.animated-scroll-object > div {
+  flex: 1;
+  position: relative;
+  top: 25%;
+  height: fit-content;
+}
+.animated-scroll-object-image-container {
+  position: relative;
+}
+.animated-scroll-object-image-container > div:has(> img):first-of-type {
+  position: static;
+}
+.animated-scroll-object-image-container > div:has(> img) {
+  position: absolute;
+  inset: 0;
+  /* transition: scale 300ms ease-in-out; */
+}
+.scroll-progress-bar {
+  position: absolute;
+  bottom: 0;
+  height: 10px;
+  background: var(--color-oh-red);
+}
+.animated-scroll-object-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  transform: translateY(12.5vh);
+}
+.animated-scroll-object-text-container > div:has(> .red-dot) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.animated-scroll-object-text-container .red-dot {
+  font-size: 14px;
+  line-height: 14px;
+}
+.animated-scroll-object-text-container > div > .rich-text-div {
+  color: #737373;
+}
+
 /*
 * --------------------------------------------------
 * media queries
