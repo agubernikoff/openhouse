@@ -1,15 +1,3 @@
-import {ServerRouter} from 'react-router';
-import {isbot} from 'isbot';
-import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
-
-/**
- * @param {Request} request
- * @param {number} responseStatusCode
- * @param {Headers} responseHeaders
- * @param {EntryContext} reactRouterContext
- * @param {HydrogenRouterContextProvider} context
- */
 export default async function handleRequest(
   request,
   responseStatusCode,
@@ -27,8 +15,15 @@ export default async function handleRequest(
       "'self'",
       'https://cdn.shopify.com',
       'https://openhouse.store',
+      'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com', // Add your S3 bucket
       'blob:',
       'data:',
+    ],
+    // ADD THIS - Critical for API calls to S3
+    connectSrc: [
+      "'self'",
+      'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
+      'https://s3.us-east-1.amazonaws.com', // Some AWS SDK calls go to regional endpoint
     ],
   });
 
@@ -62,6 +57,3 @@ export default async function handleRequest(
     status: responseStatusCode,
   });
 }
-
-/** @typedef {import('@shopify/hydrogen').HydrogenRouterContextProvider} HydrogenRouterContextProvider */
-/** @typedef {import('react-router').EntryContext} EntryContext */
