@@ -911,6 +911,7 @@ div:has(> .testimonials-container) {
   object-fit: cover;
   display: block;
   border-radius: 10px;
+  background: white;
 }
 
 /* Details column - takes up remaining space */
@@ -1180,6 +1181,7 @@ div:has(> .testimonials-container) {
   height: 100%;
   aspect-ratio: 1/1;
   width: 63px;
+  background: white;
 }
 .predictive-search-result-item a p {
   font-size: 16px;
