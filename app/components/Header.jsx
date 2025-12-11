@@ -745,10 +745,11 @@ function SearchToggle({handleHeaderMouseLeave}) {
           if (display === 'none')
             if (type === 'mobile') {
               close();
+              return;
             } else {
               open('mobile');
+              return;
             }
-          return;
         }
         if (type === 'search') {
           close();
