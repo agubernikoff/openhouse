@@ -19,13 +19,21 @@ export function ProductForm({productOptions, selectedVariant}) {
     (option) => option.name !== 'Order Type',
   );
 
-  // Get the minimum order quantity from variant metafield or default to 22
-  const minimumQuantity = selectedVariant?.minimumQuantity?.value
+  // Get the minimum order quantity from variant metafield (priority) or product metafield
+  // If variant has minimumQuantity, use it; otherwise fall back to product level
+  const variantMinQty = selectedVariant?.minimumQuantity?.value
     ? parseInt(selectedVariant.minimumQuantity.value)
-    : 22;
+    : null;
 
-  // State for quantity selector
-  const [quantity, setQuantity] = useState(minimumQuantity);
+  const productMinQty = selectedVariant?.product?.minimumQuantity?.value
+    ? parseInt(selectedVariant.product.minimumQuantity.value)
+    : null;
+
+  const minimumQuantity = variantMinQty ?? productMinQty ?? null;
+  const hasMinimumQuantity = minimumQuantity !== null;
+
+  // State for quantity selector - start with minimum or 1
+  const [quantity, setQuantity] = useState(minimumQuantity || 1);
 
   // State for "added to cart" feedback
   const [bulkAdded, setBulkAdded] = useState(false);
@@ -45,7 +53,8 @@ export function ProductForm({productOptions, selectedVariant}) {
 
   // Handle quantity decrease
   const decreaseQuantity = () => {
-    if (quantity > minimumQuantity) {
+    const minQty = minimumQuantity || 1;
+    if (quantity > minQty) {
       setQuantity(quantity - 1);
     }
   };
@@ -58,7 +67,8 @@ export function ProductForm({productOptions, selectedVariant}) {
   // Handle direct input
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= minimumQuantity) {
+    const minQty = minimumQuantity || 1;
+    if (!isNaN(value) && value >= minQty) {
       setQuantity(value);
     }
   };
@@ -254,7 +264,11 @@ export function ProductForm({productOptions, selectedVariant}) {
               <h5>
                 <span className="option-bullet">●</span>
                 <span className="option-number">{displayNumber}.</span>{' '}
-                {option.name.toUpperCase()}:{' '}
+                {(option.name === 'Embellishment Type'
+                  ? 'Embellishment'
+                  : option.name
+                ).toUpperCase()}
+                :{' '}
                 <AnimatePresence mode="popLayout">
                   <motion.span
                     key={selectedName}
@@ -433,7 +447,7 @@ export function ProductForm({productOptions, selectedVariant}) {
           <button
             type="button"
             onClick={decreaseQuantity}
-            disabled={quantity <= minimumQuantity}
+            disabled={quantity <= (minimumQuantity || 1)}
           >
             -
           </button>
@@ -441,7 +455,7 @@ export function ProductForm({productOptions, selectedVariant}) {
             type="number"
             value={quantity}
             onChange={handleQuantityChange}
-            min={minimumQuantity}
+            min={minimumQuantity || 1}
           />
           <button type="button" onClick={increaseQuantity}>
             +
@@ -451,7 +465,9 @@ export function ProductForm({productOptions, selectedVariant}) {
 
       {/* Quantity display and bulk order info */}
       <div className="product-quantity-info">
-        <p>Minimum Order Quantity: {minimumQuantity} units</p>
+        {hasMinimumQuantity && (
+          <p>Minimum Order Quantity: {minimumQuantity} units</p>
+        )}
         <p>Ready to ship. when?</p>
       </div>
 

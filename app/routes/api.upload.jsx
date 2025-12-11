@@ -78,8 +78,6 @@ export async function action({request, context}) {
       Key: fileName,
       Body: uint8Array,
       ContentType: file.type,
-      // Make the file publicly readable
-      ACL: 'public-read',
     });
 
     await s3Client.send(command);

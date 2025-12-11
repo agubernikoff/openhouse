@@ -526,6 +526,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     product {
       title
       handle
+      minimumQuantity: metafield(namespace: "custom", key: "minimum_quantity") {
+        value
+      }
     }
     selectedOptions {
       name
@@ -536,6 +539,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     unitPrice {
       amount
       currencyCode
+    }
+    minimumQuantity: metafield(namespace: "custom", key: "variant_minimum_quantity_priority") {
+      value
     }
   }
 `;
@@ -609,6 +615,9 @@ const PRODUCT_FRAGMENT = `#graphql
           }
         }
       }
+    }
+    minimumQuantity: metafield(namespace: "custom", key: "minimum_quantity") {
+      value
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
