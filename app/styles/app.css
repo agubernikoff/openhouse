@@ -2945,6 +2945,9 @@ body:has(.contact) .footer-newsletter-button:hover {
   .multi-title-and-blurb {
     display: block;
   }
+  .page section:last-of-type {
+    margin-bottom: 0;
+  }
 
   .footer-hero-content {
     max-width: 100%;
