@@ -2710,6 +2710,10 @@ body:has(.contact) .footer-newsletter-button:hover {
   .header-mobile-layout {
     display: none !important;
   }
+
+  .you-may-also-like .product-item:last-of-type {
+    display: none;
+  }
 }
 @media (max-width: 767px) {
   :root {

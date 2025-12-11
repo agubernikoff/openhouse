@@ -474,7 +474,7 @@ function YouMayAlsoLike({compliments, recs}) {
               .filter((p) => p?.id)
               .map((p) => [p.id, p]),
           ).values(),
-        ].slice(0, 3);
+        ].slice(0, 4);
 
         setResolvedCompliments(uniqueProducts);
       })
@@ -486,11 +486,11 @@ function YouMayAlsoLike({compliments, recs}) {
   }
 
   return (
-    <section className="home-featured-collection">
+    <section className="home-featured-collection you-may-also-like">
       <div>
         <p className="red-dot">YOU MAY ALSO LIKE</p>
       </div>
-      <div className="subgrid home-featured-products-grid">
+      <div className="subgrid products-grid">
         {resolvedCompliments.map((product, index) => (
           <ProductItem
             key={product.id}

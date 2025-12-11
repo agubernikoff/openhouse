@@ -168,7 +168,7 @@ function YouMayAlsoLike({recommendations}) {
 
     const unique = [
       ...new Map(allProducts.map((p) => [p.id, p])).values(),
-    ].slice(0, 3);
+    ].slice(0, 4);
 
     setUniqueProducts(unique);
   }, [recommendations]);
@@ -178,11 +178,11 @@ function YouMayAlsoLike({recommendations}) {
   }
 
   return (
-    <section className="home-featured-collection">
+    <section className="home-featured-collection you-may-also-like">
       <div>
         <p className="red-dot">YOU MAY ALSO LIKE</p>
       </div>
-      <div className="subgrid home-featured-products-grid">
+      <div className="subgrid products-grid">
         {uniqueProducts.map((product, index) => (
           <ProductItem
             key={product.id}
