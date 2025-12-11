@@ -56,7 +56,10 @@ export function CartLineItem({layout, line}) {
               .filter((option) => option.name !== 'Order Type') // Filter out Order Type
               .map((option) => (
                 <li key={option.name}>
-                  {option.name}: {option.value}
+                  {option.name === 'Embellishment Type'
+                    ? 'Embellishment'
+                    : option.name}
+                  : {option.value}
                 </li>
               ))}
             {/* Add attributes display here */}
