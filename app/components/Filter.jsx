@@ -401,6 +401,7 @@ export function FilterInput({
           textDecoration: count === 0 ? 'underline' : 'none',
           textUnderlineOffset: '-38%',
           textDecorationSkipInk: 'none',
+          color: 'var(--color-oh-black)',
         }}
         transition={{ease: 'easeInOut'}}
         layout
