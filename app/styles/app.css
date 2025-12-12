@@ -213,7 +213,8 @@ button.reset:hover:not(:has(> *)) {
   width: 100%;
   max-width: 730px;
   pointer-events: none;
-  padding-top: 60px;
+  padding-top: 59px;
+  border-top: 1px solid var(--color-oh-gray);
 }
 
 .header-dropdown-content {
