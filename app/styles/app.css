@@ -3265,10 +3265,11 @@ div:has(> .sticky-scroll-image) {
   .footer-newsletter-title {
     margin: 0;
   }
-  .footer-newsletter-error {
+  .footer-newsletter-error,
+  .footer-newsletter-success {
     position: absolute;
-    bottom: 2.5rem;
-    left: 1rem;
+    bottom: 6rem;
+    left: 0rem;
   }
   .footer-newsletter-input {
     padding: 1rem;
