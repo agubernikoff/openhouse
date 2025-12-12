@@ -787,11 +787,15 @@ div:has(> .testimonials-container) {
   margin-left: 1rem;
   width: calc(100% - 2rem);
 }
-.footer-newsletter-error {
+.footer-newsletter-error,
+.footer-newsletter-success {
   position: absolute;
   bottom: 2.5rem;
   left: 1rem;
   color: var(--color-oh-red);
+}
+.footer-newsletter-success {
+  color: inherit;
 }
 
 .footer-newsletter-form {

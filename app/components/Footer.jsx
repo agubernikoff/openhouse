@@ -223,22 +223,33 @@ function FooterNewsletter() {
 
   const isSubmitting = fetcher.state === 'submitting';
   const isSuccess = fetcher.data?.success;
+  const successMessage = fetcher.data?.message;
   const error = fetcher.data?.error;
   const [displayErr, setDisplayErr] = useState('');
+  const [displaySucc, setDisplaySucc] = useState('');
 
   useEffect(() => {
-    setDisplayErr(error);
-    const timer = setTimeout(() => setDisplayErr(''), 1600);
-    return () => clearTimeout(timer);
-  }, [error, isSubmitting]);
+    if (error) {
+      setDisplayErr(error);
+      setDisplaySucc(''); // Clear success message
+      const timer = setTimeout(() => setDisplayErr(''), 1600);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   useEffect(() => {
     if (isSuccess) {
       setEmail('');
+      setDisplaySucc(successMessage);
+      setDisplayErr(''); // Clear error message
+      const timer = setTimeout(() => setDisplaySucc(''), 1600);
+      return () => clearTimeout(timer);
     }
-  }, [isSuccess]);
+  }, [isSuccess, successMessage]);
 
   const handleSubmit = (e) => {
+    setDisplayErr('');
+    setDisplaySucc('');
     e.preventDefault();
     const formData = new FormData();
     formData.append('email', email);
@@ -258,6 +269,7 @@ function FooterNewsletter() {
       <AnimatePresence>
         {displayErr && (
           <motion.p
+            key="error"
             initial={{opacity: 0}}
             animate={{opacity: 1}}
             exit={{opacity: 0}}
@@ -266,12 +278,22 @@ function FooterNewsletter() {
             {displayErr}
           </motion.p>
         )}
+        {displaySucc && (
+          <motion.p
+            key="success"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-success"
+          >
+            {displaySucc}
+          </motion.p>
+        )}
       </AnimatePresence>
       <form className="footer-newsletter-form" onSubmit={handleSubmit}>
         <input
           id="email"
           name="email"
-          // type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
