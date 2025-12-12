@@ -768,6 +768,7 @@ div:has(> .testimonials-container) {
   border: 1px solid #ccc;
   border-bottom: none;
   padding-top: 1rem;
+  position: relative;
 }
 
 .footer-newsletter-title {
@@ -781,6 +782,12 @@ div:has(> .testimonials-container) {
   margin-bottom: 2.5rem;
   margin-left: 1rem;
   width: calc(100% - 2rem);
+}
+.footer-newsletter-error {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 1rem;
+  color: var(--color-oh-red);
 }
 
 .footer-newsletter-form {
@@ -3157,6 +3164,7 @@ body:has(.contact) .red-dot {
   .footer-newsletter {
     border: none;
     padding: 0;
+    position: relative;
   }
   .footer-newsletter-form {
     border: none;
@@ -3173,6 +3181,11 @@ body:has(.contact) .red-dot {
   .footer-newsletter-description,
   .footer-newsletter-title {
     margin: 0;
+  }
+  .footer-newsletter-error {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 1rem;
   }
   .footer-newsletter-input {
     padding: 1rem;

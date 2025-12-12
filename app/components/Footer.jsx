@@ -1,8 +1,8 @@
-import {Suspense, useState} from 'react';
-import {Await, NavLink, useLocation} from 'react-router';
+import {Suspense, useState, useEffect} from 'react';
+import {Await, NavLink, useLocation, useFetcher} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {Logo} from './Logo';
-import {motion} from 'motion/react';
+import {AnimatePresence, motion} from 'motion/react';
 import bg from 'app/assets/testi-bg.png';
 
 /**
@@ -204,7 +204,7 @@ function FooterHero({metaobject}) {
               <br />
               for Brands that Care
             </p>
-            <a href="/collections/all" className="footer-hero-button">
+            <a href="/collections/frontpage" className="footer-hero-button">
               EXPLORE ALL
             </a>
           </div>
@@ -218,6 +218,36 @@ function FooterHero({metaobject}) {
  * Newsletter Section
  */
 function FooterNewsletter() {
+  const fetcher = useFetcher();
+  const [email, setEmail] = useState('');
+
+  const isSubmitting = fetcher.state === 'submitting';
+  const isSuccess = fetcher.data?.success;
+  const error = fetcher.data?.error;
+  const [displayErr, setDisplayErr] = useState('');
+
+  useEffect(() => {
+    setDisplayErr(error);
+    const timer = setTimeout(() => setDisplayErr(''), 1600);
+    return () => clearTimeout(timer);
+  }, [error, isSubmitting]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setEmail('');
+    }
+  }, [isSuccess]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('email', email);
+    fetcher.submit(formData, {
+      method: 'post',
+      action: '/api/newsletter',
+    });
+  };
+
   return (
     <div className="footer-newsletter">
       <p className="footer-newsletter-title">Newsletter</p>
@@ -225,16 +255,35 @@ function FooterNewsletter() {
         Let's get connected. Reach out about a project, collaboration or just to
         say hello!
       </p>
-      <form className="footer-newsletter-form">
+      <AnimatePresence>
+        {displayErr && (
+          <motion.p
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-error"
+          >
+            {displayErr}
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <form className="footer-newsletter-form" onSubmit={handleSubmit}>
         <input
           id="email"
-          type="email"
+          name="email"
+          // type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           className="footer-newsletter-input"
-          required
           autoComplete="off"
+          disabled={isSubmitting}
         />
-        <button type="submit" className="footer-newsletter-button">
+        <button
+          type="submit"
+          className="footer-newsletter-button"
+          disabled={isSubmitting}
+        >
           SUBSCRIBE
         </button>
       </form>
