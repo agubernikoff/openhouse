@@ -342,6 +342,7 @@ button.reset:hover:not(:has(> *)) {
   flex-direction: row;
   gap: 2rem;
   align-items: start;
+  grid-column: span 3;
 }
 
 .categories-section .red-dot {
@@ -379,6 +380,16 @@ button.reset:hover:not(:has(> *)) {
 
 .collections-links:hover .collection-link:not(:hover) {
   color: #737373;
+}
+.shop-header-dropdown-links-container {
+  display: flex;
+  justify-content: space-between;
+  grid-column: span 3;
+  font-size: 14px;
+}
+.shop-header-dropdown-links-container > div {
+  display: flex;
+  gap: 16px;
 }
 
 .header-ctas {

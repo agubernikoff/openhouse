@@ -130,7 +130,6 @@ function MegaDropdown({
           <div className={`${type}-dropdown-label`}>
             <div className="red-dot">{type.toUpperCase()}</div>
           </div>
-
           <div className={`${type}-menu-links`}>
             {subItems.length > 0 ? (
               <div className="collections-links">
@@ -181,6 +180,27 @@ function MegaDropdown({
               primaryDomainUrl={primaryDomainUrl}
               close={close}
             />
+          )}
+          {type === 'shop' && (
+            <div className="shop-header-dropdown-links-container">
+              <a href="mailto:sales@byopenhouse.com">sales@byopenhouse.com</a>
+              <div>
+                <a
+                  href="https://instagram.com/byopenhouse"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Instagram
+                </a>
+                <a
+                  href="https://linkedin.com/company/byopenhouse"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  LinkedIn
+                </a>
+              </div>
+            </div>
           )}
         </div>
       </div>
