@@ -105,6 +105,7 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
   return (
     <div className="cart-checkout-actions">
       <div
+        className="special-instructions-container"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -153,6 +154,7 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
             }}
           >
             <textarea
+              className="special-instructions-textarea"
               ref={textareaRef}
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}

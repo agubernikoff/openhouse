@@ -3662,4 +3662,11 @@ body:has(.contact) .red-dot {
   .marquee-section > div {
     gap: 16px;
   }
+
+  .special-instructions-container {
+    width: 100% !important;
+  }
+  .special-instructions-textarea {
+    width: 94%;
+  }
 }
