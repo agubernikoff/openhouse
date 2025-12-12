@@ -2461,16 +2461,17 @@ div:has(> .pdp-additional-info-image) {
 
 .contact {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(12, 1fr);
   width: 100%;
-  max-width: 1164px;
   margin: auto;
-  row-gap: 60px;
+  gap: 120px 20px;
   color: var(--color-oh-white);
   margin-bottom: 60px;
 }
 .contact-hero-img-container {
   width: 100%;
+  grid-column-start: 2;
+  grid-column-end: 6;
 }
 .contact-hero-img-container > img {
   width: 100%;
@@ -2478,7 +2479,7 @@ div:has(> .pdp-additional-info-image) {
   object-fit: cover;
 }
 .contact-hero-text {
-  grid-column: span 2;
+  grid-column: span 6;
   margin-block: auto !important;
   padding-left: 1rem;
   box-sizing: border-box;
@@ -2487,11 +2488,9 @@ div:has(> .pdp-additional-info-image) {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 75%;
-}
-.contact-details-container p {
-  font-size: 14px;
-  font-family: 'apfel';
+  min-width: 235px;
+  grid-column-start: 2;
+  grid-column-end: 5;
 }
 .contact-details-container p span a {
   color: var(--color-oh-white);
@@ -2517,12 +2516,14 @@ div:has(> .pdp-additional-info-image) {
 }
 
 .contact form {
-  grid-column: span 2;
+  grid-column-start: 6;
+  grid-column-end: 12;
   display: grid;
   max-width: none;
+  row-gap: 12px;
 }
 .contact-form h3 {
-  margin-bottom: 30px;
+  margin-bottom: 18px;
 }
 .contact-form-row,
 .contact-form-field {
@@ -2530,7 +2531,7 @@ div:has(> .pdp-additional-info-image) {
 }
 .contact-form-row {
   display: flex;
-  gap: 1rem;
+  gap: 20px;
 }
 .contact-form-row > .contact-form-field {
   flex: 1;
@@ -2539,6 +2540,7 @@ div:has(> .pdp-additional-info-image) {
   display: flex;
   flex-direction: column;
   font-family: 'apfel';
+  gap: 8px;
 }
 .contact input,
 .contact textarea {
@@ -2547,6 +2549,7 @@ div:has(> .pdp-additional-info-image) {
   border: 1px solid var(--color-oh-gray);
   color: var(--color-oh-white);
   transition: border-color 150ms ease-in-out;
+  margin: 0;
 }
 .contact input::placeholder,
 .contact textarea::placeholder {
