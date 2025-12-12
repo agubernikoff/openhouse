@@ -2550,6 +2550,7 @@ div:has(> .pdp-additional-info-image) {
   color: var(--color-oh-white);
   transition: border-color 150ms ease-in-out;
   margin: 0;
+  padding: 12px;
 }
 .contact input::placeholder,
 .contact textarea::placeholder {
@@ -2583,7 +2584,8 @@ body:has(.contact) .footer-newsletter-wrapper {
 }
 body:has(.contact) .footer-menu-list a,
 body:has(.contact) .footer-legal-left a,
-body:has(.contact) .footer-logo * {
+body:has(.contact) .footer-logo *,
+body:has(.contact) .footer-newsletter-input {
   color: var(--color-oh-white);
 }
 body:has(.contact) .footer-newsletter-button {
