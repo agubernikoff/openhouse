@@ -2232,6 +2232,7 @@ div:has(> .pdp-additional-info-image) {
 
 .quantity-controls button {
   border-radius: 999px;
+  aspect-ratio: 1/1;
   background-color: #ffffff;
   border: none;
   font-size: 16px;
@@ -2241,6 +2242,7 @@ div:has(> .pdp-additional-info-image) {
   justify-content: center;
   transition: background-color 0.2s;
   color: black;
+  width: 20px;
 }
 
 .quantity-controls button:hover:not(:disabled) {
