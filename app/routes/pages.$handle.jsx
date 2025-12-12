@@ -171,7 +171,7 @@ function AnimatedScroll({section}) {
   );
 
   return (
-    <div className="home-featured-collection">
+    <section className="home-featured-collection">
       <div>
         <p className="red-dot">{title?.value?.toUpperCase()}</p>
       </div>
@@ -202,7 +202,7 @@ function AnimatedScroll({section}) {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
