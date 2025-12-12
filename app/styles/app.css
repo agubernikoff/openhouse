@@ -2591,7 +2591,7 @@ body:has(.contact) .red-dot {
 [id] {
   scroll-margin-top: calc(51px + 1rem);
 }
-.page .hero-section::before {
+.hero-section::before {
   content: '';
   position: absolute;
   inset: 0;
