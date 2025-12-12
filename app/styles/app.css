@@ -1708,6 +1708,9 @@ div:has(.products-grid) {
   grid-template-columns: subgrid;
   margin-bottom: 2rem;
 }
+.products-grid:has(+ .pagination-links-container) {
+  margin-bottom: 90px;
+}
 .product-item {
   color: var(--color-oh-black);
   width: calc((100vw - 60px - 2rem) / 4);
@@ -3047,6 +3050,9 @@ body:has(.contact) .red-dot {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+  }
+  .products-grid:has(+ .pagination-links-container) {
+    margin-bottom: 60px;
   }
   .product-item {
     width: calc(50vw - 2rem);
