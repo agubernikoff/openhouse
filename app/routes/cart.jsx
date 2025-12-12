@@ -26,7 +26,26 @@ export async function action({request, context}) {
 
   const {action, inputs} = CartForm.getFormInput(formData);
 
+  // Handle special instructions note update
   if (!action) {
+    const note = formData.get('note');
+    if (note !== null) {
+      const result = await cart.updateNote(note);
+      const cartId = result?.cart?.id;
+      const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+
+      return data(
+        {
+          cart: result.cart,
+          errors: result.errors,
+          warnings: result.warnings,
+          analytics: {
+            cartId,
+          },
+        },
+        {status: 200, headers},
+      );
+    }
     throw new Error('No action provided');
   }
 

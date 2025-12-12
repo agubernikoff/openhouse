@@ -1,5 +1,5 @@
 import {CartForm, Money} from '@shopify/hydrogen';
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useFetcher} from 'react-router';
 
 /**
@@ -25,30 +25,157 @@ export function CartSummary({cart, layout}) {
       </dl>
       {/* <CartDiscounts discountCodes={cart?.discountCodes} />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} /> */}
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} layout={layout} />
+      <CartCheckoutActions
+        checkoutUrl={cart?.checkoutUrl}
+        layout={layout}
+        cart={cart}
+      />
     </div>
   );
 }
 
 /**
- * @param {{checkoutUrl?: string}}
+ * @param {{checkoutUrl?: string, layout: string, cart: any}}
  */
-function CartCheckoutActions({checkoutUrl, layout}) {
+function CartCheckoutActions({checkoutUrl, layout, cart}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [instructions, setInstructions] = useState(cart?.note || '');
+  const textareaRef = useRef(null);
+  const fetcher = useFetcher();
+  const hasSubmittedRef = useRef(false);
+
   if (!checkoutUrl) return null;
 
   const isCartPage = layout === 'page';
 
+  useEffect(() => {
+    if (isOpen && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Handle successful submission
+  useEffect(() => {
+    if (fetcher.state === 'loading' && hasSubmittedRef.current) {
+      // Submission in progress
+      return;
+    }
+
+    if (fetcher.state === 'idle' && hasSubmittedRef.current && fetcher.data) {
+      // Close textarea after successful submission
+      setIsOpen(false);
+      hasSubmittedRef.current = false;
+    }
+  }, [fetcher.state, fetcher.data]);
+
+  const handleButtonClick = () => {
+    if (isOpen && instructions.trim()) {
+      // Submit the note
+      const formData = new FormData();
+      formData.append('note', instructions);
+
+      hasSubmittedRef.current = true;
+      fetcher.submit(formData, {
+        method: 'POST',
+        action: '/cart',
+      });
+      return; // Exit early after submit
+    }
+
+    if (isOpen && !instructions.trim()) {
+      // Close if no text
+      setIsOpen(false);
+    } else if (!isOpen) {
+      // Open the textarea
+      setIsOpen(true);
+    }
+  };
+
+  const getButtonText = () => {
+    // When closed with a saved note
+    if (!isOpen && instructions.trim()) return 'EDIT SPECIAL INSTRUCTIONS';
+    // When closed without a note
+    if (!isOpen) return 'ORDER SPECIAL INSTRUCTIONS';
+    // When open and has text (editing existing or new)
+    if (isOpen && instructions.trim()) return 'SUBMIT';
+    // When open but empty
+    return 'CLOSE';
+  };
+
   return (
     <div className="cart-checkout-actions">
-      {isCartPage ? (
-        <button className="cart-special-instructions">
-          ORDER SPECIAL INSTRUCTIONS
-        </button>
-      ) : (
-        <a href="/cart" className="cart-special-instructions">
-          VIEW CART
-        </a>
-      )}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0px',
+          width: isCartPage ? '50%' : '100%',
+        }}
+      >
+        {isCartPage ? (
+          <>
+            <button
+              className="cart-special-instructions"
+              onClick={handleButtonClick}
+              type="button"
+            >
+              {getButtonText()}
+            </button>
+            {!isOpen && instructions.trim() && (
+              <div
+                style={{
+                  marginTop: '8px',
+                  padding: '8px',
+                  fontSize: '14px',
+                  color: '#666',
+                  fontStyle: 'italic',
+                  borderLeft: '2px solid #ddd',
+                  paddingLeft: '12px',
+                }}
+              >
+                Note: {instructions}
+              </div>
+            )}
+          </>
+        ) : (
+          <a href="/cart" className="cart-special-instructions">
+            VIEW CART
+          </a>
+        )}
+
+        {isCartPage && (
+          <div
+            style={{
+              maxHeight: isOpen ? '200px' : '0',
+              overflow: 'hidden',
+              transition: 'max-height 0.2s ease-out, margin-top 0.2s ease-out',
+              marginTop: isOpen ? '8px' : '0',
+            }}
+          >
+            <textarea
+              ref={textareaRef}
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="Add any special instructions for your order."
+              rows={4}
+              style={{
+                width: '94.5%',
+                padding: '8px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                minHeight: '80px',
+                background: 'transparent',
+                maxHeight: '80px',
+                outline: 'none',
+                boxShadow: 'none',
+              }}
+            />
+          </div>
+        )}
+      </div>
+
       <a href={checkoutUrl} target="_self" className="cart-checkout-button">
         PROCEED TO CHECKOUT
       </a>
