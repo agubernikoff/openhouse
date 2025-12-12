@@ -3090,8 +3090,8 @@ body:has(.contact) .red-dot {
     text-align: left;
     max-width: calc(100vw - 1rem);
   }
-  .page .hero-section img,
-  .page .hero-section::before {
+  .hero-section img,
+  .hero-section::before {
     border-radius: 0;
   }
   .page .services-header > div {

@@ -321,3 +321,31 @@ query GetTestimonials {
   }
 }
 `;
+
+export const ABOUT_HEADER_IMAGE_QUERY = `#graphql
+query GetTestimonials {
+  metaobject(
+    handle: {
+      type: "auw_header_about_image"
+      handle: "auw-header-about-image-k2brikm9"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      reference{
+        ... on MediaImage {
+          image {
+            id
+            url
+            height
+            width
+          }
+        }
+      }
+    }
+  }
+}
+`;

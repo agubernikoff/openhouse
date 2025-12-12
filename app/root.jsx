@@ -10,7 +10,12 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import favicon from '~/assets/favicon.svg';
-import {FOOTER_QUERY, HEADER_QUERY, TESTIMONIALS_QUERY} from '~/lib/fragments';
+import {
+  FOOTER_QUERY,
+  HEADER_QUERY,
+  TESTIMONIALS_QUERY,
+  ABOUT_HEADER_IMAGE_QUERY,
+} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
@@ -143,11 +148,23 @@ function loadDeferredData({context}) {
       console.error(error);
       return null;
     });
+
+  const about_image = storefront
+    .query(ABOUT_HEADER_IMAGE_QUERY, {
+      cache: storefront.CacheLong(),
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
     footer,
     testimonials,
+    about_image,
   };
 }
 

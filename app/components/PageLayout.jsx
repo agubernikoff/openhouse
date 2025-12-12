@@ -21,6 +21,7 @@ export function PageLayout({
   isLoggedIn,
   publicStoreDomain,
   testimonials,
+  about_image,
 }) {
   return (
     <Aside.Provider>
@@ -31,6 +32,7 @@ export function PageLayout({
           cart={cart}
           isLoggedIn={isLoggedIn}
           publicStoreDomain={publicStoreDomain}
+          about_image={about_image}
         />
       )}
       <main>{children}</main>

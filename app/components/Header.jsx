@@ -20,8 +20,23 @@ import {
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 import hamburgerIcon from '../assets/mobile-menu.png';
 import closeIcon from '../assets/x.png';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 
-export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
+export function Header({
+  header,
+  isLoggedIn,
+  cart,
+  publicStoreDomain,
+  about_image,
+}) {
+  const [defaultImage, setDefaultImage] = useState();
+  useEffect(() => {
+    about_image.then((r) => {
+      const {image} = normalizeMetaobject(r.metaobject);
+      setDefaultImage(image);
+    });
+  }, [about_image]);
+
   const {shop, menu} = header;
   const {type, close} = useAside();
   const isCartOpen = type === 'cart';
@@ -81,6 +96,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
               primaryDomainUrl={header.shop.primaryDomain.url}
               publicStoreDomain={publicStoreDomain}
               close={close}
+              about_image={defaultImage}
             />
           )}
           {isCartOpen && <Cart cart={cart} />}
@@ -107,6 +123,7 @@ function MegaDropdown({
   primaryDomainUrl,
   publicStoreDomain,
   close,
+  about_image,
 }) {
   const menuItem = menu?.items?.find(
     (item) => item.title.toLowerCase() === type,
@@ -170,7 +187,17 @@ function MegaDropdown({
                 transition={{duration: 0.2}}
               />
             ) : (
-              <div className="image-placeholder"></div>
+              <motion.img
+                key={about_image?.id ?? `${type}-placeholder`}
+                src={about_image?.reference.image?.url}
+                alt={
+                  (about_image && (about_image.title || about_image.id)) || type
+                }
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                exit={{opacity: 0}}
+                transition={{duration: 0.2}}
+              />
             )}
           </div>
           {categoryLink && (
