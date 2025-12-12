@@ -179,28 +179,26 @@ function AnimatedScroll({section}) {
         <h3>{mapRichText(JSON.parse(blurb?.value))}</h3>
       </div>
       <div className="animated-scroll-content-container-outer">
-        <div className="animated-scroll-content-container-inner">
-          <StickyScrollContent
-            images={data?.references?.nodes.map((n) => {
-              const {image} = normalizeMetaobject(n);
-              return image;
-            })}
-            data={selected}
-            index={selectedIndex + 1}
-            selectedIndex={selectedIndex}
-            scrollProgresses={scrollProgresses}
+        <StickyScrollContent
+          images={data?.references?.nodes.map((n) => {
+            const {image} = normalizeMetaobject(n);
+            return image;
+          })}
+          data={selected}
+          index={selectedIndex + 1}
+          selectedIndex={selectedIndex}
+          scrollProgresses={scrollProgresses}
+        />
+        {data?.references?.nodes?.map((n, i) => (
+          <ScrollingContent
+            key={n.id}
+            data={n}
+            index={i + 1}
+            onScrollProgressChange={(progress) =>
+              updateScrollProgress(i, progress)
+            }
           />
-          {data?.references?.nodes?.map((n, i) => (
-            <ScrollingContent
-              key={n.id}
-              data={n}
-              index={i + 1}
-              onScrollProgressChange={(progress) =>
-                updateScrollProgress(i, progress)
-              }
-            />
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
@@ -379,7 +377,6 @@ function StickyScroll({section}) {
   const containerRef = useRef(null);
   const [topOffset, setTopOffset] = useState(0);
   const [bottomOffset, setBottomOffset] = useState(0);
-
   const {scrollYProgress} = useScroll({
     target: containerRef,
     offset: ['start center', 'end center'],
@@ -441,10 +438,7 @@ function StickyScroll({section}) {
         <p className="red-dot">{title.value.toUpperCase()}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <div
-          className="page-subgrid-content-container sticky-scroll-content-container"
-          ref={containerRef}
-        >
+        <div className="sticky-scroll-line-and-div-container">
           <div className="sticky-scroll-line" />
           <motion.div
             className="filter-dot"
@@ -452,6 +446,11 @@ function StickyScroll({section}) {
               top: dotTop,
             }}
           />
+        </div>
+        <div
+          className="page-subgrid-content-container sticky-scroll-content-container"
+          ref={containerRef}
+        >
           {content}
         </div>
         <div>
