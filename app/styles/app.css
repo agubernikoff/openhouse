@@ -2636,6 +2636,9 @@ body:has(.contact) .red-dot {
   display: block;
   text-align: center;
 }
+.page .hero-section h4 em {
+  font-family: 'bedford';
+}
 .page .services-header {
   background: transparent;
 }

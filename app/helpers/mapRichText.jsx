@@ -28,6 +28,9 @@ export default function mapRichText(richTextObject, index = 0) {
         </h4>
       );
     case 'text':
+      console.log(richTextObject);
+      if (richTextObject.italic)
+        return <em key={index}>{richTextObject.value}</em>;
       if (richTextObject.bold)
         return <strong key={index}>{richTextObject.value}</strong>;
       return <span key={index}>{richTextObject.value}</span>;
