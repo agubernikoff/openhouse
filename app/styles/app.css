@@ -427,11 +427,11 @@ button:has(.search-text) {
 
 .mobile-menu-overlay {
   top: 50px;
-  height: 100dvh;
+  height: calc(100dvh - 50px);
 }
 
 .mobile-menu-overlay .header-dropdown-content {
-  max-height: calc(100dvh - 56px);
+  max-height: calc(100dvh - 50px);
 }
 
 .mobile-menu-container {
