@@ -2993,7 +2993,7 @@ div:has(> .sticky-scroll-image) {
     margin-left: -1rem;
     margin-top: -1rem;
     border-radius: 0;
-    height: 100vh;
+    height: 100dvh;
   }
   .hero-section video {
     border-radius: 0;
