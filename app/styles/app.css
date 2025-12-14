@@ -434,6 +434,10 @@ button:has(.search-text) {
   max-height: calc(100dvh - 50px);
 }
 
+.mobile-menu-overlay .header-dropdown-inner {
+  height: 100% !important;
+}
+
 .mobile-menu-container {
   display: flex;
   flex-direction: column;
