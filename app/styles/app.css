@@ -68,7 +68,7 @@ body {
 aside {
   background: transparent;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
-  height: 100vh;
+  height: 100dvh;
   width: min(var(--aside-width), 100vw);
   position: fixed;
   right: calc(-1 * var(--aside-width));
@@ -109,7 +109,7 @@ aside header h2 {
 aside main {
   margin: 1rem;
   overflow-y: auto;
-  max-height: calc(80vh - var(--header-height));
+  max-height: calc(80dvh - var(--header-height));
 }
 
 aside p {
@@ -1250,7 +1250,7 @@ input[type='search']::-webkit-search-cancel-button {
 */
 .hero-section {
   width: calc(100vw - 2rem);
-  height: calc(100vh - 2rem);
+  height: calc(100dvh - 2rem);
   border-radius: 20px;
   background: rgba(0, 0, 0, 0.2);
   position: relative;
@@ -1481,7 +1481,7 @@ input[type='search']::-webkit-search-cancel-button {
   grid-template-columns: repeat(6, 1fr);
   gap: 1rem;
   grid-auto-rows: 1fr;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
 }
 .collection-grid-item {
   border-radius: 10px;
@@ -1543,7 +1543,7 @@ input[type='search']::-webkit-search-cancel-button {
 
 .home-collections-hero {
   width: 100%;
-  height: calc(100vh - 2rem);
+  height: calc(100dvh - 2rem);
   position: relative;
   border-radius: 20px;
   overflow: hidden;
@@ -2712,11 +2712,11 @@ body:has(.contact) .red-dot {
   grid-template-columns: subgrid;
   grid-template-rows: repeat(5, 1fr);
   display: grid;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
 }
 .partners-wall-container > div {
   grid-column: span 3;
-  max-height: calc((100vh - 2rem) / 5);
+  max-height: calc((100dvh - 2rem) / 5);
 }
 
 .marquee-section {
@@ -2813,7 +2813,7 @@ div:has(> .sticky-scroll-image) {
   grid-column-end: 12;
   display: grid;
   grid-template-columns: subgrid;
-  height: calc(100vh - 2rem);
+  height: calc(100dvh - 2rem);
   opacity: 0;
 }
 .animated-scroll-object:first-of-type {
@@ -2827,7 +2827,7 @@ div:has(> .sticky-scroll-image) {
   z-index: -1;
 }
 .animated-scroll-object:last-of-type {
-  margin-bottom: calc(100vh - 2rem);
+  margin-bottom: calc(100dvh - 2rem);
 }
 .animated-scroll-object > div {
   grid-column-start: 1;
@@ -2993,7 +2993,7 @@ div:has(> .sticky-scroll-image) {
     margin-left: -1rem;
     margin-top: -1rem;
     border-radius: 0;
-    height: 100vh;
+    height: 100dvh;
   }
   .hero-section video {
     border-radius: 0;
