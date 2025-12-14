@@ -1,5 +1,6 @@
 import {useLoaderData} from 'react-router';
 import React, {useState} from 'react';
+import emailjs from '@emailjs/browser';
 import hangers from 'app/assets/hangers.png';
 
 /**
@@ -19,42 +20,22 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
   return {...deferredData, ...criticalData};
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {Route.LoaderArgs}
- */
 async function loadCriticalData({context, params, request}) {
   const {handle} = params;
   const {storefront} = context;
 
-  const [] = await Promise.all([
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const [] = await Promise.all([]);
   return {};
 }
 
 async function action({}) {}
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {Route.LoaderArgs}
- */
 function loadDeferredData({context, params}) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
-
   return {};
 }
 
@@ -65,6 +46,45 @@ export default function Contact() {
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    // Initialize EmailJS with your public key
+    emailjs.init('rzBTp542LGt-9PFek');
+
+    try {
+      const result = await emailjs.send('service_p8ncxii', 'template_4xfs5ih', {
+        firstName: first,
+        lastName: last,
+        email: email,
+        phone: phone,
+        company: company,
+        message: message,
+      });
+
+      console.log('Email sent successfully:', result);
+      setSubmitStatus('success');
+
+      // Clear form fields
+      setFirst('');
+      setLast('');
+      setEmail('');
+      setPhone('');
+      setCompany('');
+      setMessage('');
+    } catch (error) {
+      console.error('Email send failed:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="contact">
       <div className="contact-hero-img-container">
@@ -72,7 +92,7 @@ export default function Contact() {
       </div>
       <h3 className="contact-hero-text">
         Whether you have a question about an order, a product, or would like
-        more information about what us, we’d love to hear from you.
+        more information about what us, we'd love to hear from you.
       </h3>
       <div className="contact-details-container">
         <div>
@@ -113,20 +133,36 @@ export default function Contact() {
           eiusmod tempor incididunt ut labore et dolore magna aliqua.
         </p>
       </div>
-      <form className="contact-form">
+      <form className="contact-form" onSubmit={handleSubmit}>
         <h3>Email</h3>
+
+        {submitStatus === 'success' && (
+          <div className="contact-success-message">
+            Thank you! Your message has been sent successfully.
+          </div>
+        )}
+
+        {submitStatus === 'error' && (
+          <div className="contact-error-message">
+            Sorry, there was an error sending your message. Please try again or
+            email us directly.
+          </div>
+        )}
+
         <div className="contact-form-row">
           <Input
             id="firstName"
             label="First Name"
             value={first}
             setter={setFirst}
+            required
           />
           <Input
             id="lastName"
             label="Last Name"
             value={last}
             setter={setLast}
+            required
           />
         </div>
         <Input
@@ -135,6 +171,7 @@ export default function Contact() {
           type="email"
           value={email}
           setter={setEmail}
+          required
         />
         <Input
           id="phone"
@@ -156,17 +193,22 @@ export default function Contact() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={10}
+            required
           />
         </div>
-        <button type="submit" className="contact-submit">
-          ORDER SPECIAL INSTRUCTIONS
+        <button
+          type="submit"
+          className="contact-submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'SENDING...' : 'ORDER SPECIAL INSTRUCTIONS'}
         </button>
       </form>
     </div>
   );
 }
 
-function Input({id, label, value, setter, type = 'text'}) {
+function Input({id, label, value, setter, type = 'text', required = false}) {
   return (
     <div className="contact-form-field">
       <label htmlFor={id} className="contact-label">
@@ -179,6 +221,7 @@ function Input({id, label, value, setter, type = 'text'}) {
         onChange={(e) => setter(e.target.value)}
         className="contact-input"
         placeholder={label}
+        required={required}
       />
     </div>
   );

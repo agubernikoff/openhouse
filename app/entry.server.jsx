@@ -35,7 +35,11 @@ export default async function handleRequest(
       "'self'",
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
       'https://s3.us-east-1.amazonaws.com',
+      'https://api.emailjs.com',
+      'https://cdn.shopify.com',
+      'https://monorail-edge.shopifysvc.com',
     ],
+    scriptSrc: ["'self'", 'https://cdn.emailjs.com', 'https://cdn.shopify.com'],
     mediaSrc: [
       'https://openhouse.store',
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',

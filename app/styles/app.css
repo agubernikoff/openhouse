@@ -2506,7 +2506,6 @@ div:has(> .pdp-additional-info-image) {
 .contact-hero-text {
   grid-column: span 6;
   margin-block: auto !important;
-  padding-left: 1rem;
   box-sizing: border-box;
 }
 .contact-details-container {
@@ -3505,7 +3504,6 @@ div:has(> .sticky-scroll-image) {
 
   .header-dropdown-overlay {
     top: 50px;
-    border-top: 1px solid #bfc0c1;
     z-index: 100000;
     padding-top: 0px;
   }
