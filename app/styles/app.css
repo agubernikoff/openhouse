@@ -3478,7 +3478,8 @@ div:has(> .sticky-scroll-image) {
     margin-top: 2px;
   }
 
-  body > main {
+  body > main,
+  body > main:has(> .product) {
     margin: 120px 1rem 1rem 1rem;
   }
 
@@ -3492,10 +3493,6 @@ div:has(> .sticky-scroll-image) {
     position: relative;
     top: 0;
     aspect-ratio: 343/405;
-  }
-
-  body > main:has(> .product) {
-    margin: 60px 1rem 1rem 1rem;
   }
 
   .product-main {
