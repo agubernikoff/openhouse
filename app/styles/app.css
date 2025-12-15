@@ -1889,16 +1889,13 @@ div:has(.products-grid) {
 .product-image {
   width: 100%;
   aspect-ratio: 1/1;
-  position: relative;
 }
 
 .product-image img {
-  height: 100%;
+  height: auto;
   width: 100%;
-  object-fit: cover;
-  display: block;
+  display: flex;
 }
-
 .product-image-previews-container {
   display: flex;
   max-width: 100%;
@@ -1909,7 +1906,6 @@ div:has(.products-grid) {
   gap: 1rem;
   overflow: scroll;
   justify-content: center;
-  z-index: 3;
 }
 .product-image-previews-container button {
   padding: 0;
