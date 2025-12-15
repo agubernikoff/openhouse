@@ -182,6 +182,7 @@ button.reset {
 
 button.reset > * {
   margin: 0;
+  font-family: 'apfel';
 }
 
 button.reset:not(:has(> *)) {

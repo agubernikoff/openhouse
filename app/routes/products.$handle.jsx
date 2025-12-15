@@ -224,13 +224,30 @@ export default function Product() {
         <div className="product-main">
           <div className="product-main-details">
             <nav className="breadcrumbs" aria-label="Breadcrumb">
-              <Link style={{color: '#BFC0C1'}} to="/products">
-                Rework
+              <Link style={{color: '#BFC0C1'}} to="/collections/frontpage">
+                Categories
               </Link>
-              <span className="breadcrumb-separator" style={{color: '#BFC0C1'}}>
-                {' '}
-                -{' '}
-              </span>
+              <svg
+                className="breadcrumb-separator"
+                width="32"
+                height="2"
+                viewBox="0 0 32 2"
+                style={{
+                  margin: '0 16px',
+                  display: 'inline-block',
+                  verticalAlign: 'middle',
+                }}
+                aria-hidden="true"
+              >
+                <line
+                  x1="0"
+                  y1="1"
+                  x2="32"
+                  y2="1"
+                  stroke="#BFC0C1"
+                  strokeWidth="1.5"
+                />
+              </svg>
               <Link className="crumb" to={to}>
                 {to.includes('new-arrivals')
                   ? 'New Arrivals'
