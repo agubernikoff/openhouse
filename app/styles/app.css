@@ -2212,6 +2212,9 @@ div:has(> .dropdown-content) {
   font-size: 1rem;
   line-height: 18px;
 }
+.rich-text-div p:last-of-type {
+  margin-bottom: 0;
+}
 .pdp-additional-info-content-container {
   position: relative;
   grid-column: span 2;
@@ -2735,6 +2738,7 @@ body:has(.contact) .red-dot {
 .marquee-section > div > img {
   aspect-ratio: 1/1 !important;
   width: 40vw !important;
+  min-width: 283px;
   height: auto;
   object-fit: cover;
   flex-shrink: 0;
@@ -3017,7 +3021,8 @@ div:has(> .sticky-scroll-image) {
   }
   section.home-featured-collection,
   .home-featured-collection .subgrid.home-featured-products-grid,
-  .home-collections-grid {
+  .home-collections-grid,
+  .multi-title-and-blurb {
     display: flex;
     overflow: hidden;
     flex-direction: column;
@@ -3146,9 +3151,6 @@ div:has(> .sticky-scroll-image) {
   }
   .page-subgrid-content-container > .rich-text-div p {
     margin-bottom: 28px;
-  }
-  .multi-title-and-blurb {
-    display: block;
   }
   .sticky-scroll-content-container {
     padding-left: 0px;

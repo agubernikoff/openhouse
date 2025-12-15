@@ -595,16 +595,35 @@ function PageHero({section}) {
 function Marquee({section}) {
   const images = section.fields[0].references.nodes;
   const containerRef = useRef(null);
+  const contentRef = useRef(null);
+  const [percentHidden, setPercentHidden] = useState(0);
+
   const {scrollYProgress} = useScroll({
     target: containerRef,
     offset: ['start end', 'end start'],
   });
-  const percentHidden = (100 / (images.length * 42) - 1) * 100;
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', `${percentHidden}%`]);
+
+  useEffect(() => {
+    const calculatePercentHidden = () => {
+      if (contentRef.current && containerRef.current) {
+        const contentWidth = contentRef.current.scrollWidth;
+        const windowWidth = window.innerWidth;
+        const hiddenWidth = contentWidth - windowWidth;
+        const percent = (hiddenWidth / windowWidth) * 100;
+        setPercentHidden(percent);
+      }
+    };
+
+    calculatePercentHidden();
+    window.addEventListener('resize', calculatePercentHidden);
+    return () => window.removeEventListener('resize', calculatePercentHidden);
+  }, [images]);
+
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', `-${percentHidden}%`]);
 
   return (
     <section className="marquee-section" ref={containerRef}>
-      <motion.div style={{x}}>
+      <motion.div ref={contentRef} style={{x}}>
         {images.map((i) => (
           <Image
             key={i.id}
