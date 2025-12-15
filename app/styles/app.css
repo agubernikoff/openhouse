@@ -1918,6 +1918,7 @@ div:has(.products-grid) {
   border: 1px solid var(--color-oh-gray);
   border-radius: 10px;
   aspect-ratio: 1/1;
+  overflow: hidden;
 }
 
 .product-main {
@@ -3831,9 +3832,7 @@ div:has(> .sticky-scroll-image) {
   }
 
   .product-image-previews-container button {
-    height: 54.2px;
     flex: 1 0 0;
-    aspect-ratio: 54.2/54.2;
     width: auto;
   }
 }
