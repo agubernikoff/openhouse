@@ -887,12 +887,25 @@ div:has(> .testimonials-container) {
 
 /* Cart main spans all 3 grid columns in the subgrid */
 .cart-main {
-  grid-column: span 3;
+  grid-column: span 9;
   width: 100%;
+}
+.home-featured-collection .cart-main {
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: 30px;
 }
 
 .cart-details {
   width: 100%;
+}
+.home-featured-collection .cart-details,
+.home-featured-collection .cart-details > div,
+.home-featured-collection .cart-details > div > ul {
+  width: 100%;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 9;
 }
 
 /* Cart line items */
@@ -902,6 +915,11 @@ div:has(> .testimonials-container) {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-oh-grey);
   padding-top: 0;
+}
+.home-featured-collection .cart-line {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 9;
 }
 
 .cart-line:last-child {
@@ -915,9 +933,7 @@ div:has(> .testimonials-container) {
 }
 
 .cart-line-image {
-  flex-shrink: 0;
-  width: 200px;
-  height: 200px;
+  grid-column: span 2;
 }
 
 .header-dropdown-content .cart-line-image img {
@@ -931,10 +947,12 @@ div:has(> .testimonials-container) {
   display: block;
   border-radius: 10px;
   background: white;
+  max-width: calc((100vw - 2rem) / 6);
 }
 
 /* Details column - takes up remaining space */
 .cart-line-details {
+  grid-column: span 2;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -985,6 +1003,7 @@ div:has(> .testimonials-container) {
   flex-direction: row;
   gap: 0.5rem;
   align-items: flex-start;
+  grid-column-start: 9;
 }
 
 .cart-line-actions form {
@@ -1044,6 +1063,7 @@ div:has(> .testimonials-container) {
   font-size: 36px;
   margin: 0;
   margin-inline-start: 10px;
+  grid-column: 6/9;
 }
 
 .header-dropdown-content .cart-checkout-actions {
@@ -1060,6 +1080,7 @@ div:has(> .testimonials-container) {
   display: flex;
   gap: 12px;
   margin-top: 30px;
+  grid-column: span 9;
 }
 
 .cart-checkout-actions button:hover,
@@ -3528,6 +3549,15 @@ div:has(> .sticky-scroll-image) {
     border-radius: 0;
   }
 
+  .home-featured-collection .cart-main,
+  .home-featured-collection .cart-details,
+  .home-featured-collection .cart-details > div,
+  .home-featured-collection .cart-details > div > ul {
+    display: block;
+  }
+  .home-featured-collection .cart-line {
+    display: flex;
+  }
   .cart-details {
     padding-top: 30px;
     padding-bottom: 20px;

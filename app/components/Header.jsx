@@ -7,7 +7,7 @@ import {
   useState,
   Component,
 } from 'react';
-import {Await, NavLink, useAsyncValue, Link} from 'react-router';
+import {Await, NavLink, useAsyncValue, Link, useLocation} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {Aside} from '~/components/Aside';
@@ -535,6 +535,8 @@ class AwaitErrorBoundary extends Component {
 
 function HeaderAside({children, isMobileMenu}) {
   const {close, type} = useAside();
+  const {pathname} = useLocation();
+  const isInitialMount = useRef(pathname);
 
   const measuredRef = useRef(null);
   const [measuredHeight, setMeasuredHeight] = useState(0);
@@ -584,6 +586,15 @@ function HeaderAside({children, isMobileMenu}) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [close, type]);
+
+  useEffect(() => {
+    // Skip on initial mount
+    if (isInitialMount.current !== pathname) {
+      close();
+      return;
+    }
+    isInitialMount.current = pathname;
+  }, [pathname, close]);
 
   return (
     <div
