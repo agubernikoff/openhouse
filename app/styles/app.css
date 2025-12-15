@@ -1914,7 +1914,6 @@ div:has(.products-grid) {
   cursor: pointer;
   border: 1px solid var(--color-oh-gray);
   border-radius: 10px;
-  overflow: hidden;
   aspect-ratio: 1/1;
 }
 
@@ -2942,6 +2941,10 @@ div:has(> .sticky-scroll-image) {
   .you-may-also-like .product-item:last-of-type {
     display: none;
   }
+
+  .product-image-previews-container button {
+    overflow: hidden;
+  }
 }
 @media (max-width: 767px) {
   :root {
@@ -3817,5 +3820,17 @@ div:has(> .sticky-scroll-image) {
   }
   .special-instructions-textarea {
     width: 94%;
+  }
+
+  .product-image-previews-container {
+    padding: 1rem;
+    justify-content: center;
+  }
+
+  .product-image-previews-container button {
+    height: 54.2px;
+    flex: 1 0 0;
+    aspect-ratio: 54.2/54.2;
+    width: auto;
   }
 }
