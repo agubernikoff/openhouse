@@ -3,7 +3,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
 
@@ -93,7 +93,19 @@ function loadDeferredData({context}) {
 export default function Collection() {
   /** @type {LoaderReturnData} */
   const {collection} = useLoaderData();
+  const [total, setTotal] = useState(0);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = searchParams.getAll('filter');
+
+  useEffect(() => {
+    if (filter.length > 0) setTotal(collection.products.nodes.length);
+    else
+      fetch(`/api/collection-product-count/${collection.handle}`)
+        .then((res) => res.json())
+        .then((data) => setTotal(data.total));
+  }, [collection?.handle, filter, collection?.products?.nodes?.length]);
+  console.log(total);
   return (
     <section className="home-featured-collection collection">
       <div>
@@ -107,11 +119,11 @@ export default function Collection() {
       <div className="subgrid home-featured-products-grid">
         <div className="plp-title-container">
           <h1>{collection.title}</h1>
-          <p>{`${collection.products.nodes.length} Product${collection.products.nodes.length !== 1 ? 's' : ''}`}</p>
+          <p>{`${total} Product${total !== 1 ? 's' : ''}`}</p>
         </div>
         <Filter
           isSearch={false}
-          length={collection.products.nodes.length}
+          length={total}
           filters={collection?.products?.filters}
         />
         <motion.div layout={false}>
