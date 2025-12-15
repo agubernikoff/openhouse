@@ -168,7 +168,7 @@ export default function Product() {
 
   useEffect(() => {
     setSelectedImage(productImages[0]);
-  }, [selectedVariant, productImages]);
+  }, [selectedVariant]);
 
   const {lastCollectionPath} = useNavigationContext();
 

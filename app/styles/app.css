@@ -3830,7 +3830,6 @@ div:has(> .sticky-scroll-image) {
   }
 
   .product-image-previews-container button {
-    flex: 1 0 0;
-    width: auto;
+    width: calc((100% - 4rem) / 5);
   }
 }
