@@ -3491,6 +3491,7 @@ div:has(> .sticky-scroll-image) {
     width: 100%;
     position: relative;
     top: 0;
+    aspect-ratio: 343/405;
   }
 
   body > main:has(> .product) {
