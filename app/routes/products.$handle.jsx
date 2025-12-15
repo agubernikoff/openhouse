@@ -546,6 +546,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       minimumQuantity: metafield(namespace: "custom", key: "minimum_quantity") {
         value
       }
+      lead_time: metafield(namespace: "custom", key: "lead_time") {
+        value
+      }
     }
     selectedOptions {
       name

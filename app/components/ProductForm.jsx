@@ -3,6 +3,7 @@ import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
 import {useState} from 'react';
 import {AnimatePresence, motion} from 'motion/react';
+import mapRichText from '~/helpers/mapRichText';
 
 /**
  * @param {{
@@ -468,7 +469,12 @@ export function ProductForm({productOptions, selectedVariant}) {
         {hasMinimumQuantity && (
           <p>Minimum Order Quantity: {minimumQuantity} units</p>
         )}
-        <p>Ready to ship. when?</p>
+        {selectedVariant?.product?.lead_time?.value && (
+          <p style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
+            Estimated lead time:{' '}
+            {mapRichText(JSON.parse(selectedVariant.product.lead_time.value))}
+          </p>
+        )}
       </div>
 
       {/* Bulk order button */}
