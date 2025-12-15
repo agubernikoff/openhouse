@@ -1907,6 +1907,9 @@ div:has(.products-grid) {
   overflow: scroll;
   justify-content: center;
 }
+.product-image-previews-container:has(> button:nth-of-type(10)) {
+  justify-content: flex-start;
+}
 .product-image-previews-container button {
   padding: 0;
   width: calc((100% - 9rem) / 10);

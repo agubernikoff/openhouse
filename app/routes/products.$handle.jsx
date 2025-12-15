@@ -150,11 +150,25 @@ export default function Product() {
   });
 
   const {title, descriptionHtml} = product;
-  const [selectedImage, setSelectedImage] = useState(selectedVariant?.image);
+  const productImages = product.images.nodes
+    .sort((a, b) => {
+      return (
+        (b.altText !== undefined && b.altText !== null ? 1 : 0) -
+        (a.altText !== undefined && a.altText !== null ? 1 : 0)
+      );
+    })
+    .filter((img) => {
+      if (selectedVariant && img.altText)
+        return selectedVariant.selectedOptions
+          .map((s) => s.value.toLowerCase())
+          .includes(img.altText.toLowerCase());
+      else return true;
+    });
+  const [selectedImage, setSelectedImage] = useState(productImages[0]);
 
   useEffect(() => {
-    setSelectedImage(selectedVariant.image);
-  }, [selectedVariant]);
+    setSelectedImage(productImages[0]);
+  }, [selectedVariant, productImages]);
 
   const {lastCollectionPath} = useNavigationContext();
 
@@ -194,27 +208,21 @@ export default function Product() {
       <div className="product">
         <div className="product-images-gallery">
           <div className="product-image-previews-container">
-            {product.images.nodes
-              .filter((img) => {
-                if (selectedVariant?.image.altText && img.altText)
-                  return img.altText === selectedVariant.image.altText;
-                else return true;
-              })
-              .map((img) => (
-                <button
-                  key={img.id}
-                  onClick={() => setSelectedImage(img)}
-                  style={{
-                    border:
-                      selectedImage?.id === img.id
-                        ? '1px solid var(--color-oh-black)'
-                        : '1px solid var(--color-oh-gray)',
-                    transition: 'border 200ms ease-in-out',
-                  }}
-                >
-                  <ProductImage image={img} />
-                </button>
-              ))}
+            {productImages?.map((img) => (
+              <button
+                key={img.id}
+                onClick={() => setSelectedImage(img)}
+                style={{
+                  border:
+                    selectedImage?.id === img.id
+                      ? '1px solid var(--color-oh-black)'
+                      : '1px solid var(--color-oh-gray)',
+                  transition: 'border 200ms ease-in-out',
+                }}
+              >
+                <ProductImage image={img} />
+              </button>
+            ))}
           </div>
           {product.images.nodes.map((img) => (
             <ProductImage key={img.id} image={img} hidden />

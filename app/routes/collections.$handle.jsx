@@ -105,7 +105,7 @@ export default function Collection() {
         .then((res) => res.json())
         .then((data) => setTotal(data.total));
   }, [collection?.handle, filter, collection?.products?.nodes?.length]);
-  console.log(total);
+
   return (
     <section className="home-featured-collection collection">
       <div>
