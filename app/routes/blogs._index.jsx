@@ -91,16 +91,16 @@ export default function Dispatch() {
               <PreviousLink>
                 {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
               </PreviousLink>
-              <div className="subgrid home-featured-products-grid dispatch-articles-grid">
+              <div className="subgrid  products-grid">
                 {nodes.map((article, index) => (
                   <Link
-                    className="dispatch-article-card"
+                    className="product-item"
                     key={article.handle}
                     prefetch="intent"
                     to={`/blogs/${article.blog.handle}/${article.handle}`}
                   >
                     {article.image && (
-                      <div className="dispatch-article-image">
+                      <div className="product-image-container">
                         <Image
                           alt={article.image.altText || article.title}
                           aspectRatio="1/1"
