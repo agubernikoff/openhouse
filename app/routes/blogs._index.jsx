@@ -1,6 +1,7 @@
 import {Link, useLoaderData} from 'react-router';
 import {getPaginationVariables, Image, Pagination} from '@shopify/hydrogen';
 import dispatch from '../assets/dispatch.svg';
+import {useRef} from 'react';
 
 /**
  * @type {Route.MetaFunction}
@@ -29,7 +30,7 @@ export async function loader(args) {
  */
 async function loadCriticalData({context, request}) {
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 10,
+    pageBy: 12,
   });
 
   const [{articles}] = await Promise.all([
@@ -85,41 +86,92 @@ export default function Dispatch() {
         <div>
           <p className="red-dot">DISPATCH</p>
         </div>
-        <Pagination connection={articles}>
-          {({nodes, isLoading, PreviousLink, NextLink}) => (
-            <>
-              <PreviousLink>
-                {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-              </PreviousLink>
-              <div className="subgrid  products-grid">
-                {nodes.map((article, index) => (
-                  <Link
-                    className="product-item"
-                    key={article.handle}
-                    prefetch="intent"
-                    to={`/blogs/${article.blog.handle}/${article.handle}`}
-                  >
-                    {article.image && (
-                      <div className="product-image-container">
-                        <Image
-                          alt={article.image.altText || article.title}
-                          aspectRatio="1/1"
-                          data={article.image}
-                          sizes="(min-width: 45em) 20vw, 50vw"
-                        />
-                      </div>
-                    )}
-                    <h3 className="dispatch-article-title">{article.title}</h3>
-                  </Link>
-                ))}
-              </div>
-              <NextLink>
-                {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-              </NextLink>
-            </>
-          )}
-        </Pagination>
+        <div id="blogs">
+          <BlogsPAJGination products={articles} />
+        </div>
       </section>
+    </>
+  );
+}
+
+export function BlogsPAJGination({products}) {
+  const {endCursor, hasNextPage, hasPreviousPage, startCursor} =
+    products.pageInfo;
+
+  const gridRef = useRef(null);
+
+  // Build query string with sort/filter params
+  const buildPaginationUrl = (cursor, direction) => {
+    const params = new URLSearchParams();
+    params.set('direction', direction);
+    params.set('cursor', cursor);
+    return `/blogs?${params.toString()}`;
+  };
+
+  const handlePaginationClick = (e, hasPage) => {
+    if (!hasPage) {
+      e.preventDefault();
+      return;
+    }
+
+    // Smooth scroll to 1rem above the products grid
+    if (gridRef.current) {
+      const elementTop = gridRef.current.getBoundingClientRect().top;
+      const remInPixels = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      const scrollPosition = window.scrollY + elementTop - remInPixels;
+
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  return (
+    <>
+      <div className="products-grid" ref={gridRef}>
+        {products.nodes.map((article, index) => (
+          <Link
+            className="product-item"
+            key={article.handle}
+            prefetch="intent"
+            to={`/blogs/${article.blog.handle}/${article.handle}`}
+          >
+            {article.image && (
+              <div className="product-image-container">
+                <Image
+                  alt={article.image.altText || article.title}
+                  aspectRatio="1/1"
+                  data={article.image}
+                  sizes="(min-width: 45em) 20vw, 50vw"
+                />
+              </div>
+            )}
+            <h3 className="dispatch-article-title">{article.title}</h3>
+          </Link>
+        ))}
+      </div>
+      <div className="pagination-links-container">
+        <Link
+          onClick={(e) => handlePaginationClick(e, hasPreviousPage)}
+          to={buildPaginationUrl(startCursor, 'previous')}
+          className={`pagination-link ${!hasPreviousPage ? 'disabled' : ''}`}
+          preventScrollReset
+        >
+          Previous Page
+        </Link>
+        <div className="line" />
+        <Link
+          onClick={(e) => handlePaginationClick(e, hasNextPage)}
+          className={`pagination-link ${!hasNextPage ? 'disabled' : ''}`}
+          to={buildPaginationUrl(endCursor, 'next')}
+          preventScrollReset
+        >
+          Next Page
+        </Link>
+      </div>
     </>
   );
 }
