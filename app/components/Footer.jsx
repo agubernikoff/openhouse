@@ -69,8 +69,15 @@ export function Footer({
                 <a href="/policies/terms-of-service">Terms & Conditions</a>
               </div>
               <div className="footer-legal-right">
-                © {new Date().getFullYear()} Openhouse Inc. All rights
-                reserved.
+                © {new Date().getFullYear()} Openhouse Inc. All rights reserved
+                /{' '}
+                <a
+                  href="https://www.auw.studio/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Site Credit
+                </a>
               </div>
             </div>
 
