@@ -492,7 +492,26 @@ function CollectionGrid({collections}) {
 }
 
 function CollectionsHero({collections}) {
-  const [selected, setSelected] = useState();
+  const [selected, setSelected] = useState(null);
+  const [resolvedData, setResolvedData] = useState(null);
+
+  // Handle data resolution
+  useEffect(() => {
+    collections.then((r) => {
+      setResolvedData(r);
+    });
+  }, [collections]);
+
+  // Set initial selection when data is available
+  useEffect(() => {
+    if (resolvedData && !selected) {
+      const fields = normalizeMetaobject(resolvedData.metaobject);
+      const nodes = fields?.collections?.references?.nodes || [];
+      if (nodes.length > 0) {
+        setSelected(nodes[0]);
+      }
+    }
+  }, [resolvedData, selected]);
 
   return (
     <section className="home-collections-hero">
@@ -502,12 +521,6 @@ function CollectionsHero({collections}) {
             const fields = normalizeMetaobject(r.metaobject);
             const collectionNodes =
               fields?.collections?.references?.nodes || [];
-
-            // Set initial selection when data loads (no useEffect needed)
-            if (collectionNodes.length > 0 && !selected) {
-              // Use setTimeout to avoid setState during render
-              setTimeout(() => setSelected(collectionNodes[0]), 0);
-            }
 
             return (
               <>
