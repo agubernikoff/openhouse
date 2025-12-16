@@ -250,25 +250,6 @@ function RotatingBrandTypes({types, interval = 2500}) {
 }
 
 function Partners({data}) {
-  const trackRef = useRef(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  // Resume animation when component becomes visible again
-  useEffect(() => {
-    if (!trackRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsPaused(!entry.isIntersecting);
-      },
-      {threshold: 0.1},
-    );
-
-    observer.observe(trackRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section className="home-partners-section">
       <p>WE'RE IN GOOD COMPANY</p>
@@ -279,11 +260,6 @@ function Partners({data}) {
             {(d) => {
               const fields = normalizeMetaobject(d?.metaobject);
               const partners = fields?.partners?.references?.nodes || [];
-
-              // Set ready state when data loads
-              if (!isReady && partners.length > 0) {
-                setTimeout(() => setIsReady(true), 100);
-              }
 
               const renderLogo = (n, i, setIndex) => {
                 const fieldz = normalizeMetaobject(n);
@@ -306,16 +282,7 @@ function Partners({data}) {
               };
 
               return (
-                <div
-                  className="partners-carousel-track"
-                  ref={trackRef}
-                  style={{
-                    animationPlayState:
-                      isPaused || !isReady ? 'paused' : 'running',
-                    opacity: isReady ? 1 : 0,
-                    transition: 'opacity 300ms ease-in',
-                  }}
-                >
+                <div className="partners-carousel-track">
                   <div className="partners-set" aria-hidden="false">
                     {partners.map((n, i) => renderLogo(n, i, 0))}
                   </div>
@@ -338,119 +305,117 @@ function Partners({data}) {
  * }}
  */
 function FeaturedCollection({collection}) {
+  return (
+    <section className="home-featured-collection">
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={collection}>
+          {(response) => <FeaturedCollectionContent response={response} />}
+        </Await>
+      </Suspense>
+    </section>
+  );
+}
+
+function FeaturedCollectionContent({response}) {
   const track = useRef(null);
   const item = useRef(null);
   const [index, setIndex] = useState(0);
   const [offset, setOffset] = useState(0);
 
+  const products = response?.collection?.products?.nodes ?? [];
+  const visibleCount = 3;
+  const maxIndex = products.length - visibleCount;
+
   useEffect(() => {
-    if (!item.current || !track.current) return;
+    if (!item.current) return;
 
     const itemWidth = item.current.offsetWidth;
-    const gap = 20; // your existing gap
-    const step = itemWidth + gap;
-
-    setOffset(index * step);
+    const gap = 20;
+    setOffset(index * (itemWidth + gap));
   }, [index]);
 
+  function next() {
+    setIndex((i) => Math.min(i + 1, maxIndex));
+  }
+
+  function prev() {
+    setIndex((i) => Math.max(i - 1, 0));
+  }
+
   return (
-    <section className="home-featured-collection">
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={collection}>
-          {(response) => {
-            const products = response?.collection?.products?.nodes ?? [];
-            const visibleCount = 3;
-            const total = products.length;
-
-            const maxIndex = total - visibleCount;
-
-            function next() {
-              setIndex((i) => Math.min(i + 1, maxIndex));
-            }
-
-            function prev() {
-              setIndex((i) => Math.max(i - 1, 0));
-            }
-            return (
-              <>
-                <div>
-                  <p className="red-dot">FEATURED</p>
+    <>
+      <div>
+        <p className="red-dot">FEATURED</p>
+      </div>
+      <div className="subgrid home-featured-products-grid">
+        <h3>{response.collection.description}</h3>
+        <div className="carousel-wrapper">
+          <div className="carousel-viewport">
+            <div
+              className="carousel-track"
+              ref={track}
+              style={{transform: `translateX(-${offset}px)`}}
+            >
+              {products.map((product, i) => (
+                <div
+                  className="carousel-item"
+                  key={product.id}
+                  ref={i === 0 ? item : null}
+                >
+                  <ProductItem product={product} loading="eager" />
                 </div>
-                <div className="subgrid home-featured-products-grid">
-                  <h3>{response.collection.description}</h3>
-                  {/* Carousel wrapper */}
-                  <div className="carousel-wrapper">
-                    <div className="carousel-viewport">
-                      <div
-                        className="carousel-track"
-                        ref={track}
-                        style={{transform: `translateX(-${offset}px)`}}
-                      >
-                        {products.map((product, i) => (
-                          <div
-                            className="carousel-item"
-                            key={product.id}
-                            ref={i === 0 ? item : null} // measure first item
-                          >
-                            <ProductItem product={product} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="featured-products-button-container">
-                    <Link
-                      to={`/collections/${response.collection.handle}`}
-                      className="explore-all"
-                    >
-                      EXPLORE ALL
-                    </Link>
-                    <div>
-                      <button
-                        className="carousel-btn left"
-                        onClick={prev}
-                        disabled={index === 0}
-                      >
-                        <svg
-                          width="32"
-                          height="15"
-                          viewBox="0 0 32 15"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M0.292892 8.07112C-0.0976295 7.6806 -0.0976295 7.04743 0.292892 6.65691L6.65685 0.292946C7.04738 -0.0975785 7.68054 -0.0975785 8.07107 0.292946C8.46159 0.68347 8.46159 1.31664 8.07107 1.70716L2.41421 7.36401L8.07107 13.0209C8.46159 13.4114 8.46159 14.0446 8.07107 14.4351C7.68054 14.8256 7.04738 14.8256 6.65685 14.4351L0.292892 8.07112ZM32 7.36401V8.36401H1V7.36401V6.36401H32V7.36401Z"
-                            fill="#2D2D2B"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="carousel-btn right"
-                        onClick={next}
-                        disabled={index === maxIndex}
-                      >
-                        <svg
-                          width="32"
-                          height="15"
-                          viewBox="0 0 32 15"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M31.7071 8.07112C32.0976 7.6806 32.0976 7.04743 31.7071 6.65691L25.3431 0.292946C24.9526 -0.0975785 24.3195 -0.0975785 23.9289 0.292946C23.5384 0.68347 23.5384 1.31664 23.9289 1.70716L29.5858 7.36401L23.9289 13.0209C23.5384 13.4114 23.5384 14.0446 23.9289 14.4351C24.3195 14.8256 24.9526 14.8256 25.3431 14.4351L31.7071 8.07112ZM0 7.36401V8.36401H31V7.36401V6.36401H0V7.36401Z"
-                            fill="#2D2D2B"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            );
-          }}
-        </Await>
-      </Suspense>
-    </section>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="featured-products-button-container">
+          <Link
+            to={`/collections/${response.collection.handle}`}
+            className="explore-all"
+          >
+            EXPLORE ALL
+          </Link>
+          <div>
+            <button
+              className="carousel-btn left"
+              onClick={prev}
+              disabled={index === 0}
+            >
+              <svg
+                width="32"
+                height="15"
+                viewBox="0 0 32 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M0.292892 8.07112C-0.0976295 7.6806 -0.0976295 7.04743 0.292892 6.65691L6.65685 0.292946C7.04738 -0.0975785 7.68054 -0.0975785 8.07107 0.292946C8.46159 0.68347 8.46159 1.31664 8.07107 1.70716L2.41421 7.36401L8.07107 13.0209C8.46159 13.4114 8.46159 14.0446 8.07107 14.4351C7.68054 14.8256 7.04738 14.8256 6.65685 14.4351L0.292892 8.07112ZM32 7.36401V8.36401H1V7.36401V6.36401H32V7.36401Z"
+                  fill="#2D2D2B"
+                />
+              </svg>
+            </button>
+            <button
+              className="carousel-btn right"
+              onClick={next}
+              disabled={index === maxIndex}
+            >
+              <svg
+                width="32"
+                height="15"
+                viewBox="0 0 32 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M31.7071 8.07112C32.0976 7.6806 32.0976 7.04743 31.7071 6.65691L25.3431 0.292946C24.9526 -0.0975785 24.3195 -0.0975785 23.9289 0.292946C23.5384 0.68347 23.5384 1.31664 23.9289 1.70716L29.5858 7.36401L23.9289 13.0209C23.5384 13.4114 23.5384 14.0446 23.9289 14.4351C24.3195 14.8256 24.9526 14.8256 25.3431 14.4351L31.7071 8.07112ZM0 7.36401V8.36401H31V7.36401V6.36401H0V7.36401Z"
+                  fill="#2D2D2B"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -501,63 +466,44 @@ function CollectionGrid({collections}) {
 }
 
 function CollectionsHero({collections}) {
-  const [selected, setSelected] = useState(null);
-  const [resolvedData, setResolvedData] = useState(null);
-
-  // Handle data resolution
-  useEffect(() => {
-    collections.then((r) => {
-      setResolvedData(r);
-    });
-  }, [collections]);
-
-  // Set initial selection when data is available
-  useEffect(() => {
-    if (resolvedData && !selected) {
-      const fields = normalizeMetaobject(resolvedData.metaobject);
-      const nodes = fields?.collections?.references?.nodes || [];
-      if (nodes.length > 0) {
-        setSelected(nodes[0]);
-      }
-    }
-  }, [resolvedData, selected]);
-
   return (
     <section className="home-collections-hero">
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={collections}>
-          {(r) => {
-            const fields = normalizeMetaobject(r.metaobject);
-            const collectionNodes =
-              fields?.collections?.references?.nodes || [];
-
-            return (
-              <>
-                <AnimatePresence mode="popLayout">
-                  <motion.div
-                    style={{width: '100%', height: '100%'}}
-                    key={selected?.id}
-                    initial={{opacity: 0}}
-                    animate={{opacity: 1}}
-                    exit={{opacity: 0}}
-                  >
-                    {selected && <Image data={selected?.image} sizes="100vw" />}
-                  </motion.div>
-                </AnimatePresence>
-                <div className="home-collections-hero-titles-container">
-                  <p>70+ Customizable Products Waiting for Your Brand</p>
-                  {collectionNodes.map((coll) => (
-                    <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
-                      {coll.title}
-                    </p>
-                  ))}
-                </div>
-              </>
-            );
-          }}
+          {(r) => <CollectionsHeroContent data={r} />}
         </Await>
       </Suspense>
     </section>
+  );
+}
+
+function CollectionsHeroContent({data}) {
+  const fields = normalizeMetaobject(data.metaobject);
+  const collectionNodes = fields?.collections?.references?.nodes || [];
+  const [selected, setSelected] = useState(collectionNodes[0]);
+
+  return (
+    <>
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          style={{width: '100%', height: '100%'}}
+          key={selected?.id}
+          initial={{opacity: 0}}
+          animate={{opacity: 1}}
+          exit={{opacity: 0}}
+        >
+          {selected && <Image data={selected?.image} sizes="100vw" />}
+        </motion.div>
+      </AnimatePresence>
+      <div className="home-collections-hero-titles-container">
+        <p>70+ Customizable Products Waiting for Your Brand</p>
+        {collectionNodes.map((coll) => (
+          <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
+            {coll.title}
+          </p>
+        ))}
+      </div>
+    </>
   );
 }
 
