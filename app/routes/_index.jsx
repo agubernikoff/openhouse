@@ -252,6 +252,7 @@ function RotatingBrandTypes({types, interval = 2500}) {
 function Partners({data}) {
   const trackRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   // Resume animation when component becomes visible again
   useEffect(() => {
@@ -279,6 +280,11 @@ function Partners({data}) {
               const fields = normalizeMetaobject(d?.metaobject);
               const partners = fields?.partners?.references?.nodes || [];
 
+              // Set ready state when data loads
+              if (!isReady && partners.length > 0) {
+                setTimeout(() => setIsReady(true), 100);
+              }
+
               const renderLogo = (n, i, setIndex) => {
                 const fieldz = normalizeMetaobject(n);
                 return (
@@ -304,7 +310,10 @@ function Partners({data}) {
                   className="partners-carousel-track"
                   ref={trackRef}
                   style={{
-                    animationPlayState: isPaused ? 'paused' : 'running',
+                    animationPlayState:
+                      isPaused || !isReady ? 'paused' : 'running',
+                    opacity: isReady ? 1 : 0,
+                    transition: 'opacity 300ms ease-in',
                   }}
                 >
                   <div className="partners-set" aria-hidden="false">
