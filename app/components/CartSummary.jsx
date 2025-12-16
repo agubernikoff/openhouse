@@ -43,11 +43,9 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
   const textareaRef = useRef(null);
   const fetcher = useFetcher();
   const hasSubmittedRef = useRef(false);
-
-  if (!checkoutUrl) return null;
-
   const isCartPage = layout === 'page';
 
+  // *** FIXED: Move all hooks BEFORE the early return ***
   useEffect(() => {
     if (isOpen && textareaRef.current) {
       textareaRef.current.focus();
@@ -67,6 +65,9 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
       hasSubmittedRef.current = false;
     }
   }, [fetcher.state, fetcher.data]);
+
+  // *** FIXED: Early return is now AFTER all hooks ***
+  if (!checkoutUrl) return null;
 
   const handleButtonClick = () => {
     if (isOpen && instructions.trim()) {
