@@ -1,6 +1,7 @@
 import {useLoaderData} from 'react-router';
 import {Image} from '@shopify/hydrogen';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {useEffect, useRef} from 'react';
 
 /**
  * @type {Route.MetaFunction}
@@ -76,28 +77,59 @@ export default function Article() {
   /** @type {LoaderReturnData} */
   const {article} = useLoaderData();
   const {title, image, contentHtml, author} = article;
-
   const publishedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'numeric',
     day: 'numeric',
   }).format(new Date(article.publishedAt));
+  const content = useRef(null);
+
+  useEffect(() => {
+    if (!content.current) return;
+
+    // Find all images in the article content
+    const images = content.current.querySelectorAll('.article-content img');
+
+    images.forEach((img) => {
+      // Skip if already wrapped
+      if (img.parentElement.classList.contains('image-wrapper')) return;
+
+      const wrapper = document.createElement('figure');
+      wrapper.className = 'image-wrapper';
+
+      // Wrap the image
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+
+      // Add caption if alt text exists
+      if (img.alt) {
+        const caption = document.createElement('figcaption');
+        caption.textContent = img.alt;
+        wrapper.appendChild(caption);
+      }
+    });
+  }, [contentHtml]); // Re-run if content changes
 
   return (
-    <div className="article">
-      <h1>
-        {title}
+    <div className="article" ref={content}>
+      <div className="article-header">
         <div>
-          <time dateTime={article.publishedAt}>{publishedDate}</time> &middot;{' '}
-          <address>{author?.name}</address>
+          <h1>{title}</h1>
+          <address>By {author?.name}</address>
+          <div className="line" />
+          <time dateTime={article.publishedAt}>{publishedDate}</time>{' '}
         </div>
-      </h1>
-
-      {image && <Image data={image} sizes="90vw" loading="eager" />}
-      <div
-        dangerouslySetInnerHTML={{__html: contentHtml}}
-        className="article"
-      />
+        {image && <Image data={image} sizes="90vw" loading="eager" />}
+      </div>
+      {contentHtml
+        .split('<h1>')
+        .filter((x) => x)
+        .map((x) => (
+          <div className="article-content" key={x.slice(0, 20)}>
+            <h1 className="red-dot">{x.split('</h1>')[0]}</h1>
+            <div dangerouslySetInnerHTML={{__html: x.split('</h1>')[1]}} />
+          </div>
+        ))}
     </div>
   );
 }
@@ -116,6 +148,7 @@ const ARTICLE_QUERY = `#graphql
         handle
         title
         contentHtml
+        content
         publishedAt
         author: authorV2 {
           name
