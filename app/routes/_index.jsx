@@ -32,13 +32,14 @@ export async function loader(args) {
  * @param {Route.LoaderArgs}
  */
 async function loadCriticalData({context}) {
-  const [x] = await Promise.all([
+  const [x, partnersData] = await Promise.all([
     context.storefront.query(HERO_QUERY),
-    // Add other queries here, so that they are loaded in parallel
+    context.storefront.query(PARTNERS_QUERY, {variables: {first: 10}}),
   ]);
 
   return {
     hero: x.metaobject,
+    partners: partnersData.metaobject,
   };
 }
 
@@ -70,18 +71,9 @@ function loadDeferredData({context}) {
       return null;
     });
 
-  const partners = context.storefront
-    .query(PARTNERS_QUERY, {variables: {first: 10}})
-    .catch((error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
-
   return {
     featuredCollection,
     collections,
-    partners,
   };
 }
 
@@ -250,50 +242,42 @@ function RotatingBrandTypes({types, interval = 2500}) {
 }
 
 function Partners({data}) {
+  const fields = normalizeMetaobject(data);
+  const partners = fields?.partners?.references?.nodes || [];
+
+  const renderLogo = (n, i, setIndex) => {
+    const fieldz = normalizeMetaobject(n);
+    return (
+      <div
+        className="partner-logo-container"
+        key={`${n.id}-set${setIndex}-${i}`}
+      >
+        <Image
+          data={{
+            ...fieldz.logo?.reference?.image,
+            altText: fieldz?.name?.value,
+          }}
+          sizes="20vw"
+          className="partner-logo"
+          loading="eager"
+        />
+      </div>
+    );
+  };
+
   return (
     <section className="home-partners-section">
-      <p>WE'RE IN GOOD COMPANY</p>
+      <p>WE&rsquo;RE IN GOOD COMPANY</p>
 
       <div className="partners-carousel-mask">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Await resolve={data}>
-            {(d) => {
-              const fields = normalizeMetaobject(d?.metaobject);
-              const partners = fields?.partners?.references?.nodes || [];
-
-              const renderLogo = (n, i, setIndex) => {
-                const fieldz = normalizeMetaobject(n);
-                return (
-                  <div
-                    className="partner-logo-container"
-                    key={`${n.id}-set${setIndex}-${i}`}
-                  >
-                    <Image
-                      data={{
-                        ...fieldz.logo?.reference?.image,
-                        altText: fieldz?.name?.value,
-                      }}
-                      sizes="20vw"
-                      className="partner-logo"
-                      loading="eager"
-                    />
-                  </div>
-                );
-              };
-
-              return (
-                <div className="partners-carousel-track">
-                  <div className="partners-set" aria-hidden="false">
-                    {partners.map((n, i) => renderLogo(n, i, 0))}
-                  </div>
-                  <div className="partners-set" aria-hidden="true">
-                    {partners.map((n, i) => renderLogo(n, i, 1))}
-                  </div>
-                </div>
-              );
-            }}
-          </Await>
-        </Suspense>
+        <div className="partners-carousel-track">
+          <div className="partners-set" aria-hidden="false">
+            {partners.map((n, i) => renderLogo(n, i, 0))}
+          </div>
+          <div className="partners-set" aria-hidden="true">
+            {partners.map((n, i) => renderLogo(n, i, 1))}
+          </div>
+        </div>
       </div>
     </section>
   );
