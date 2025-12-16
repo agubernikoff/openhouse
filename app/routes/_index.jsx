@@ -250,6 +250,24 @@ function RotatingBrandTypes({types, interval = 2500}) {
 }
 
 function Partners({data}) {
+  const trackRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Resume animation when component becomes visible again
+  useEffect(() => {
+    if (!trackRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPaused(!entry.isIntersecting);
+      },
+      {threshold: 0.1},
+    );
+
+    observer.observe(trackRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="home-partners-section">
       <p>WE'RE IN GOOD COMPANY</p>
@@ -261,10 +279,13 @@ function Partners({data}) {
               const fields = normalizeMetaobject(d?.metaobject);
               const partners = fields?.partners?.references?.nodes || [];
 
-              const renderLogo = (n, i) => {
+              const renderLogo = (n, i, setIndex) => {
                 const fieldz = normalizeMetaobject(n);
                 return (
-                  <div className="partner-logo-container" key={n.id + '-' + i}>
+                  <div
+                    className="partner-logo-container"
+                    key={`${n.id}-set${setIndex}-${i}`}
+                  >
                     <Image
                       data={{
                         ...fieldz.logo?.reference?.image,
@@ -272,15 +293,26 @@ function Partners({data}) {
                       }}
                       sizes="20vw"
                       className="partner-logo"
+                      loading="eager"
                     />
                   </div>
                 );
               };
 
               return (
-                <div className="partners-carousel-track">
-                  <div className="partners-set">{partners.map(renderLogo)}</div>
-                  <div className="partners-set">{partners.map(renderLogo)}</div>
+                <div
+                  className="partners-carousel-track"
+                  ref={trackRef}
+                  style={{
+                    animationPlayState: isPaused ? 'paused' : 'running',
+                  }}
+                >
+                  <div className="partners-set" aria-hidden="false">
+                    {partners.map((n, i) => renderLogo(n, i, 0))}
+                  </div>
+                  <div className="partners-set" aria-hidden="true">
+                    {partners.map((n, i) => renderLogo(n, i, 1))}
+                  </div>
                 </div>
               );
             }}
@@ -461,15 +493,22 @@ function CollectionGrid({collections}) {
 
 function CollectionsHero({collections}) {
   const [selected, setSelected] = useState();
+
   return (
     <section className="home-collections-hero">
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={collections}>
           {(r) => {
             const fields = normalizeMetaobject(r.metaobject);
-            useEffect(() => {
-              setSelected(fields?.collections?.references?.nodes[0]);
-            }, []);
+            const collectionNodes =
+              fields?.collections?.references?.nodes || [];
+
+            // Set initial selection when data loads (no useEffect needed)
+            if (collectionNodes.length > 0 && !selected) {
+              // Use setTimeout to avoid setState during render
+              setTimeout(() => setSelected(collectionNodes[0]), 0);
+            }
+
             return (
               <>
                 <AnimatePresence mode="popLayout">
@@ -485,7 +524,7 @@ function CollectionsHero({collections}) {
                 </AnimatePresence>
                 <div className="home-collections-hero-titles-container">
                   <p>70+ Customizable Products Waiting for Your Brand</p>
-                  {fields?.collections?.references?.nodes?.map((coll) => (
+                  {collectionNodes.map((coll) => (
                     <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
                       {coll.title}
                     </p>
