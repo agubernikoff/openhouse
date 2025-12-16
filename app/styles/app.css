@@ -1013,7 +1013,7 @@ div:has(> .testimonials-container) {
 .cart-line-actions form button {
   color: #737373;
   font-family: 'apfel';
-  font-weight: 300 !important;
+  font-weight: 400 !important;
 }
 
 .cart-line-actions button {
