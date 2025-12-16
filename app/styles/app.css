@@ -1896,6 +1896,7 @@ div:has(.products-grid) {
 .product-image {
   width: 100%;
   aspect-ratio: 1/1;
+  background-color: white;
 }
 
 .product-image img {
