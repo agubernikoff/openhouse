@@ -1786,7 +1786,7 @@ div:has(.products-grid) {
   height: 100%;
   width: 100%;
   border-radius: 10px;
-  background-color: rgb(245, 244, 240);
+  background-color: white;
 }
 
 .product-badge {
