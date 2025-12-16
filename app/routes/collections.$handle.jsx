@@ -1,10 +1,17 @@
-import {redirect, useLoaderData, NavLink, useSearchParams} from 'react-router';
+import {
+  redirect,
+  useLoaderData,
+  NavLink,
+  useSearchParams,
+  useRouteLoaderData,
+  useLocation,
+} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import {useEffect, useState} from 'react';
-import {motion} from 'motion/react';
+import {AnimatePresence, motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
 
 /**
@@ -92,6 +99,9 @@ function loadDeferredData({context}) {
 
 export default function Collection() {
   /** @type {LoaderReturnData} */
+  const {publicStoreDomain, header} = useRouteLoaderData('root');
+  const {shop, menu} = header;
+  const {primaryDomain} = shop;
   const {collection} = useLoaderData();
   const [total, setTotal] = useState(0);
 
@@ -106,10 +116,43 @@ export default function Collection() {
         .then((data) => setTotal(data.total));
   }, [collection?.handle, filter, collection?.products?.nodes?.length]);
 
+  const {pathname} = useLocation();
+
+  const shopMenuItems = menu.items
+    .find((i) => i.title === 'Shop')
+    .items.filter((i) => i.title !== 'Categories');
+  const collections = shopMenuItems.map((smi) => {
+    const url =
+      smi.url.includes('myshopify.com') ||
+      smi.url.includes(publicStoreDomain) ||
+      smi.url.includes(primaryDomain.url)
+        ? new URL(smi.url).pathname + new URL(smi.url).hash
+        : smi.url;
+    return (
+      <div key={smi.id} className="plp-sidemenu-a">
+        {pathname === url && (
+          <motion.div
+            layoutId={'collections-side-menu-top'}
+            className="filter-dot"
+            transition={{ease: 'easeInOut'}}
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+          />
+        )}
+        <motion.div layout>
+          <NavLink to={url}>{smi.title}</NavLink>
+        </motion.div>
+      </div>
+    );
+  });
   return (
     <section className="home-featured-collection collection">
       <div>
         <div className="collection-side-menu">
+          <AnimatePresence mode="popLayout">
+            <div className="collections-side-menu-top">{collections}</div>
+          </AnimatePresence>
           <FilterColumns
             filters={collection?.products?.filters}
             isSideMenu={true}
