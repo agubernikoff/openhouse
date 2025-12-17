@@ -157,12 +157,18 @@ function Hero({data}) {
         </em>
         <RotatingBrandTypes
           types={[
-            'Hospitality',
             'Retail',
-            'Media',
-            'PR',
-            'Wellness',
-            'Fitness',
+            'Hospitality & Hotels',
+            'Travel & Experiences',
+            'Tech & AI',
+            'Wellness & Fitness',
+            'CPG',
+            'Education',
+            'Music & Media',
+            'Healthcare',
+            'Events & Activations',
+            'Banking & Finance',
+            'F&B',
           ]}
         />
       </h2>
