@@ -1,4 +1,4 @@
-import {Await, useLoaderData, Link} from 'react-router';
+import {Await, useLoaderData, Link, useRouteLoaderData} from 'react-router';
 import React, {Suspense, useState, useRef, useEffect} from 'react';
 import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
@@ -92,8 +92,17 @@ export default function Homepage() {
 }
 
 function Hero({data}) {
+  const {publicStoreDomain, header} = useRouteLoaderData('root');
+  const {shop} = header;
+  const {primaryDomain} = shop;
   const fields = normalizeMetaobject(data);
   const buttonData = JSON.parse(fields?.button_link?.value);
+  const url =
+    buttonData.url.includes('myshopify.com') ||
+    buttonData.url.includes(publicStoreDomain) ||
+    buttonData.url.includes(primaryDomain.url)
+      ? new URL(buttonData.url).pathname + new URL(buttonData.url).hash
+      : buttonData.url;
 
   const videoRef = useRef(null);
 
@@ -159,7 +168,7 @@ function Hero({data}) {
       </h2>
       <div>
         <p>{fields.subtext.value}</p>
-        <Link to={buttonData.url} className="explore-all">
+        <Link to={url} className="explore-all">
           {buttonData.text.toUpperCase()}
         </Link>
       </div>
