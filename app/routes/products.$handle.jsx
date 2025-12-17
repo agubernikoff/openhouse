@@ -305,7 +305,7 @@ export default function Product() {
 }
 
 function AdditionalInfo({product}) {
-  const {lead_time, material, size_chart} = product;
+  const {lead_time, material, size_chart, download_dieline} = product;
 
   const measuredRef = useRef(null);
   const initial = useRef(null);
@@ -314,13 +314,29 @@ function AdditionalInfo({product}) {
   const imageRef = useRef(null);
   const [measuredHeight, setMeasuredHeight] = useState(0);
 
-  const options = [
+  // Build options array based on what metafields exist
+  const baseOptions = [
     'LEAD TIME',
     'MATERIAL',
     'SIZE CHART',
     'OUR COMMITMENT',
     'RETURNS',
   ];
+
+  // Add DOWNLOAD DIELINE if the metafield exists and has a file/image
+  const hasDownloadDieline =
+    download_dieline?.reference?.image?.url || download_dieline?.reference?.url;
+
+  const options = hasDownloadDieline
+    ? [
+        'LEAD TIME',
+        'MATERIAL',
+        'SIZE CHART',
+        'DOWNLOAD DIELINE',
+        'OUR COMMITMENT',
+        'RETURNS',
+      ]
+    : baseOptions;
 
   const {selected, transitioning, handleSelection, isChecked} =
     useCascadingSelection(options, 'LEAD TIME');
@@ -387,6 +403,31 @@ function AdditionalInfo({product}) {
     />
   ));
 
+  // Handler for downloading the dieline image
+  const handleDownloadDieline = async () => {
+    // Support both MediaImage and GenericFile types
+    const fileUrl =
+      download_dieline?.reference?.image?.url ||
+      download_dieline?.reference?.url;
+
+    if (fileUrl) {
+      try {
+        const response = await fetch(fileUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `dieline-${product.handle}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading dieline:', error);
+      }
+    }
+  };
+
   function content() {
     switch (selected) {
       case 'LEAD TIME':
@@ -403,6 +444,40 @@ function AdditionalInfo({product}) {
             data={size_chart?.reference?.image}
             sizes="(min-width: 45em) 45vw, 100vw"
           />
+        );
+      case 'DOWNLOAD DIELINE':
+        return (
+          <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+            {download_dieline?.reference?.image?.url && (
+              <img
+                src={download_dieline.reference.image.url}
+                alt={download_dieline.reference.image.altText || 'Dieline'}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  maxWidth: '100%',
+                  display: 'block',
+                  objectFit: 'contain',
+                }}
+              />
+            )}
+            <button
+              onClick={handleDownloadDieline}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: 'var(--color-oh-black)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '400',
+                borderRadius: '4px',
+                alignSelf: 'flex-start',
+              }}
+            >
+              DOWNLOAD DIELINE
+            </button>
+          </div>
         );
       default:
         return null;
@@ -428,10 +503,6 @@ function AdditionalInfo({product}) {
               animate={{opacity: 1}}
               exit={{opacity: 0}}
             >
-              <Image
-                data={size_chart?.reference?.image}
-                sizes="(min-width: 45em) 45vw, 100vw"
-              />
               {content()}
             </motion.div>
           </div>
@@ -641,6 +712,21 @@ const PRODUCT_FRAGMENT = `#graphql
             width
             height
           }
+        }
+      }
+    }
+    download_dieline: metafield(namespace: "custom", key: "download_dieline") {
+      reference{
+        ... on MediaImage {
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+        ... on GenericFile {
+          url
         }
       }
     }
