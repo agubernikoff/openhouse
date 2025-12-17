@@ -1,7 +1,7 @@
 import {useLoaderData} from 'react-router';
 import React, {useState} from 'react';
 import emailjs from '@emailjs/browser';
-import hangers from 'app/assets/hangers.png';
+import hangers from 'app/assets/boxes.jpg';
 
 /**
  * @type {Route.MetaFunction}
@@ -91,8 +91,9 @@ export default function Contact() {
         <img src={hangers} alt="hangers" />
       </div>
       <h3 className="contact-hero-text">
-        Whether you have a question about an order, a product, or would like
-        more information about what us, we'd love to hear from you.
+        We'd love to hear from you. Whether you have a question about an order,
+        a product, or would like to partner with us, please use the form below
+        to get in touch.
       </h3>
       <div className="contact-details-container">
         <div>
@@ -128,10 +129,6 @@ export default function Contact() {
             </span>
           </p>
         </div>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        </p>
       </div>
       <form className="contact-form" onSubmit={handleSubmit}>
         <h3>Email</h3>
@@ -201,7 +198,7 @@ export default function Contact() {
           className="contact-submit"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'SENDING...' : 'ORDER SPECIAL INSTRUCTIONS'}
+          {isSubmitting ? 'SUBMITTING...' : 'SUBMIT'}
         </button>
       </form>
     </div>
