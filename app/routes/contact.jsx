@@ -58,7 +58,7 @@ export default function Contact() {
     emailjs.init('rzBTp542LGt-9PFek');
 
     try {
-      const result = await emailjs.send('service_p8ncxii', 'template_4xfs5ih', {
+      const result = await emailjs.send('service_5d73fzg', 'template_4xfs5ih', {
         firstName: first,
         lastName: last,
         email: email,
