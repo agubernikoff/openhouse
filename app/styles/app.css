@@ -1303,10 +1303,6 @@ input[type='search']::-webkit-search-cancel-button {
 .hero-section h2 span {
   font-family: 'apfel';
 }
-.hero-section h2 em {
-  display: inline-block;
-  width: calc(100vw - 2rem);
-}
 .hero-section > div {
   position: absolute;
   left: 1rem;
@@ -3985,5 +3981,11 @@ div:has(> .sticky-scroll-image) {
   }
   .article-content {
     gap: 2rem;
+  }
+}
+@media (max-width: 1218px) {
+  .hero-section h2 em {
+    display: inline-block;
+    width: calc(100vw - 2rem);
   }
 }
