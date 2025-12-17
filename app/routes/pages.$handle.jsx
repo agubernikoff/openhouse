@@ -506,8 +506,14 @@ const FAQSection = forwardRef(({section}, ref) => {
         <p className="red-dot">FREQUENTLY ASKED QUESTIONS</p>
       </div>
       <div>
-        {faqs.references.nodes.map((field) => {
+        {faqs?.references?.nodes?.map((field) => {
           const {question, answer} = normalizeMetaobject(field);
+
+          // Skip if question or answer is missing
+          if (!question?.value || !answer?.value) {
+            return null;
+          }
+
           return (
             <Expandable
               key={field.id}
@@ -526,20 +532,28 @@ const FAQSection = forwardRef(({section}, ref) => {
 
 function MultiTitleAndBlurb({section}) {
   const {title, titles_and_blurbs} = normalizeMetaobject(section);
-  const content = titles_and_blurbs.references.nodes.map((node) => {
-    const {title, blurb} = normalizeMetaobject(node);
-    return (
-      <div key={node.id} className="title-and-blurb-item">
-        <h3>{title.value}</h3>
-        {mapRichText(JSON.parse(blurb.value))}
-      </div>
-    );
-  });
+  const content = titles_and_blurbs.references.nodes
+    .map((node) => {
+      const {title: itemTitle, blurb} = normalizeMetaobject(node);
+
+      // Skip rendering if either title or blurb is missing
+      if (!itemTitle?.value || !blurb?.value) {
+        return null;
+      }
+
+      return (
+        <div key={node.id} className="title-and-blurb-item">
+          <h3>{itemTitle.value}</h3>
+          {mapRichText(JSON.parse(blurb.value))}
+        </div>
+      );
+    })
+    .filter(Boolean); // Remove null entries
 
   return (
     <section className="home-featured-collection">
       <div>
-        <p className="red-dot">{title.value.toUpperCase()}</p>
+        <p className="red-dot">{title?.value?.toUpperCase() || ''}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
         <div className="page-subgrid-content-container multi-title-and-blurb">
