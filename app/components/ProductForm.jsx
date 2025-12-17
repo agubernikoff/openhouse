@@ -1,7 +1,7 @@
 import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {AnimatePresence, motion} from 'motion/react';
 import mapRichText from '~/helpers/mapRichText';
 
@@ -46,6 +46,28 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // State for client-side only preview URL
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track when component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Create preview URL only on client side
+  useEffect(() => {
+    if (uploadedFile && isMounted) {
+      const url = URL.createObjectURL(uploadedFile);
+      setPreviewUrl(url);
+
+      // Cleanup
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [uploadedFile, isMounted]);
 
   // Calculate total price for bulk order
   const bulkPrice = selectedVariant?.price?.amount
@@ -135,6 +157,7 @@ export function ProductForm({productOptions, selectedVariant}) {
     setUploadedFile(null);
     setUploadedFileUrl('');
     setUploadError('');
+    setPreviewUrl('');
   };
 
   // Drag and drop handlers
@@ -401,11 +424,24 @@ export function ProductForm({productOptions, selectedVariant}) {
               </>
             ) : (
               <>
-                {uploadedFile.type.startsWith('image/') ? (
+                {isMounted &&
+                uploadedFile.type.startsWith('image/') &&
+                previewUrl ? (
                   <img
-                    src={URL.createObjectURL(uploadedFile)}
+                    src={previewUrl}
                     alt="Uploaded artwork preview"
                     className="upload-preview-image"
+                  />
+                ) : uploadedFile.type.startsWith('image/') ? (
+                  // Placeholder while loading on client
+                  <div
+                    className="upload-preview-image"
+                    style={{
+                      background: '#f0f0f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   />
                 ) : (
                   <div
@@ -470,10 +506,10 @@ export function ProductForm({productOptions, selectedVariant}) {
           <p>Minimum Order Quantity: {minimumQuantity} units</p>
         )}
         {selectedVariant?.product?.lead_time?.value && (
-          <p style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
             Estimated lead time:{' '}
             {mapRichText(JSON.parse(selectedVariant.product.lead_time.value))}
-          </p>
+          </div>
         )}
       </div>
 
