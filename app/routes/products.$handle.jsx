@@ -450,13 +450,9 @@ function AdditionalInfo({product, global_pdp_data}) {
   function content() {
     switch (selected) {
       case 'LEAD TIME':
-        return lead_time?.value
-          ? mapRichText(JSON.parse(lead_time?.value))
-          : null;
+        return lead_time?.value && mapRichText(JSON.parse(lead_time.value));
       case 'MATERIAL':
-        return material?.value
-          ? mapRichText(JSON.parse(material?.value))
-          : null;
+        return material?.value && mapRichText(JSON.parse(material.value));
       case 'SIZE CHART':
         return (
           <Image
@@ -499,13 +495,14 @@ function AdditionalInfo({product, global_pdp_data}) {
           </div>
         );
       case 'OUR COMMITMENT':
-        return globalData?.our_commitment
-          ? mapRichText(JSON.parse(globalData.our_commitment))
-          : null;
+        return (
+          globalData?.our_commitment &&
+          mapRichText(JSON.parse(globalData.our_commitment))
+        );
       case 'RETURNS':
-        return globalData?.returns
-          ? mapRichText(JSON.parse(globalData.returns))
-          : null;
+        return (
+          globalData?.returns && mapRichText(JSON.parse(globalData.returns))
+        );
       default:
         return null;
     }
@@ -568,7 +565,9 @@ function FAQSection({data}) {
                     openSection={openSection}
                     toggleSection={toggleSection}
                     title={question.value}
-                    details={mapRichText(JSON.parse(answer.value))}
+                    details={
+                      answer?.value && mapRichText(JSON.parse(answer.value))
+                    }
                     isFirstRender={isFirstRender}
                   />
                 );

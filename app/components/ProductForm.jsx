@@ -508,7 +508,8 @@ export function ProductForm({productOptions, selectedVariant}) {
         {selectedVariant?.product?.lead_time?.value && (
           <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
             Estimated lead time:{' '}
-            {mapRichText(JSON.parse(selectedVariant.product.lead_time.value))}
+            {selectedVariant?.product?.lead_time?.value &&
+              mapRichText(JSON.parse(selectedVariant.product.lead_time.value))}
           </div>
         )}
       </div>
