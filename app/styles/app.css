@@ -2254,12 +2254,21 @@ div:has(> .dropdown-content) {
 .rich-text-div p:last-of-type {
   margin-bottom: 0;
 }
+.rich-text-div a {
+  color: var(--color-oh-black);
+}
 .pdp-additional-info-section > .filter-column-container {
   grid-column: span 3;
 }
 .pdp-additional-info-content-container {
   position: relative;
   grid-column: span 6;
+}
+.pdp-additional-info-content-container .rich-text-div a {
+  text-decoration: underline;
+}
+.pdp-additional-info-content-container .rich-text-div a:hover {
+  color: black;
 }
 .pdp-additional-info-section button {
   font-family: 'mono';

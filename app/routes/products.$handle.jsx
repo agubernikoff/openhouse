@@ -107,18 +107,19 @@ function loadDeferredData({context, params}) {
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
   const faqs = storefront.query(FAQ_QUERY);
+  const global_pdp_data = storefront.query(GLOBAL_PDP_QUERY);
   const recs = storefront.query(PRODUCT_RECOMENDATIONS_QUERY, {
     variables: {handle},
   });
   const compliments = storefront.query(COMPLEMENTARY_QUERY, {
     variables: {handle},
   });
-  return {faqs, recs, compliments};
+  return {faqs, global_pdp_data, recs, compliments};
 }
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, faqs, recs, compliments} = useLoaderData();
+  const {product, faqs, global_pdp_data, recs, compliments} = useLoaderData();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -297,22 +298,35 @@ export default function Product() {
           }}
         />
       </div>
-      <AdditionalInfo product={product} />
+      <AdditionalInfo product={product} global_pdp_data={global_pdp_data} />
       <FAQSection data={faqs} />
       <YouMayAlsoLike recs={recs} compliments={compliments} />
     </>
   );
 }
 
-function AdditionalInfo({product}) {
+function AdditionalInfo({product, global_pdp_data}) {
   const {lead_time, material, size_chart, download_dieline} = product;
-
+  const [globalData, setGlobalData] = useState(null);
   const measuredRef = useRef(null);
   const initial = useRef(null);
   const initialHeight = useRef(0);
   const sectionRef = useRef(null);
   const imageRef = useRef(null);
   const [measuredHeight, setMeasuredHeight] = useState(0);
+
+  // Resolve global_pdp_data promise
+  useEffect(() => {
+    global_pdp_data.then((data) => {
+      if (data?.metaobject?.fields) {
+        const fieldsObj = {};
+        data.metaobject.fields.forEach((field) => {
+          fieldsObj[field.key] = field.value;
+        });
+        setGlobalData(fieldsObj);
+      }
+    });
+  }, [global_pdp_data]);
 
   // Build options array based on what metafields exist
   const baseOptions = [
@@ -340,6 +354,11 @@ function AdditionalInfo({product}) {
 
   const {selected, transitioning, handleSelection, isChecked} =
     useCascadingSelection(options, 'LEAD TIME');
+
+  // Reset selection to 'LEAD TIME' when product changes
+  useEffect(() => {
+    handleSelection('LEAD TIME');
+  }, [product.id]);
 
   useEffect(() => {
     if (!measuredRef.current || !initial.current) return;
@@ -479,6 +498,14 @@ function AdditionalInfo({product}) {
             </button>
           </div>
         );
+      case 'OUR COMMITMENT':
+        return globalData?.our_commitment
+          ? mapRichText(JSON.parse(globalData.our_commitment))
+          : null;
+      case 'RETURNS':
+        return globalData?.returns
+          ? mapRichText(JSON.parse(globalData.returns))
+          : null;
       default:
         return null;
     }
@@ -760,6 +787,45 @@ query GetFAQ() {
     handle: {
       type: "faq_section"
       handle: "faq-section-xp0vokbs"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      references(first: 50) {
+        nodes{
+          ... on Metaobject{
+            id
+            fields{
+              key
+              value
+              reference{
+                ... on MediaImage {
+                  image {
+                    id
+                    url
+                    height
+                    width
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+export const GLOBAL_PDP_QUERY = `#graphql
+query GetFAQ() {
+  metaobject(
+    handle: {
+      type: "global_pdp_data"
+      handle: "global-pdp-data-qjt5a6uz"}
   ) {
     id
     type
