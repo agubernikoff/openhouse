@@ -86,7 +86,7 @@ export default function Homepage() {
       <Partners data={data.partners} />
       <FeaturedCollection collection={data.featuredCollection} />
       <CollectionGrid collections={data.collections} />
-      <CollectionsHero collections={data.collections} />
+      {/* <CollectionsHero collections={data.collections} /> */}
     </div>
   );
 }
