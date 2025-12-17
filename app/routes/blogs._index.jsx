@@ -69,8 +69,8 @@ export default function Dispatch() {
               Notes on taste, product culture, and brand expression.
             </h1>
             <p className="dispatch-hero-description">
-              Help us share the big industry product of every made custom
-              products by optimizing with OpenHouse.
+              The inner circle of Openhouse: fresh ideas, elevated designs, and
+              brand stories that stick.
             </p>
             <Link className="explore-all" to={`/contact`}>
               GET IN CONTACT
