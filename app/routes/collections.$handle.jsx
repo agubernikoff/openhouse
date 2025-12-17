@@ -151,12 +151,16 @@ export default function Collection() {
       <div>
         <div className="collection-side-menu">
           <AnimatePresence mode="popLayout">
-            <div className="collections-side-menu-top">{collections}</div>
+            <motion.div layout layoutRoot className="collections-side-menu-top">
+              {collections}
+            </motion.div>
           </AnimatePresence>
-          <FilterColumns
-            filters={collection?.products?.filters}
-            isSideMenu={true}
-          />
+          <motion.div layout layoutRoot className="collections-side-menu-top">
+            <FilterColumns
+              filters={collection?.products?.filters}
+              isSideMenu={true}
+            />
+          </motion.div>
         </div>
       </div>
       <div className="subgrid home-featured-products-grid">
