@@ -104,7 +104,7 @@ export function Sections({sections}) {
     return acc;
   }, {});
 
-  const mapped = sections.map((section) => {
+  const mapped = sections?.map((section) => {
     switch (section.type) {
       case 'partners':
         return <Partners section={section} key={section.id} />;
@@ -176,7 +176,7 @@ function AnimatedScroll({section}) {
         <p className="red-dot">{title?.value?.toUpperCase()}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>{mapRichText(JSON.parse(blurb?.value))}</h3>
+        <h3>{blurb?.value && mapRichText(JSON.parse(blurb.value))}</h3>
       </div>
       <div className="animated-scroll-content-container-outer">
         <StickyScrollContent
@@ -211,10 +211,11 @@ function StickyScrollContent({
   selectedIndex,
   scrollProgresses,
 }) {
-  const {title, blurb} = normalizeMetaobject(data);
   const containerRef = useRef(null);
   const [scrollDirection, setScrollDirection] = useState('down');
   const lastScrollY = useRef(0);
+
+  const {title, blurb} = normalizeMetaobject(data);
 
   // Track scroll direction based on actual scroll position
   useEffect(() => {
@@ -271,33 +272,33 @@ function StickyScrollContent({
         <div>
           <motion.p
             className="red-dot"
-            key={title.value}
+            key={title?.value}
             initial={{opacity: 0, y: yEnter}}
             animate={{opacity: 1, y: 0}}
             exit={{opacity: 0, y: yExit}}
             transition={{ease: 'easeInOut', delay: isScrollingDown ? 0 : 0.3}}
           >{`${index <= 10 ? 0 : ''}${index}`}</motion.p>
           <motion.h3
-            key={`${title.value}-h3`}
+            key={`${title?.value}-h3`}
             initial={{opacity: 0, y: yEnter}}
             animate={{opacity: 1, y: 0}}
             exit={{opacity: 0, y: yExit}}
             transition={{ease: 'easeInOut', delay: isScrollingDown ? 0.1 : 0.2}}
           >
-            {title.value}
+            {title?.value}
           </motion.h3>
         </div>
         <motion.div
-          key={`${title.value}-blurb`}
+          key={`${title?.value}-blurb`}
           initial={{opacity: 0, y: yEnter}}
           animate={{opacity: 1, y: 0}}
           exit={{opacity: 0, y: yExit}}
           transition={{ease: 'easeInOut', delay: isScrollingDown ? 0.2 : 0.1}}
         >
-          {mapRichText(JSON.parse(blurb.value))}
+          {blurb?.value && mapRichText(JSON.parse(blurb.value))}
         </motion.div>
         <motion.div
-          key={`${title.value}-link`}
+          key={`${title?.value}-link`}
           initial={{opacity: 0, y: yEnter}}
           animate={{opacity: 1, y: 0}}
           exit={{opacity: 0, y: yExit}}
@@ -313,6 +314,8 @@ function StickyScrollContent({
 }
 
 function AnimatedImage({image, progress, isFirst, isSelected}) {
+  if (!image?.reference) return null;
+
   return (
     <motion.div
       animate={{scale: isFirst ? 1 : progress === 0 && !isSelected ? 0 : 1}}
@@ -360,9 +363,9 @@ function ScrollingContent({data, index, onScrollProgressChange}) {
       <div className="animated-scroll-object-text-container">
         <div>
           <p className="red-dot">{`${index <= 10 ? 0 : ''}${index}`}</p>
-          <h3>{title.value}</h3>
+          <h3>{title?.value}</h3>
         </div>
-        {mapRichText(JSON.parse(blurb.value))}
+        {blurb?.value && mapRichText(JSON.parse(blurb.value))}
         <Link to="/contact" className="explore-all">
           GET IN CONTACT
         </Link>
@@ -407,7 +410,7 @@ function StickyScroll({section}) {
     updateOffsets();
     window.addEventListener('resize', updateOffsets);
     return () => window.removeEventListener('resize', updateOffsets);
-  }, [data.references.nodes.length]);
+  }, [data?.references?.nodes?.length]);
 
   // Transform scroll progress to dot position
   const dotTop = useTransform(
@@ -416,18 +419,22 @@ function StickyScroll({section}) {
     [topOffset, bottomOffset],
   );
 
-  const content = data.references.nodes.map((node, i) => {
+  const content = data?.references?.nodes?.map((node, i) => {
     const {title, blurb} = normalizeMetaobject(node);
     return (
       <div
         key={node.id}
         className="title-and-blurb-item"
         ref={
-          i === 0 ? first : i === data.references.nodes.length - 1 ? last : null
+          i === 0
+            ? first
+            : i === data?.references?.nodes?.length - 1
+              ? last
+              : null
         }
       >
-        <h3>{title.value}</h3>
-        {mapRichText(JSON.parse(blurb.value))}
+        <h3>{title?.value}</h3>
+        {blurb?.value && mapRichText(JSON.parse(blurb.value))}
       </div>
     );
   });
@@ -435,7 +442,7 @@ function StickyScroll({section}) {
   return (
     <section className="home-featured-collection">
       <div>
-        <p className="red-dot">{title.value.toUpperCase()}</p>
+        <p className="red-dot">{title?.value?.toUpperCase()}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
         <div className="sticky-scroll-line-and-div-container">
@@ -479,11 +486,11 @@ function ServicesHeader({section}) {
           <Image data={image?.reference?.image} sizes="25vw" />
         </div>
         <div className="services-header-text-container">
-          <p>{label.value.toUpperCase()}</p>
-          <h2>{header.value}</h2>
-          <p>{subheader.value}</p>
-          <Link to={link.value} className="explore-all">
-            {button_text.value}
+          <p>{label?.value?.toUpperCase()}</p>
+          <h2>{header?.value}</h2>
+          <p>{subheader?.value}</p>
+          <Link to={link?.value || '#'} className="explore-all">
+            {button_text?.value}
           </Link>
         </div>
       </div>
@@ -520,7 +527,7 @@ const FAQSection = forwardRef(({section}, ref) => {
               openSection={openSection}
               toggleSection={toggleSection}
               title={question.value}
-              details={mapRichText(JSON.parse(answer.value))}
+              details={answer?.value && mapRichText(JSON.parse(answer.value))}
               isFirstRender={isFirstRender}
             />
           );
@@ -532,7 +539,7 @@ const FAQSection = forwardRef(({section}, ref) => {
 
 function MultiTitleAndBlurb({section}) {
   const {title, titles_and_blurbs} = normalizeMetaobject(section);
-  const content = titles_and_blurbs.references.nodes
+  const content = titles_and_blurbs?.references?.nodes
     .map((node) => {
       const {title: itemTitle, blurb} = normalizeMetaobject(node);
 
@@ -543,8 +550,8 @@ function MultiTitleAndBlurb({section}) {
 
       return (
         <div key={node.id} className="title-and-blurb-item">
-          <h3>{itemTitle.value}</h3>
-          {mapRichText(JSON.parse(blurb.value))}
+          <h3>{itemTitle?.value}</h3>
+          {blurb?.value && mapRichText(JSON.parse(blurb.value))}
         </div>
       );
     })
@@ -570,11 +577,11 @@ const TitleAndBlurb = forwardRef(({section}, ref) => {
   return (
     <section className="home-featured-collection" ref={ref}>
       <div>
-        <p className="red-dot">{title.value.toUpperCase()}</p>
+        <p className="red-dot">{title?.value?.toUpperCase()}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
         <div className="page-subgrid-content-container">
-          {mapRichText(JSON.parse(blurb.value))}
+          {blurb?.value && mapRichText(JSON.parse(blurb.value))}
         </div>
       </div>
     </section>
@@ -586,7 +593,7 @@ function PageHero({section}) {
 
   return (
     <section className="hero-section">
-      <Image data={background.reference.image} sizes="100vw" />
+      <Image data={background?.reference?.image} sizes="100vw" />
       <div>
         <svg
           width="66"
@@ -600,14 +607,14 @@ function PageHero({section}) {
             fill="#F4F2EA"
           />
         </svg>
-        {mapRichText(JSON.parse(headline.value))}
+        {headline?.value && mapRichText(JSON.parse(headline.value))}
       </div>
     </section>
   );
 }
 
 function Marquee({section}) {
-  const images = section.fields[0].references.nodes;
+  const images = section?.fields?.[0]?.references?.nodes;
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const [percentHidden, setPercentHidden] = useState(0);
@@ -638,7 +645,7 @@ function Marquee({section}) {
   return (
     <section className="marquee-section" ref={containerRef}>
       <motion.div ref={contentRef} style={{x}}>
-        {images.map((i) => (
+        {images?.map((i) => (
           <Image
             key={i.id}
             data={i.image}
@@ -653,7 +660,7 @@ function Marquee({section}) {
 function Partners({section}) {
   const {header, partners} = normalizeMetaobject(section);
 
-  const allPartners = partners.references.nodes;
+  const allPartners = partners?.references?.nodes || [];
   const [displayed, setDisplayed] = useState(() => allPartners.slice(0, 20));
   const leftoverRef = useRef(allPartners.slice(20));
   const stagingRef = useRef([]);
@@ -772,7 +779,7 @@ function Partners({section}) {
         <p className="red-dot">PARTNERS</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>{header.value}</h3>
+        <h3>{header?.value}</h3>
       </div>
       <div className="partners-wall-container" ref={containerRef}>
         <AnimatePresence mode="popLayout">
