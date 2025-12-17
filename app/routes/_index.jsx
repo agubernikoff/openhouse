@@ -150,21 +150,28 @@ function Hero({data}) {
         <track kind="captions" />
       </video>
       <h2>
-        <em>
+        <em className="rotating-brands-mobile-adj">
           Custom Product Collections
           <br />
-          for World Class{' '}
+          for World Class<span>{' — '}</span>
         </em>
         <RotatingBrandTypes
           types={[
-            'Hospitality',
             'Retail',
-            'Media',
-            'PR',
-            'Wellness',
-            'Fitness',
+            'Hospitality & Hotels',
+            'Travel & Experiences',
+            'Tech & AI',
+            'Wellness & Fitness',
+            'CPG',
+            'Education',
+            'Music & Media',
+            'Healthcare',
+            'Events & Activations',
+            'Banking & Finance',
+            'F&B',
           ]}
         />
+        <span className="rotating-brands-mobile-adj">{' Brands'}</span>
       </h2>
       <div>
         <p>{fields.subtext.value}</p>
@@ -201,7 +208,7 @@ function RotatingBrandTypes({types, interval = 2500}) {
 
   return (
     <span style={{display: 'inline-flex'}}>
-      {' — '}({/* Outer container with animated width */}
+      {'('}
       <motion.span
         style={{
           display: 'inline-block',
@@ -233,7 +240,7 @@ function RotatingBrandTypes({types, interval = 2500}) {
           </motion.span>
         </AnimatePresence>
       </motion.span>
-      {')'} Brands
+      {')'}
       {/* Hidden measurer */}
       <span
         ref={measureRef}

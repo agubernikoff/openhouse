@@ -1303,6 +1303,10 @@ input[type='search']::-webkit-search-cancel-button {
 .hero-section h2 span {
   font-family: 'apfel';
 }
+.hero-section h2 em {
+  display: inline-block;
+  width: calc(100vw - 2rem);
+}
 .hero-section > div {
   position: absolute;
   left: 1rem;
@@ -3155,14 +3159,18 @@ div:has(> .sticky-scroll-image) {
     border-radius: 0;
   }
   .hero-section h2 {
-    font-size: 36px;
-    line-height: 36px;
+    font-size: clamp(31px, 9.69vw, 36px);
+    line-height: clamp(31px, 9.69vw, 36px);
   }
   .hero-section h2 > span > span {
-    height: 36px !important;
+    height: clamp(31px, 9.69vw, 36px) !important;
   }
   .hero-section h2 > span > span > span {
-    line-height: 36px !important;
+    line-height: clamp(31px, 9.69vw, 36px) !important;
+  }
+  .rotating-brands-mobile-adj {
+    display: inline-block;
+    width: calc(100vw - 2rem);
   }
   .partners-carousel-mask {
     width: 100vw;
