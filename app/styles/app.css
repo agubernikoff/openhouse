@@ -2759,7 +2759,8 @@ body:has(.contact) .footer-newsletter-wrapper {
 body:has(.contact) .footer-menu-list a,
 body:has(.contact) .footer-legal-left a,
 body:has(.contact) .footer-logo *,
-body:has(.contact) .footer-newsletter-input {
+body:has(.contact) .footer-newsletter-input,
+body:has(.contact) .footer-legal-right a {
   color: var(--color-oh-white);
 }
 body:has(.contact) .footer-newsletter-button {
