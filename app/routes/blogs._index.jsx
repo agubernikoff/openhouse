@@ -96,7 +96,7 @@ export default function Dispatch() {
 
       <section className="home-featured-collection dispatch-articles-section">
         <div>
-          <p className="red-dot">DISPATCH</p>
+          <p className="red-dot">THE DISPATCH</p>
         </div>
         <div id="blogs">
           <BlogsPAJGination products={articles} />

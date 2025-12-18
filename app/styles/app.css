@@ -2525,26 +2525,39 @@ div:has(> .pdp-additional-info-image) {
   grid-column: span 12;
   display: grid;
   grid-template-columns: subgrid;
-  border-top: 1px solid var(--color-oh-gray);
-  padding-top: 1rem;
+  row-gap: 20px;
+}
+.article-content .line {
+  grid-column: 1/-1;
+  background: var(--color-oh-gray);
+}
+.article-content > * {
+  grid-column: 4/11;
+  transform: translateY(-2px);
+}
+.article-content > *:not(.line):empty {
+  display: none;
 }
 .article-content h1 {
   text-transform: uppercase;
   margin: 0;
-  grid-column: span 3;
+  grid-column: 1/4;
   font-family: 'mono';
   font-size: 14px;
   line-height: 14px;
   font-weight: normal;
+  transform: translateY(0);
+  display: flex;
 }
-.article-content > div {
-  grid-column: 4/11;
-  display: grid;
-  grid-template-columns: subgrid;
-  row-gap: 1rem;
-}
-.article-content > div > * {
-  grid-column: span 7;
+.article-content h1::before {
+  display: inline-block;
+  margin-right: 0.5rem;
+  content: '';
+  height: 10px;
+  width: 10px;
+  border-radius: 10px;
+  background: var(--color-oh-red);
+  flex-shrink: 0;
 }
 .article ul {
   list-style: outside;

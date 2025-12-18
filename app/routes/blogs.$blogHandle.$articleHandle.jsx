@@ -108,6 +108,18 @@ export default function Article() {
         wrapper.appendChild(caption);
       }
     });
+
+    // Add a div with class "line" before any h1 elements
+    const h1Elements = content.current.querySelectorAll('.article-content h1');
+
+    h1Elements.forEach((h1) => {
+      // Skip if line div already exists before this h1
+      if (h1.previousElementSibling?.classList.contains('line')) return;
+
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'line';
+      h1.parentNode.insertBefore(lineDiv, h1);
+    });
   }, [contentHtml]); // Re-run if content changes
 
   return (
@@ -121,7 +133,11 @@ export default function Article() {
         </div>
         {image && <Image data={image} sizes="90vw" loading="eager" />}
       </div>
-      {contentHtml
+      <div
+        dangerouslySetInnerHTML={{__html: contentHtml}}
+        className="article-content"
+      />
+      {/* {contentHtml
         .split('<h1>')
         .filter((x) => x)
         .map((x) => (
@@ -129,7 +145,7 @@ export default function Article() {
             <h1 className="red-dot">{x.split('</h1>')[0]}</h1>
             <div dangerouslySetInnerHTML={{__html: x.split('</h1>')[1]}} />
           </div>
-        ))}
+        ))} */}
     </div>
   );
 }
