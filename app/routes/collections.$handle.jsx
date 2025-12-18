@@ -10,9 +10,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
-import {useEffect, useState} from 'react';
-import {AnimatePresence, motion} from 'motion/react';
+import {useEffect, useState, useRef, useCallback} from 'react';
+import {motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
+import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
 
 /**
  * @type {Route.MetaFunction}
@@ -104,6 +105,8 @@ export default function Collection() {
   const {primaryDomain} = shop;
   const {collection} = useLoaderData();
   const [total, setTotal] = useState(0);
+  const [dotPosition, setDotPosition] = useState(0);
+  const itemRefs = useRef({});
 
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.getAll('filter');
@@ -121,6 +124,42 @@ export default function Collection() {
   const shopMenuItems = menu.items
     .find((i) => i.title === 'Shop')
     .items.filter((i) => i.title !== 'Categories');
+
+  // Create array of URLs for cascading hook
+  const collectionUrls = shopMenuItems.map((smi) => {
+    const url =
+      smi.url.includes('myshopify.com') ||
+      smi.url.includes(publicStoreDomain) ||
+      smi.url.includes(primaryDomain.url)
+        ? new URL(smi.url).pathname + new URL(smi.url).hash
+        : smi.url;
+    return url;
+  });
+
+  // Check if a URL is the current pathname
+  const isChecked = useCallback((url) => url === pathname, [pathname]);
+
+  // Use cascading selection hook
+  const {transitioning, handleSelection} = useCascadingFilterSelection(
+    collectionUrls,
+    isChecked,
+  );
+
+  // Trigger cascade when pathname changes
+  // useEffect(() => {
+  //   handleSelection(pathname, () => {});
+  // }, [pathname, handleSelection]);
+
+  useEffect(() => {
+    const activeItem = Object.entries(itemRefs.current).find(
+      ([url]) => url === pathname,
+    );
+    if (activeItem && activeItem[1]) {
+      const element = activeItem[1];
+      setDotPosition(element.offsetTop + 8);
+    }
+  }, [pathname]);
+
   const collections = shopMenuItems.map((smi) => {
     const url =
       smi.url.includes('myshopify.com') ||
@@ -128,21 +167,32 @@ export default function Collection() {
       smi.url.includes(primaryDomain.url)
         ? new URL(smi.url).pathname + new URL(smi.url).hash
         : smi.url;
+    const isActive = pathname === url;
+    const isTransitioning = transitioning.has(url);
+
     return (
-      <div key={smi.id} className="plp-sidemenu-a">
-        {pathname === url && (
-          <motion.div
-            layoutId={'collections-side-menu-top'}
-            className="filter-dot"
-            transition={{ease: 'easeInOut'}}
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-          />
-        )}
-        <motion.div layout>
-          <NavLink to={url}>{smi.title}</NavLink>
-        </motion.div>
+      <div
+        key={smi.id}
+        className="plp-sidemenu-a"
+        ref={(el) => {
+          if (el) itemRefs.current[url] = el;
+        }}
+      >
+        <NavLink
+          to={url}
+          style={{
+            transform:
+              isActive || isTransitioning
+                ? 'translateX(15px)'
+                : 'translateX(0)',
+            transition: 'transform 300ms ease-in-out',
+          }}
+          onClick={() => {
+            handleSelection(url, () => {});
+          }}
+        >
+          {smi.title}
+        </NavLink>
       </div>
     );
   });
@@ -150,11 +200,15 @@ export default function Collection() {
     <section className="home-featured-collection collection">
       <div>
         <div className="collection-side-menu">
-          <AnimatePresence mode="popLayout">
-            <motion.div layout layoutRoot className="collections-side-menu-top">
-              {collections}
-            </motion.div>
-          </AnimatePresence>
+          <div className="collections-side-menu-top">
+            <motion.div
+              className="filter-dot"
+              animate={{y: dotPosition}}
+              transition={{type: 'spring', stiffness: 300, damping: 30}}
+              style={{position: 'absolute', top: 0}}
+            />
+            {collections}
+          </div>
           <motion.div layout layoutRoot className="collections-side-menu-top">
             <FilterColumns
               filters={collection?.products?.filters}
