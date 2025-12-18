@@ -255,9 +255,10 @@ function CategoriesSection({
               ? new URL(link.url).pathname
               : link.url;
 
-          pathname = pathname.split('/').slice(0, -1).join('/');
-
+          // Only strip the last segment if we're going to add filter params
           if (link.tags && link.tags.length > 0) {
+            pathname = pathname.split('/').slice(0, -1).join('/');
+
             const filterObject = {
               tag: link.tags[0],
             };
