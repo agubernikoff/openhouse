@@ -106,6 +106,7 @@ export default function Collection() {
   const {collection} = useLoaderData();
   const [total, setTotal] = useState(0);
   const [dotPosition, setDotPosition] = useState(0);
+  const [dotVisible, setDotVisible] = useState(false);
   const itemRefs = useRef({});
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -156,9 +157,18 @@ export default function Collection() {
     );
     if (activeItem && activeItem[1]) {
       const element = activeItem[1];
-      setDotPosition(element.offsetTop + 8);
+      const newPosition = element.offsetTop + 8;
+
+      // On initial load, set position immediately then fade in
+      if (!dotVisible) {
+        setDotPosition(newPosition);
+        // Slight delay to ensure position is set before fading in
+        setTimeout(() => setDotVisible(true), 400);
+      } else {
+        setDotPosition(newPosition);
+      }
     }
-  }, [pathname]);
+  }, [pathname, dotVisible]);
 
   const collections = shopMenuItems.map((smi) => {
     const url =
@@ -182,7 +192,7 @@ export default function Collection() {
           to={url}
           style={{
             transform:
-              isActive || isTransitioning
+              (isActive && dotVisible) || isTransitioning
                 ? 'translateX(15px)'
                 : 'translateX(0)',
             transition: 'transform 300ms ease-in-out',
@@ -203,8 +213,12 @@ export default function Collection() {
           <div className="collections-side-menu-top">
             <motion.div
               className="filter-dot"
-              animate={{y: dotPosition}}
-              transition={{type: 'spring', stiffness: 300, damping: 30}}
+              initial={{y: dotPosition, opacity: 0}}
+              animate={{y: dotPosition, opacity: dotVisible ? 1 : 0}}
+              transition={{
+                y: {type: 'spring', stiffness: 300, damping: 30},
+                opacity: {duration: 0.3, delay: 0.1},
+              }}
               style={{position: 'absolute', top: 0}}
             />
             {collections}
