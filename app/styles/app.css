@@ -2650,8 +2650,9 @@ div:has(> .pdp-additional-info-image) {
 }
 .contact-hero-img-container > img {
   width: 100%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 1/1 !important;
   object-fit: cover;
+  height: auto;
 }
 .contact-hero-text {
   grid-column: span 6;

@@ -1,7 +1,7 @@
 import {useLoaderData} from 'react-router';
 import React, {useState} from 'react';
 import emailjs from '@emailjs/browser';
-import hangers from 'app/assets/boxes.jpg';
+import {Image} from '@shopify/hydrogen';
 
 /**
  * @type {Route.MetaFunction}
@@ -26,11 +26,13 @@ export async function loader(args) {
 }
 
 async function loadCriticalData({context, params, request}) {
-  const {handle} = params;
   const {storefront} = context;
 
-  const [] = await Promise.all([]);
-  return {};
+  const {metaobject} = await storefront.query(CONTACT_QUERY);
+
+  return {
+    contactData: metaobject,
+  };
 }
 
 async function action({}) {}
@@ -40,6 +42,7 @@ function loadDeferredData({context, params}) {
 }
 
 export default function Contact() {
+  const {contactData} = useLoaderData();
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [email, setEmail] = useState('');
@@ -47,14 +50,13 @@ export default function Contact() {
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
+  const [submitStatus, setSubmitStatus] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    // Initialize EmailJS with your public key
     emailjs.init('rzBTp542LGt-9PFek');
 
     try {
@@ -70,7 +72,6 @@ export default function Contact() {
       console.log('Email sent successfully:', result);
       setSubmitStatus('success');
 
-      // Clear form fields
       setFirst('');
       setLast('');
       setEmail('');
@@ -85,15 +86,24 @@ export default function Contact() {
     }
   };
 
+  const heroImage = contactData?.fields?.find(
+    (field) => field.key === 'hero_image',
+  )?.reference?.image;
+
+  const heroText = contactData?.fields?.find(
+    (field) => field.key === 'contact_hero_text',
+  )?.value;
+
   return (
     <div className="contact">
       <div className="contact-hero-img-container">
-        <img src={hangers} alt="hangers" />
+        {heroImage ? (
+          <Image data={heroImage} alt="Contact hero" sizes="100vw" />
+        ) : null}
       </div>
       <h3 className="contact-hero-text">
-        We'd love to hear from you. Whether you have a question about an order,
-        a product, or would like to partner with us, please use the form below
-        to get in touch.
+        {heroText ||
+          "We'd love to hear from you. Whether you have a question about an order, a product, or would like to partner with us, please use the form below to get in touch."}
       </h3>
       <div className="contact-details-container">
         <div>
@@ -223,3 +233,24 @@ function Input({id, label, value, setter, type = 'text', required = false}) {
     </div>
   );
 }
+
+const CONTACT_QUERY = `#graphql
+  query ContactMetaobject {
+    metaobject(handle: {type: "auw_contact", handle: "auw-contact-m1dihusc"}) {
+      fields {
+        key
+        value
+        reference {
+          ... on MediaImage {
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+        }
+      }
+    }
+  }
+`;

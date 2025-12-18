@@ -33,16 +33,19 @@ async function loadCriticalData({context, request}) {
     pageBy: 12,
   });
 
-  const [{articles}] = await Promise.all([
+  const [{articles}, {metaobject}] = await Promise.all([
     context.storefront.query(ARTICLES_QUERY, {
       variables: {
         ...paginationVariables,
       },
     }),
-    // Add other queries here, so that they are loaded in parallel
+    context.storefront.query(DISPATCH_QUERY),
   ]);
 
-  return {articles};
+  return {
+    articles,
+    dispatchData: metaobject,
+  };
 }
 
 /**
@@ -57,7 +60,15 @@ function loadDeferredData({context}) {
 
 export default function Dispatch() {
   /** @type {LoaderReturnData} */
-  const {articles} = useLoaderData();
+  const {articles, dispatchData} = useLoaderData();
+
+  const dispatchTitle = dispatchData?.fields?.find(
+    (field) => field.key === 'dispatch_title',
+  )?.value;
+
+  const dispatchBlurb = dispatchData?.fields?.find(
+    (field) => field.key === 'dispatch_blurb',
+  )?.value;
 
   return (
     <>
@@ -66,11 +77,12 @@ export default function Dispatch() {
           <div className="dispatch-hero-text">
             <p className="dispatch-hero-label">THE DISPATCH</p>
             <h1 className="dispatch-hero-title">
-              Notes on taste, product culture, and brand expression.
+              {dispatchTitle ||
+                'Notes on taste, product culture, and brand expression.'}
             </h1>
             <p className="dispatch-hero-description">
-              The inner circle of Openhouse: fresh ideas, elevated designs, and
-              brand stories that stick.
+              {dispatchBlurb ||
+                'The inner circle of Openhouse: fresh ideas, elevated designs, and brand stories that stick.'}
             </p>
             <Link className="explore-all" to={`/contact`}>
               GET IN CONTACT
@@ -219,6 +231,17 @@ const ARTICLES_QUERY = `#graphql
           title
           description
         }
+      }
+    }
+  }
+`;
+
+const DISPATCH_QUERY = `#graphql
+  query DispatchMetaobject {
+    metaobject(handle: {type: "auw_dispatch", handle: "auw-dispatch-yyrirgxq"}) {
+      fields {
+        key
+        value
       }
     }
   }
