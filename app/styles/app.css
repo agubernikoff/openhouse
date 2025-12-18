@@ -4011,6 +4011,9 @@ div:has(> .sticky-scroll-image) {
     justify-content: flex-start;
     gap: 20px;
   }
+  .article-content .line {
+    margin-top: 0px;
+  }
 }
 @media (max-width: 1218px) {
   .hero-section h2 em {
