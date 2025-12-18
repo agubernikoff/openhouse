@@ -3756,11 +3756,12 @@ div:has(> .sticky-scroll-image) {
   }
 
   .product-badge {
-    width: 90%;
+    width: 85%;
     bottom: 15px;
     top: initial;
-    left: 10px;
-    text-align: CENTER;
+    left: 0;
+    margin-left: 4px;
+    text-align: center;
   }
 
   /* Mobile menu specific padding */
