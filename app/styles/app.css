@@ -2546,6 +2546,10 @@ div:has(> .pdp-additional-info-image) {
 .article-content > div > * {
   grid-column: span 7;
 }
+.article ul {
+  list-style: outside;
+  padding-left: 1rem;
+}
 .image-wrapper {
   position: relative;
   margin: 0;
