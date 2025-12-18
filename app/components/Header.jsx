@@ -206,6 +206,7 @@ function MegaDropdown({
               publicStoreDomain={publicStoreDomain}
               primaryDomainUrl={primaryDomainUrl}
               close={close}
+              setHovered={setHovered}
             />
           )}
           {type === 'shop' && (
@@ -240,6 +241,7 @@ function CategoriesSection({
   publicStoreDomain,
   primaryDomainUrl,
   close,
+  setHovered,
 }) {
   return (
     <div className="categories-section">
@@ -253,10 +255,8 @@ function CategoriesSection({
               ? new URL(link.url).pathname
               : link.url;
 
-          // Strip the last segment from pathname
           pathname = pathname.split('/').slice(0, -1).join('/');
 
-          // Build filter object from link.tags (use first tag only)
           if (link.tags && link.tags.length > 0) {
             const filterObject = {
               tag: link.tags[0],
@@ -272,6 +272,8 @@ function CategoriesSection({
               key={link.id}
               to={pathname}
               className="collection-link"
+              onMouseEnter={() => setHovered(link)}
+              onFocus={() => setHovered(link)}
               onClick={close}
             >
               {link.title}
