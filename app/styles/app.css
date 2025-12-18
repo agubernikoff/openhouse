@@ -2533,9 +2533,6 @@ div:has(> .pdp-additional-info-image) {
   margin-top: 40px;
   flex: auto;
 }
-.article-content .line {
-  margin: 0;
-}
 .article-content > * {
   grid-column: 4/11;
   transform: translateY(-2px);
