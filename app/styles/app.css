@@ -2531,6 +2531,7 @@ div:has(> .pdp-additional-info-image) {
   grid-column: 1/-1;
   background: var(--color-oh-gray);
   margin-top: 40px;
+  flex: auto;
 }
 .article-content .line {
   margin: 0;
@@ -3988,7 +3989,7 @@ div:has(> .sticky-scroll-image) {
     gap: 1rem;
   }
   .article {
-    margin-bottom: 90px;
+    margin-bottom: 60px;
   }
   .article-header {
     width: 100vw;
@@ -4002,8 +4003,16 @@ div:has(> .sticky-scroll-image) {
   .article-header img {
     border-radius: 0;
   }
-  .article-content {
-    gap: 2rem;
+  .article-content h1 {
+    margin-bottom: 1rem;
+  }
+  .article-header > div {
+    left: 0;
+    transform: translate(0, -50%);
+    text-align: left;
+    padding-inline: 1rem;
+    justify-content: flex-start;
+    gap: 20px;
   }
 }
 @media (max-width: 1218px) {
