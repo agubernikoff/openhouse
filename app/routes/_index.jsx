@@ -329,7 +329,7 @@ function FeaturedCollectionContent({response}) {
   useEffect(() => {
     if (!item.current) return;
 
-    const itemWidth = item.current.offsetWidth;
+    const itemWidth = item.current.getBoundingClientRect().width;
     const gap = 20;
     setOffset(index * (itemWidth + gap));
   }, [index]);
