@@ -3684,6 +3684,13 @@ div:has(> .sticky-scroll-image) {
   .product-quantity-info {
     flex-direction: column;
     align-items: start;
+    gap: 4px;
+  }
+
+  .product-quantity-info p,
+  .product-quantity-info div,
+  .product-quantity-info .rich-text-div p {
+    font-size: 14px;
   }
 
   .product-form .button-divider {
@@ -3985,10 +3992,14 @@ div:has(> .sticky-scroll-image) {
   .product-image-previews-container {
     padding: 1rem;
     justify-content: center;
+    gap: 8px;
+    padding-inline: 0;
+    margin-inline: 1rem;
+    width: calc(100vw - 4rem);
   }
 
   .product-image-previews-container button {
-    width: calc((100% - 4rem) / 5);
+    width: calc((100vw - 4rem - 32px) / 5);
   }
 
   .article,
