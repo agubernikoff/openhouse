@@ -10,7 +10,6 @@ import {
 import {Await, NavLink, useAsyncValue, Link, useLocation} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
-import {Aside} from '~/components/Aside';
 import {CartMain} from '~/components/CartMain';
 import {AnimatePresence, motion} from 'motion/react';
 import {
@@ -18,8 +17,6 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
-import hamburgerIcon from '../assets/mobile-menu.png';
-import closeIcon from '../assets/x.png';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 
 export function Header({
@@ -273,8 +270,8 @@ function CategoriesSection({
               key={link.id}
               to={pathname}
               className="collection-link"
-              onMouseEnter={() => setHovered(link)}
-              onFocus={() => setHovered(link)}
+              // onMouseEnter={() => setHovered(link)}
+              // onFocus={() => setHovered(link)}
               onClick={close}
             >
               {link.title}

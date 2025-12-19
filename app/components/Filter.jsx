@@ -290,6 +290,7 @@ function FilterColumn({
       'carry',
       'accessories',
       'drinkware',
+      'kitchenware',
     ];
     const existingMap = new Map(
       filter.values.map((v) => [String(v.label || '').toLowerCase(), v]),
