@@ -298,15 +298,29 @@ export default function Product() {
           }}
         />
       </div>
-      <AdditionalInfo product={product} global_pdp_data={global_pdp_data} />
+      <AdditionalInfo
+        product={product}
+        global_pdp_data={global_pdp_data}
+        selectedVariant={selectedVariant}
+      />
       <FAQSection data={faqs} />
       <YouMayAlsoLike recs={recs} compliments={compliments} />
     </>
   );
 }
 
-function AdditionalInfo({product, global_pdp_data}) {
+function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
   const {lead_time, material, size_chart, download_dieline} = product;
+  const variantLeadTime = selectedVariant?.lead_time?.value
+    ? mapRichText(JSON.parse(selectedVariant.lead_time.value))
+    : null;
+
+  const productLeadTime = selectedVariant?.product?.lead_time?.value
+    ? mapRichText(JSON.parse(selectedVariant.product.lead_time.value))
+    : null;
+
+  const leadTime = variantLeadTime ?? productLeadTime ?? null;
+  const hasLeadTime = leadTime !== null;
   const [globalData, setGlobalData] = useState(null);
   const measuredRef = useRef(null);
   const initial = useRef(null);
@@ -450,7 +464,7 @@ function AdditionalInfo({product, global_pdp_data}) {
   function content() {
     switch (selected) {
       case 'LEAD TIME':
-        return lead_time?.value && mapRichText(JSON.parse(lead_time.value));
+        return hasLeadTime && leadTime;
       case 'MATERIAL':
         return material?.value && mapRichText(JSON.parse(material.value));
       case 'SIZE CHART':
@@ -666,6 +680,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       currencyCode
     }
     minimumQuantity: metafield(namespace: "custom", key: "variant_minimum_quantity_priority") {
+      value
+    }
+    lead_time: metafield(namespace: "custom", key: "lead_time") {
       value
     }
   }

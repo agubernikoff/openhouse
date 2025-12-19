@@ -33,6 +33,17 @@ export function ProductForm({productOptions, selectedVariant}) {
   const minimumQuantity = variantMinQty ?? productMinQty ?? null;
   const hasMinimumQuantity = minimumQuantity !== null;
 
+  const variantLeadTime = selectedVariant?.lead_time?.value
+    ? mapRichText(JSON.parse(selectedVariant.lead_time.value))
+    : null;
+
+  const productLeadTime = selectedVariant?.product?.lead_time?.value
+    ? mapRichText(JSON.parse(selectedVariant.product.lead_time.value))
+    : null;
+
+  const leadTime = variantLeadTime ?? productLeadTime ?? null;
+  const hasLeadTime = leadTime !== null;
+
   // State for quantity selector - start with minimum or 1
   const [quantity, setQuantity] = useState(minimumQuantity || 1);
 
@@ -505,11 +516,9 @@ export function ProductForm({productOptions, selectedVariant}) {
         {hasMinimumQuantity && (
           <p>Minimum Order Quantity: {minimumQuantity} units</p>
         )}
-        {selectedVariant?.product?.lead_time?.value && (
+        {hasLeadTime && (
           <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
-            Estimated lead time:{' '}
-            {selectedVariant?.product?.lead_time?.value &&
-              mapRichText(JSON.parse(selectedVariant.product.lead_time.value))}
+            Estimated lead time: {leadTime}
           </div>
         )}
       </div>
