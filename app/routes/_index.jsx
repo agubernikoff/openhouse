@@ -169,15 +169,15 @@ function Hero({data}) {
         <RotatingBrandTypes
           types={[
             'Retail',
-            'Hospitality & Hotels',
-            'Travel & Experiences',
+            'Hospitality & Hotel',
+            'Travel & Experience',
             'Tech & AI',
             'Wellness & Fitness',
             'CPG',
             'Education',
             'Music & Media',
             'Healthcare',
-            'Events & Activations',
+            'Events & Activation',
             'Banking & Finance',
             'F&B',
           ]}
@@ -504,6 +504,14 @@ function CollectionsHeroContent({data}) {
           exit={{opacity: 0}}
         >
           {selected && <Image data={selected?.image} sizes="100vw" />}
+          {fields?.collections?.references?.nodes.map((n) => (
+            <Image
+              data={n.image}
+              key={n.id}
+              sizes="100vw"
+              styles={{position: 'absolute', inset: 0}}
+            />
+          ))}
         </motion.div>
       </AnimatePresence>
       <div className="home-collections-hero-titles-container">
