@@ -64,7 +64,17 @@ function loadDeferredData({context}) {
     });
 
   const collections = context.storefront
-    .query(COLLECTIONS_QUERY)
+    .query(COLLECTIONS_QUERY, {variables: {handle: 'explore-all', first: 6}})
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
+  const collections2 = context.storefront
+    .query(COLLECTIONS_QUERY, {
+      variables: {handle: 'copy-of-explore-all', first: 6},
+    })
     .catch((error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
@@ -74,6 +84,7 @@ function loadDeferredData({context}) {
   return {
     featuredCollection,
     collections,
+    collections2,
   };
 }
 
@@ -85,7 +96,7 @@ export default function Homepage() {
       <Hero data={data.hero} />
       <Partners data={data.partners} />
       <FeaturedCollection collection={data.featuredCollection} />
-      <CollectionsHero collections={data.collections} />
+      <CollectionsHero collections={data.collections2} />
       <CollectionGrid collections={data.collections} />
     </div>
   );
@@ -496,7 +507,7 @@ function CollectionsHeroContent({data}) {
         </motion.div>
       </AnimatePresence>
       <div className="home-collections-hero-titles-container">
-        <p>70+ Customizable Products Waiting for Your Brand</p>
+        <p>{fields?.blurb?.value}</p>
         {collectionNodes.map((coll) => (
           <Link
             to={`/collections/${coll.handle}`}
@@ -555,11 +566,11 @@ query GetLocationVideos {
 `;
 
 const COLLECTIONS_QUERY = `#graphql
-query GetLocationVideos {
+query GetLocationVideos($handle: String!, $first: Int) {
   metaobject(
     handle: {
       type: "homepage_collection_grid"
-      handle: "explore-all"}
+      handle: $handle}
   ) {
     id
     type
@@ -567,7 +578,7 @@ query GetLocationVideos {
     fields {
       key
       value
-      references(first: 6) {
+      references(first: $first) {
         nodes{
           ... on Collection{
             id
