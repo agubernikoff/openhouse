@@ -498,9 +498,13 @@ function CollectionsHeroContent({data}) {
       <div className="home-collections-hero-titles-container">
         <p>70+ Customizable Products Waiting for Your Brand</p>
         {collectionNodes.map((coll) => (
-          <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
-            {coll.title}
-          </p>
+          <Link
+            to={`/collections/${coll.handle}`}
+            key={coll.id}
+            onMouseEnter={() => setSelected(coll)}
+          >
+            <p>{coll.title}</p>
+          </Link>
         ))}
       </div>
     </>
