@@ -110,12 +110,12 @@ function Testimonials({data}) {
           return (
             <section
               className="home-featured-collection"
-              style={{
-                backgroundImage: `url(${bg})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-              }}
+              // style={{
+              //   backgroundImage: `url(${bg})`,
+              //   backgroundSize: 'cover',
+              //   backgroundPosition: 'center',
+              //   backgroundRepeat: 'no-repeat',
+              // }}
             >
               <div>
                 <p className="red-dot">TESTIMONIALS</p>
