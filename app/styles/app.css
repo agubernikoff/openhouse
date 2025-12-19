@@ -1910,9 +1910,10 @@ div:has(.products-grid) {
 }
 
 .product-image img {
-  height: auto;
+  height: 100%;
   width: 100%;
   display: flex;
+  object-fit: contain;
 }
 .product-image-previews-container {
   display: flex;
