@@ -85,8 +85,8 @@ export default function Homepage() {
       <Hero data={data.hero} />
       <Partners data={data.partners} />
       <FeaturedCollection collection={data.featuredCollection} />
+      <CollectionsHero collections={data.collections} />
       <CollectionGrid collections={data.collections} />
-      {/* <CollectionsHero collections={data.collections} /> */}
     </div>
   );
 }
@@ -428,10 +428,10 @@ function CollectionGrid({collections}) {
   return (
     <section className="home-featured-collection">
       <div>
-        <p className="red-dot">COLLECTIONS</p>
+        <p className="red-dot">CATEGORIES</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>Explore Categories</h3>
+        {/* <h3>Explore Categories</h3> */}
         <Suspense fallback={<div>Loading...</div>}>
           <Await resolve={collections}>
             {(r) => {
@@ -498,9 +498,13 @@ function CollectionsHeroContent({data}) {
       <div className="home-collections-hero-titles-container">
         <p>70+ Customizable Products Waiting for Your Brand</p>
         {collectionNodes.map((coll) => (
-          <p onMouseEnter={() => setSelected(coll)} key={coll.id}>
-            {coll.title}
-          </p>
+          <Link
+            to={`/collections/${coll.handle}`}
+            key={coll.id}
+            onMouseEnter={() => setSelected(coll)}
+          >
+            <p>{coll.title}</p>
+          </Link>
         ))}
       </div>
     </>
