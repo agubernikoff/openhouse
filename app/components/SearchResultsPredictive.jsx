@@ -203,14 +203,9 @@ function SearchResultsPredictiveProducts({
                     transition={{duration: 0.15, ease: 'easeInOut'}}
                   />
                 )}
-                {image && (
-                  <Image
-                    alt={image.altText ?? ''}
-                    src={image.url}
-                    width={50}
-                    height={50}
-                  />
-                )}
+                <div>
+                  {image && <Image alt={image.altText ?? ''} src={image.url} />}
+                </div>
                 <div>
                   <p>{product.title}</p>
                   {price && <Money data={price} />}

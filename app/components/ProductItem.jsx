@@ -45,7 +45,7 @@ export function ProductItem({product, loading}) {
       <div className="product-image-container">
         <Image
           alt={displayImage?.altText || product.title}
-          aspectRatio="1/1"
+          // aspectRatio="1/1"
           data={displayImage}
           loading={loading}
           sizes="(min-width: 45em) 400px, 100vw"
@@ -59,7 +59,7 @@ export function ProductItem({product, loading}) {
               <Image
                 key={optionValue.name}
                 alt={variantImage?.altText || product.title}
-                aspectRatio="1/1"
+                // aspectRatio="1/1"
                 data={variantImage}
                 loading={loading}
                 style={{

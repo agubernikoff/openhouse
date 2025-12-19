@@ -934,6 +934,7 @@ div:has(> .testimonials-container) {
 
 .cart-line-image {
   grid-column: span 2;
+  aspect-ratio: 1/1;
 }
 
 .header-dropdown-content .cart-line-image img {
@@ -943,7 +944,7 @@ div:has(> .testimonials-container) {
 .cart-line-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   border-radius: 10px;
   background: white;
@@ -1237,11 +1238,15 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 .predictive-search-result-item a img {
-  margin-right: 0.75rem;
   height: 100%;
+  width: 100%;
+  background: white;
+  object-fit: contain;
+}
+.predictive-search-result-item a > div:has(img) {
+  margin-right: 0.75rem;
   aspect-ratio: 1/1;
   width: 63px;
-  background: white;
 }
 .predictive-search-result-item a p {
   font-size: 16px;
@@ -1790,6 +1795,7 @@ div:has(.products-grid) {
 
 .product-image-container {
   position: relative;
+  aspect-ratio: 1/1;
 }
 
 .product-item img {
@@ -1797,6 +1803,7 @@ div:has(.products-grid) {
   width: 100%;
   border-radius: 10px;
   background-color: white;
+  object-fit: contain;
 }
 
 .product-badge {
@@ -3760,8 +3767,7 @@ div:has(> .sticky-scroll-image) {
   }
 
   .subgrid.home-featured-products-grid .cart-details {
-    padding-top: 0px;
-    padding-bottom: 0;
+    padding: 0;
   }
 
   .carousel-item .product-badge {
