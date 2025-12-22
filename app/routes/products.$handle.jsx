@@ -278,6 +278,7 @@ export default function Product() {
             />
           </div>
           <ProductForm
+            key={product.id}
             productOptions={reorderedOptions}
             selectedVariant={selectedVariant}
           />
