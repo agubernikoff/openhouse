@@ -5,12 +5,37 @@ import {ProductItem} from '~/components/ProductItem';
 import {COLLECTION_QUERY} from './collections.$handle';
 import {motion, AnimatePresence} from 'motion/react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
-
+import socialSharing from '~/assets/socialsharing.png';
 /**
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: 'Openhouse | Home'}];
+  const title = 'Openhouse';
+  const description =
+    'Custom Products for the best in Hospitality, Media, PR, Wellness, Fitness, & more.';
+  const url = 'http://byopenhouse.com/';
+  const image = socialSharing;
+
+  return [
+    {title},
+    {name: 'description', content: description},
+
+    // Open Graph
+    {property: 'og:type', content: 'website'},
+    {property: 'og:title', content: title},
+    {property: 'og:description', content: description},
+    {property: 'og:url', content: url},
+    {property: 'og:image', content: image},
+    {property: 'og:image:width', content: '1200'},
+    {property: 'og:image:height', content: '630'},
+    {property: 'og:site_name', content: 'Openhouse'},
+
+    // Twitter Card
+    {name: 'twitter:card', content: 'summary_large_image'},
+    {name: 'twitter:title', content: title},
+    {name: 'twitter:description', content: description},
+    {name: 'twitter:image', content: image},
+  ];
 };
 
 /**
