@@ -344,28 +344,20 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
   }, [global_pdp_data]);
 
   // Build options array based on what metafields exist
-  const baseOptions = [
-    'LEAD TIME',
-    'MATERIAL',
-    'SIZE CHART',
-    'OUR COMMITMENT',
-    'RETURNS',
-  ];
+  const options = ['LEAD TIME', 'MATERIAL'];
 
-  // Add DOWNLOAD DIELINE if the metafield exists and has a file/image
+  const hasSizeChart = size_chart?.reference?.image;
   const hasDownloadDieline =
     download_dieline?.reference?.image?.url || download_dieline?.reference?.url;
 
-  const options = hasDownloadDieline
-    ? [
-        'LEAD TIME',
-        'MATERIAL',
-        'SIZE CHART',
-        'DOWNLOAD DIELINE',
-        'OUR COMMITMENT',
-        'RETURNS',
-      ]
-    : baseOptions;
+  if (hasSizeChart) {
+    options.push('SIZE CHART');
+  }
+  if (hasDownloadDieline) {
+    options.push('DOWNLOAD DIELINE');
+  }
+
+  options.push('OUR COMMITMENT', 'RETURNS');
 
   const {selected, transitioning, handleSelection, isChecked} =
     useCascadingSelection(options, 'LEAD TIME');

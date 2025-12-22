@@ -200,6 +200,7 @@ export default function Collection() {
           onClick={() => {
             handleSelection(url, () => {});
           }}
+          prefetch="render"
         >
           {smi.title}
         </NavLink>
