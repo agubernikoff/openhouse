@@ -8,7 +8,7 @@ import {Image} from '@shopify/hydrogen';
  */
 export const meta = ({data}) => {
   return [
-    {title: `Hydrogen | Contact`},
+    {title: `Openhouse | Contact`},
     {
       rel: 'canonical',
       href: `/contact`,

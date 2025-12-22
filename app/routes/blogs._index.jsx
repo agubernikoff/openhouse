@@ -7,7 +7,7 @@ import {useRef} from 'react';
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Dispatch`}];
+  return [{title: `Openhouse | Dispatch`}];
 };
 
 /**

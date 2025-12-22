@@ -19,7 +19,7 @@ import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
  * @type {Route.MetaFunction}
  */
 export const meta = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+  return [{title: `Openhouse | ${data?.collection.title ?? ''} Collection`}];
 };
 
 /**

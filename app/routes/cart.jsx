@@ -8,7 +8,7 @@ import {useState, useEffect} from 'react';
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Cart`}];
+  return [{title: `Openhouse | Cart`}];
 };
 
 /**

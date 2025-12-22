@@ -11,7 +11,7 @@ import {PAJGination} from './collections.$handle';
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Search`}];
+  return [{title: `Openhouse | Search`}];
 };
 
 /**

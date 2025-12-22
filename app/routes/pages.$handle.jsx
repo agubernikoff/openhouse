@@ -25,7 +25,7 @@ function useIsFirstRender() {
  * @type {Route.MetaFunction}
  */
 export const meta = ({data}) => {
-  return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
+  return [{title: `Openhouse | ${data?.page.title ?? ''}`}];
 };
 
 /**
