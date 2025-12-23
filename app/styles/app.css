@@ -1742,7 +1742,7 @@ div:has(.collection-side-menu) {
   align-items: center;
   padding-block: 0.25rem;
 }
-.plp-sidemenu-a:hover {
+.plp-sidemenu-a a:hover {
   text-decoration: none !important;
 }
 .filter-column:has(> .Categoriestrue) {
