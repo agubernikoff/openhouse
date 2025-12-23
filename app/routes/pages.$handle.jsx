@@ -618,11 +618,22 @@ function Marquee({section}) {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const [percentHidden, setPercentHidden] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const {scrollYProgress} = useScroll({
     target: containerRef,
     offset: ['start end', 'end start'],
   });
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 767);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const calculatePercentHidden = () => {
@@ -638,14 +649,17 @@ function Marquee({section}) {
     calculatePercentHidden();
     window.addEventListener('resize', calculatePercentHidden);
     return () => window.removeEventListener('resize', calculatePercentHidden);
-  }, [images]);
+  }, [images, isMobile]);
 
   const x = useTransform(scrollYProgress, [0, 1], ['0%', `-${percentHidden}%`]);
+
+  // Limit to 7 images on mobile
+  const displayImages = isMobile ? images?.slice(0, 7) : images?.slice(0, 8);
 
   return (
     <section className="marquee-section" ref={containerRef}>
       <motion.div ref={contentRef} style={{x}}>
-        {images?.map((i) => (
+        {displayImages?.map((i) => (
           <Image
             key={i.id}
             data={i.image}
