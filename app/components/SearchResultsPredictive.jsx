@@ -204,7 +204,16 @@ function SearchResultsPredictiveProducts({
                   />
                 )}
                 <div>
-                  {image && <Image alt={image.altText ?? ''} src={image.url} />}
+                  {image && (
+                    <Image
+                      alt={image.altText ?? ''}
+                      src={image.url}
+                      height={63}
+                      width={63}
+                      sizes="63px"
+                      widths={[63]}
+                    />
+                  )}
                 </div>
                 <div>
                   <p>{product.title}</p>
