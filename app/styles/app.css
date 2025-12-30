@@ -1066,7 +1066,7 @@ div:has(> .testimonials-container) {
   font-size: 36px;
   margin: 0;
   margin-inline-start: 10px;
-  grid-column: 6/9;
+  grid-column: 7/10;
 }
 
 .header-dropdown-content .cart-checkout-actions {
