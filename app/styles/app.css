@@ -2287,6 +2287,7 @@ div:has(> .dropdown-content) {
 }
 .pdp-additional-info-section > .filter-column-container {
   grid-column: span 3;
+  height: fit-content;
 }
 .pdp-additional-info-content-container {
   position: relative;

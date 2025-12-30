@@ -406,6 +406,7 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
           : measuredRef.current.scrollHeight || 0;
       // Ensure height doesn't go below initial height
       const finalHeight = Math.max(h, initialHeight.current);
+      console.log(finalHeight);
       try {
         startTransition(() => setMeasuredHeight(finalHeight));
       } catch (e) {
@@ -534,6 +535,10 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
               animate={{opacity: 1}}
               exit={{opacity: 0}}
             >
+              <Image
+                data={size_chart?.reference?.image}
+                sizes="(min-width: 45em) 45vw, 100vw"
+              />
               {content()}
             </motion.div>
           </div>
