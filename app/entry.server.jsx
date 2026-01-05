@@ -39,11 +39,16 @@ export default async function handleRequest(
       'https://cdn.shopify.com',
       'https://monorail-edge.shopifysvc.com',
     ],
-    scriptSrc: ["'self'", 'https://cdn.emailjs.com', 'https://cdn.shopify.com'],
+    scriptSrc: [
+      "'self'",
+      'https://cdn.emailjs.com',
+      'https://cdn.shopify.com',
+      'https://b2bjsstore.s3.us-west-2.amazonaws.com',
+    ],
     mediaSrc: [
-      'https://openhouse.store',
+      'https://openhouse.store/',
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
-      'https://w8kbyy-ez.myshopify.com',
+      'https://w8kbyy-ez.myshopify.com/',
     ],
   });
 
