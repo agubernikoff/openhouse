@@ -3036,6 +3036,10 @@ div:has(> .sticky-scroll-image) {
   top: 0;
   z-index: -1;
 }
+.animated-scroll-object:nth-of-type(n + 3) {
+  position: relative;
+  z-index: -1;
+}
 .animated-scroll-object:last-of-type {
   margin-bottom: calc(100vh - 2rem);
 }
