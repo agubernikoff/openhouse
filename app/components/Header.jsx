@@ -717,6 +717,7 @@ function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
 
       <nav className="header-ctas header-desktop-layout" role="navigation">
         <HeaderMenuMobileToggle />
+        <SearchToggle handleHeaderMouseLeave={handleHeaderMouseLeave} />
         <NavLink
           prefetch="intent"
           to="/contact"
@@ -730,7 +731,6 @@ function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
           cart={cart}
           handleHeaderMouseLeave={handleHeaderMouseLeave}
         />
-        <SearchToggle handleHeaderMouseLeave={handleHeaderMouseLeave} />
       </nav>
     </>
   );
