@@ -30,6 +30,7 @@ export default async function handleRequest(
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
       'blob:',
       'data:',
+      'https://checkout.byopenhouse.com/',
     ],
     connectSrc: [
       "'self'",
@@ -49,6 +50,7 @@ export default async function handleRequest(
       'https://openhouse.store/',
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
       'https://w8kbyy-ez.myshopify.com/',
+      'https://checkout.byopenhouse.com/',
     ],
   });
 
