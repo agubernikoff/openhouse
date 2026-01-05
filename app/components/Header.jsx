@@ -662,7 +662,9 @@ export function HeaderMenu({
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
+          item.url.includes(primaryDomainUrl) ||
+          item.url.includes('account.byopenhouse.com') || // Add this
+          item.url.includes('byopenhouse.com') // Or use root domain
             ? new URL(item.url).pathname
             : item.url;
 
