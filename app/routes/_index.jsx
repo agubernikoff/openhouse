@@ -546,6 +546,7 @@ function CollectionsHeroContent({data}) {
             to={`/collections/${coll.handle}`}
             key={coll.id}
             onMouseEnter={() => setSelected(coll)}
+            style={selected?.title === coll?.title ? {opacity: 1} : {}}
           >
             <p>{coll.title}</p>
           </Link>
