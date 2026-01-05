@@ -151,7 +151,8 @@ function MegaDropdown({
                   const url =
                     link.url.includes('myshopify.com') ||
                     link.url.includes(publicStoreDomain) ||
-                    link.url.includes(primaryDomainUrl)
+                    link.url.includes(primaryDomainUrl) ||
+                    link.url.includes('byopenhouse.com')
                       ? new URL(link.url).pathname + new URL(link.url).hash
                       : link.url;
                   return (
@@ -248,7 +249,8 @@ function CategoriesSection({
           let pathname =
             link.url.includes('myshopify.com') ||
             link.url.includes(publicStoreDomain) ||
-            link.url.includes(primaryDomainUrl)
+            link.url.includes(primaryDomainUrl) ||
+            link.url.includes('byopenhouse.com')
               ? new URL(link.url).pathname
               : link.url;
 
@@ -397,7 +399,8 @@ function MobileMenu({
                 const url =
                   subItem.url.includes('myshopify.com') ||
                   subItem.url.includes(publicStoreDomain) ||
-                  subItem.url.includes(primaryDomainUrl)
+                  subItem.url.includes(primaryDomainUrl) ||
+                  subItem.url.includes('byopenhouse.com')
                     ? new URL(subItem.url).pathname
                     : subItem.url;
                 return (
@@ -663,8 +666,7 @@ export function HeaderMenu({
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
           item.url.includes(primaryDomainUrl) ||
-          item.url.includes('account.byopenhouse.com') || // Add this
-          item.url.includes('byopenhouse.com') // Or use root domain
+          item.url.includes('byopenhouse.com')
             ? new URL(item.url).pathname
             : item.url;
 
