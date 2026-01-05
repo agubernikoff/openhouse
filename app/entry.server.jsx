@@ -43,6 +43,7 @@ export default async function handleRequest(
     mediaSrc: [
       'https://openhouse.store',
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
+      'https://w8kbyy-ez.myshopify.com',
     ],
   });
 
