@@ -3099,6 +3099,7 @@ div:has(> .sticky-scroll-image) {
     left: 50%;
     transform: translateX(-50%);
     backdrop-filter: blur(5px);
+    overflow: hidden;
   }
 
   .footer-newsletter-wrapper {
