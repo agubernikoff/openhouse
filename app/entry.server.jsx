@@ -39,6 +39,7 @@ export default async function handleRequest(
       'https://api.emailjs.com',
       'https://cdn.shopify.com',
       'https://monorail-edge.shopifysvc.com',
+      'https://pro.ip-api.com/',
     ],
     scriptSrc: [
       "'self'",
