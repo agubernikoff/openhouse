@@ -42,6 +42,7 @@ export default async function handleRequest(
       'https://pro.ip-api.com/',
       'https://a.usbrowserspeed.com/',
       'https://alocdn.com/',
+      'https://9xgnrndqve.execute-api.us-west-2.amazonaws.com/b2b',
     ],
     scriptSrc: [
       "'self'",
