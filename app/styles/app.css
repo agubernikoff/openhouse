@@ -2376,9 +2376,8 @@ div:has(> .pdp-additional-info-image) {
 
 .quantity-controls input[type='number'] {
   text-align: center;
-  width: 25px;
+  width: 50px;
   font-size: 16px;
-  border-radius: 8px;
   background-color: transparent;
   border: none;
   margin-bottom: 0;
@@ -3220,6 +3219,7 @@ div:has(> .sticky-scroll-image) {
   .hero-section h2 {
     font-size: clamp(31px, 9.69vw, 36px);
     line-height: clamp(31px, 9.69vw, 36px);
+    padding-left: 6px;
   }
   .hero-section h2 > span > span {
     height: clamp(31px, 9.69vw, 36px) !important;
