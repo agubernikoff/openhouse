@@ -40,6 +40,8 @@ export default async function handleRequest(
       'https://cdn.shopify.com',
       'https://monorail-edge.shopifysvc.com',
       'https://pro.ip-api.com/',
+      'https://a.usbrowserspeed.com/',
+      'https://alocdn.com/',
     ],
     scriptSrc: [
       "'self'",
