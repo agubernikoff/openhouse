@@ -595,7 +595,7 @@ export function ProductForm({productOptions, selectedVariant}) {
         }
         className="sample-button"
       >
-        {sampleAdded ? 'ADDED TO CART' : 'PURCHASE SAMPLE'}
+        {sampleAdded ? 'ADDED TO CART' : 'PURCHASE BLANK SAMPLE'}
       </AddToCartButton>
     </div>
   );
