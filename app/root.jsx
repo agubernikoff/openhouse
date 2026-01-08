@@ -20,6 +20,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 import {NavigationProvider} from './context/NavigationContext';
+import {PopUpProvider} from './context/PopUpContext';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -191,7 +192,9 @@ export function Layout({children}) {
         />
       </head>
       <body>
-        <NavigationProvider>{children}</NavigationProvider>
+        <PopUpProvider>
+          <NavigationProvider>{children}</NavigationProvider>
+        </PopUpProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>

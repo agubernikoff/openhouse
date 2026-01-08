@@ -4073,3 +4073,112 @@ div:has(> .sticky-scroll-image) {
     width: calc(100vw - 2rem);
   }
 }
+/*
+* --------------------------------------------------
+* Popup Component
+* --------------------------------------------------
+*/
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+  backdrop-filter: blur(2px);
+}
+
+.popup-container {
+  text-align: center;
+  font-family: 'apfel';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: var(--color-oh-white);
+  border-radius: 10px;
+  padding: 40px;
+  max-width: 500px;
+  width: calc(100vw - 2rem);
+  z-index: 9999;
+  transition:
+    opacity 300ms ease-in-out,
+    transform 300ms ease-in-out;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-oh-black);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 200ms ease-in-out;
+}
+
+.popup-close:hover {
+  opacity: 0.6;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.popup-content h2 {
+  font-size: 36px;
+  line-height: 36px;
+  margin: 0;
+  color: var(--color-oh-black);
+  font-weight: 400;
+}
+
+.popup-content p {
+  font-size: 30px;
+  line-height: 18px;
+  margin: 0;
+  color: var(--color-oh-black);
+}
+.popup-content a {
+  margin: auto;
+  margin-top: 1.5rem;
+  width: fit-content;
+  box-sizing: border-box;
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+}
+.popup-content a:hover {
+  color: var(--color-oh-black);
+  background: var(--color-oh-white);
+}
+
+@media (max-width: 767px) {
+  .popup-container {
+    padding: 1.5rem;
+  }
+  .popup-close {
+    top: 5px;
+    right: 5px;
+  }
+
+  .popup-content h2 {
+    font-size: 24px;
+    line-height: 24px;
+  }
+
+  .popup-content p {
+    font-size: 22px;
+    line-height: 16px;
+  }
+}

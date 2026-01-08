@@ -1,5 +1,5 @@
 import {Await, Link} from 'react-router';
-import {Suspense, useId} from 'react';
+import {Suspense, useId, useEffect, useState} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
@@ -9,6 +9,8 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import {usePopUp} from '~/context/PopUpContext';
+import {motion, AnimatePresence} from 'motion/react';
 
 /**
  * @param {PageLayoutProps}
@@ -23,8 +25,10 @@ export function PageLayout({
   testimonials,
   about_image,
 }) {
+  const {shouldShowPopup} = usePopUp();
   return (
     <Aside.Provider>
+      <AnimatePresence>{shouldShowPopup() && <WelcomePopup />}</AnimatePresence>
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -43,6 +47,58 @@ export function PageLayout({
         testimonials={testimonials}
       />
     </Aside.Provider>
+  );
+}
+
+function WelcomePopup() {
+  const {markPopupAsShown, shouldShowPopup} = usePopUp();
+
+  const handleClose = () => {
+    setTimeout(() => {
+      markPopupAsShown();
+    }, 300);
+  };
+
+  return (
+    <>
+      <motion.button
+        className="popup-overlay"
+        onClick={handleClose}
+        aria-label="Close popup"
+        tabIndex={0}
+        initial={{opacity: 0}}
+        animate={{opacity: 0.1, delay: 1}}
+        exit={{opacity: 0}}
+        transition={{delay: shouldShowPopup() ? 1 : 0}}
+      />
+      <motion.div
+        className="popup-container"
+        initial={{opacity: 0}}
+        animate={{opacity: 1, delay: 1}}
+        exit={{opacity: 0}}
+        transition={{delay: shouldShowPopup() ? 1 : 0}}
+      >
+        <button
+          className="popup-close"
+          onClick={handleClose}
+          aria-label="Close popup"
+        >
+          ×
+        </button>
+        <div className="popup-content">
+          <h2>Need help with a project?</h2>
+          <p>{"We'd love to chat."}</p>
+          <a
+            className="explore-all"
+            href="https://calendly.com/byopenhouse-sales/30min"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book a call with our partnerships team
+          </a>
+        </div>
+      </motion.div>
+    </>
   );
 }
 
