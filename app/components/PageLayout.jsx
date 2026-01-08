@@ -94,7 +94,7 @@ function WelcomePopup() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Book a call with our partnerships team
+            Book a call
           </a>
         </div>
       </motion.div>
