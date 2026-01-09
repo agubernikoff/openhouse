@@ -4156,7 +4156,6 @@ div:has(> .sticky-scroll-image) {
   line-height: 36px;
   margin: 0;
   color: var(--color-oh-black);
-  font-weight: 400;
 }
 
 .popup-content p {
