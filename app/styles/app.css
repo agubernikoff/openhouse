@@ -4184,9 +4184,6 @@ div:has(> .sticky-scroll-image) {
   .popup-container > div {
     width: 100% !important;
   }
-  .popup-container > div:has(img) {
-    display: none;
-  }
   .popup-close {
     top: 5px;
     right: 5px;
