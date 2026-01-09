@@ -11,6 +11,8 @@ import {
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 import {usePopUp} from '~/context/PopUpContext';
 import {motion, AnimatePresence} from 'motion/react';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
+import {Image} from '@shopify/hydrogen';
 
 /**
  * @param {PageLayoutProps}
@@ -24,11 +26,14 @@ export function PageLayout({
   publicStoreDomain,
   testimonials,
   about_image,
+  pop_up,
 }) {
   const {shouldShowPopup} = usePopUp();
   return (
     <Aside.Provider>
-      <AnimatePresence>{shouldShowPopup() && <WelcomePopup />}</AnimatePresence>
+      <AnimatePresence>
+        {shouldShowPopup() && <WelcomePopup data={pop_up} />}
+      </AnimatePresence>
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -50,7 +55,7 @@ export function PageLayout({
   );
 }
 
-function WelcomePopup() {
+function WelcomePopup({data}) {
   const {markPopupAsShown, shouldShowPopup} = usePopUp();
 
   const handleClose = () => {
@@ -85,6 +90,17 @@ function WelcomePopup() {
         >
           ×
         </button>
+        <div>
+          <Suspense>
+            <Await resolve={data}>
+              {(data) => {
+                const {metaobject} = data;
+                const {image} = normalizeMetaobject(metaobject);
+                return <Image data={image?.reference?.image} sizes="500px" />;
+              }}
+            </Await>
+          </Suspense>
+        </div>
         <div className="popup-content">
           <h2>Need help with a project?</h2>
           <p>{"We'd love to chat."}</p>

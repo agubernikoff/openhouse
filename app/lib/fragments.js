@@ -349,3 +349,31 @@ query GetTestimonials {
   }
 }
 `;
+
+export const POP_UP_QUERY = `#graphql
+query GetTestimonials {
+  metaobject(
+    handle: {
+      type: "pop_up"
+      handle: "pop-up-k4da8gxh"}
+  ) {
+    id
+    type
+    handle
+    fields {
+      key
+      value
+      reference{
+        ... on MediaImage {
+          image {
+            id
+            url
+            height
+            width
+          }
+        }
+      }
+    }
+  }
+}
+`;

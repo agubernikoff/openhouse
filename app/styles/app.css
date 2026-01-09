@@ -4089,6 +4089,7 @@ div:has(> .sticky-scroll-image) {
 }
 
 .popup-container {
+  display: flex;
   text-align: center;
   font-family: 'apfel';
   position: fixed;
@@ -4097,8 +4098,7 @@ div:has(> .sticky-scroll-image) {
   transform: translate(-50%, -50%) scale(0.9);
   background: var(--color-oh-white);
   border-radius: 10px;
-  padding: 40px;
-  max-width: 500px;
+  max-width: 700px;
   width: calc(100vw - 2rem);
   z-index: 9999;
   transition:
@@ -4130,10 +4130,25 @@ div:has(> .sticky-scroll-image) {
   opacity: 0.6;
 }
 
+.popup-container div:has(img) {
+  width: 50%;
+  height: 100%;
+  display: flex;
+}
+.popup-container img {
+  height: 100%;
+  object-fit: cover;
+}
+
 .popup-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 40px;
+  width: 50%;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
 }
 
 .popup-content h2 {
@@ -4151,7 +4166,6 @@ div:has(> .sticky-scroll-image) {
   color: var(--color-oh-black);
 }
 .popup-content a {
-  margin: auto;
   margin-top: 1.5rem;
   width: fit-content;
   box-sizing: border-box;
@@ -4165,7 +4179,13 @@ div:has(> .sticky-scroll-image) {
 
 @media (max-width: 767px) {
   .popup-container {
-    padding: 1.5rem;
+    flex-direction: column;
+  }
+  .popup-container > div {
+    width: 100% !important;
+  }
+  .popup-container > div:has(img) {
+    display: none;
   }
   .popup-close {
     top: 5px;
@@ -4175,6 +4195,7 @@ div:has(> .sticky-scroll-image) {
   .popup-content h2 {
     font-size: 24px;
     line-height: 24px;
+    font-weight: 700;
   }
 
   .popup-content p {

@@ -15,6 +15,7 @@ import {
   HEADER_QUERY,
   TESTIMONIALS_QUERY,
   ABOUT_HEADER_IMAGE_QUERY,
+  POP_UP_QUERY,
 } from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
@@ -160,12 +161,23 @@ function loadDeferredData({context}) {
       return null;
     });
 
+  const pop_up = storefront
+    .query(POP_UP_QUERY, {
+      cache: storefront.CacheLong(),
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
     footer,
     testimonials,
     about_image,
+    pop_up,
   };
 }
 
