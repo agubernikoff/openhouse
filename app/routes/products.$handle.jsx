@@ -166,10 +166,52 @@ export default function Product() {
       else return true;
     });
   const [selectedImage, setSelectedImage] = useState(productImages[0]);
+  const scrollContainerRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   useEffect(() => {
     setSelectedImage(productImages[0]);
   }, [selectedVariant]);
+
+  // Handle scroll indicators
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    const wrapper = wrapperRef.current;
+
+    if (!scrollContainer || !wrapper) return;
+
+    const updateScrollIndicators = () => {
+      const {scrollLeft, scrollWidth, clientWidth} = scrollContainer;
+      const isAtStart = scrollLeft <= 1;
+      const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 1;
+
+      if (isAtStart) {
+        wrapper.classList.remove('show-left-indicator');
+      } else {
+        wrapper.classList.add('show-left-indicator');
+      }
+
+      if (isAtEnd) {
+        wrapper.classList.remove('show-right-indicator');
+      } else {
+        wrapper.classList.add('show-right-indicator');
+      }
+    };
+
+    // Initial check
+    updateScrollIndicators();
+
+    // Listen to scroll events
+    scrollContainer.addEventListener('scroll', updateScrollIndicators);
+
+    // Listen to resize events in case the container size changes
+    window.addEventListener('resize', updateScrollIndicators);
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', updateScrollIndicators);
+      window.removeEventListener('resize', updateScrollIndicators);
+    };
+  }, [productImages]);
 
   const {lastCollectionPath} = useNavigationContext();
 
@@ -207,28 +249,32 @@ export default function Product() {
   return (
     <>
       <div className="product">
-        <div className="product-images-gallery">
-          <div className="product-image-previews-container">
-            {productImages?.map((img) => (
-              <button
-                key={img.id}
-                onClick={() => setSelectedImage(img)}
-                style={{
-                  border:
-                    selectedImage?.id === img.id
-                      ? '1px solid var(--color-oh-black)'
-                      : '1px solid var(--color-oh-gray)',
-                  transition: 'border 200ms ease-in-out',
-                }}
-              >
-                <ProductImage image={img} />
-              </button>
+        <div className="product-images-gallery-container">
+          <div className="product-images-gallery">
+            {product.images.nodes.map((img) => (
+              <ProductImage key={img.id} image={img} hidden />
             ))}
+            <ProductImage image={selectedImage} />
           </div>
-          {product.images.nodes.map((img) => (
-            <ProductImage key={img.id} image={img} hidden />
-          ))}
-          <ProductImage image={selectedImage} />
+          <div className="product-image-previews-wrapper" ref={wrapperRef}>
+            <div className="product-image-previews-container" ref={scrollContainerRef}>
+              {productImages?.map((img) => (
+                <button
+                  key={img.id}
+                  onClick={() => setSelectedImage(img)}
+                  style={{
+                    border:
+                      selectedImage?.id === img.id
+                        ? '1px solid var(--color-oh-black)'
+                        : '1px solid var(--color-oh-gray)',
+                    transition: 'border 200ms ease-in-out',
+                  }}
+                >
+                  <ProductImage image={img} />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="product-main">
           <div className="product-main-details">
