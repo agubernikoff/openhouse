@@ -31,6 +31,7 @@ export default async function handleRequest(
       'blob:',
       'data:',
       'https://checkout.byopenhouse.com/',
+      'https://www.google.com/',
     ],
     connectSrc: [
       "'self'",
@@ -43,12 +44,16 @@ export default async function handleRequest(
       'https://a.usbrowserspeed.com/',
       'https://alocdn.com/',
       'https://9xgnrndqve.execute-api.us-west-2.amazonaws.com/b2b',
+      'https://www.google.com/',
+      'https://www.googletagmanager.com',
+      'https://www.google-analytics.com',
     ],
     scriptSrc: [
       "'self'",
       'https://cdn.emailjs.com',
       'https://cdn.shopify.com',
       'https://b2bjsstore.s3.us-west-2.amazonaws.com',
+      'https://www.googletagmanager.com',
     ],
     mediaSrc: [
       'https://openhouse.store/',
@@ -56,6 +61,7 @@ export default async function handleRequest(
       'https://w8kbyy-ez.myshopify.com/',
       'https://checkout.byopenhouse.com/',
     ],
+    frameSrc: ['https://www.googletagmanager.com/'],
   });
 
   const body = await renderToReadableStream(
