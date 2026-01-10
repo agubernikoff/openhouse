@@ -257,7 +257,10 @@ export default function Product() {
             <ProductImage image={selectedImage} />
           </div>
           <div className="product-image-previews-wrapper" ref={wrapperRef}>
-            <div className="product-image-previews-container" ref={scrollContainerRef}>
+            <div
+              className="product-image-previews-container"
+              ref={scrollContainerRef}
+            >
               {productImages?.map((img) => (
                 <button
                   key={img.id}
@@ -452,7 +455,7 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
           : measuredRef.current.scrollHeight || 0;
       // Ensure height doesn't go below initial height
       const finalHeight = Math.max(h, initialHeight.current);
-      console.log(finalHeight);
+
       try {
         startTransition(() => setMeasuredHeight(finalHeight));
       } catch (e) {
