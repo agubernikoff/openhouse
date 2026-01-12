@@ -107,7 +107,7 @@ export function FilterColumns({filters, isSideMenu}) {
         prev.delete('cursor');
         return prev;
       },
-      {preventScrollReset: true},
+      {preventScrollReset: false},
     );
   }
 
@@ -127,7 +127,7 @@ export function FilterColumns({filters, isSideMenu}) {
 
         return newParams;
       },
-      {preventScrollReset: true},
+      {preventScrollReset: false},
     );
   }
 

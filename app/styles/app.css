@@ -1973,7 +1973,7 @@ div:has(.products-grid) {
   bottom: 0;
   width: calc((100% - 9rem) / 20);
   pointer-events: none;
-  z-index: 10;
+  z-index: 9;
   opacity: 1;
   transition: transform 0.3s ease;
 }
@@ -4094,6 +4094,9 @@ div:has(> .sticky-scroll-image) {
 
   .product-image-previews-container button {
     width: calc((100vw - 4rem - 32px) / 5);
+  }
+  .product-image-previews-container:has(> button:nth-of-type(5)) {
+    justify-content: flex-start;
   }
 
   .article,
