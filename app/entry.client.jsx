@@ -20,6 +20,21 @@ if (!window.location.origin.includes('webcache.googleusercontent.com')) {
   gtag('js', new Date());
   gtag('config', 'AW-11431963526');
 
+  // Prevent image context menu and dragging
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target.tagName === 'IMG') {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('dragstart', (e) => {
+    if (e.target.tagName === 'IMG') {
+      e.preventDefault();
+      return false;
+    }
+  });
+
   startTransition(() => {
     hydrateRoot(
       document,
