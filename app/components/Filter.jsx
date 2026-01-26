@@ -283,7 +283,7 @@ function FilterColumn({
 
   if (isCategories) {
     const allowedOrder = [
-      'headware',
+      'headwear',
       'apparel',
       'leather goods',
       'uniforms',
