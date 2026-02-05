@@ -41,12 +41,17 @@ function useIsFirstRender() {
  * @type {Route.MetaFunction}
  */
 export const meta = ({data}) => {
+  const image = data?.product?.images?.nodes?.[0];
   return [
     {title: `Openhouse | ${data?.product.title ?? ''}`},
     {
       rel: 'canonical',
       href: `/products/${data?.product.handle}`,
     },
+    {property: 'og:image', content: image?.url},
+    {property: 'og:image:width', content: image?.width},
+    {property: 'og:image:height', content: image?.height},
+    {property: 'og:image:alt', content: image?.altText ?? data?.product.title},
   ];
 };
 
