@@ -2147,7 +2147,8 @@ div:has(.products-grid) {
   transition: all 300ms ease-in-out;
 }
 .product-options-item:disabled {
-  opacity: 0.33;
+  opacity: 0.33 !important;
+  cursor: not-allowed;
 }
 
 /* Color option - circular swatches */

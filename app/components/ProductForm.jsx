@@ -62,6 +62,30 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
+  const [readyToShip, setReadyToShip] = useState(false);
+  function toggleReadyToShip() {
+    const newValue = !readyToShip;
+    setReadyToShip(newValue);
+
+    if (newValue) {
+      const colorOption = productOptions.find((opt) => opt.name === 'Color');
+      if (colorOption) {
+        const selectedColor = colorOption.optionValues.find((v) => v.selected);
+        if (selectedColor && !selectedColor.variant?.lead_time) {
+          const firstWithLeadTime = colorOption.optionValues.find(
+            (v) => v.variant?.lead_time,
+          );
+          if (firstWithLeadTime) {
+            navigate(`?${firstWithLeadTime.variantUriQuery}`, {
+              replace: true,
+              preventScrollReset: true,
+            });
+          }
+        }
+      }
+    }
+  }
+
   // Track when component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
@@ -271,8 +295,44 @@ export function ProductForm({productOptions, selectedVariant}) {
   const uploadOptionNumber =
     filteredOptions.filter((opt) => opt.optionValues.length > 1).length + 1;
 
+  const hasVarLeadTime = productOptions
+    .find((opt) => opt.name === 'Color')
+    ?.optionValues?.some((opt) => opt.variant.lead_time);
+
   return (
     <div className="product-form">
+      {hasVarLeadTime && (
+        <div
+          className="product-options product-options-color"
+          style={{
+            paddingTop: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 17.5,
+          }}
+        >
+          <button
+            className="product-options-item"
+            style={{
+              border: '1px solid black',
+              opacity: 1,
+              background: 'transparent',
+              color: 'var(--color-oh-black)',
+            }}
+            onClick={toggleReadyToShip}
+          >
+            <div
+              className="product-option-label-swatch"
+              style={{
+                background: 'var(--color-oh-red)',
+                opacity: readyToShip ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out',
+              }}
+            />
+          </button>{' '}
+          <h5>READY TO SHIP</h5>
+        </div>
+      )}
       {filteredOptions.map((option, index) => {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
@@ -371,7 +431,12 @@ export function ProductForm({productOptions, selectedVariant}) {
                             ? 'var(--color-oh-white)'
                             : 'var(--color-oh-black)',
                       }}
-                      disabled={!exists}
+                      disabled={
+                        !exists ||
+                        (readyToShip &&
+                          !value.variant?.lead_time &&
+                          option.name === 'Color')
+                      }
                       onClick={() => {
                         if (!selected) {
                           void navigate(`?${variantUriQuery}`, {
