@@ -57,10 +57,10 @@ export default function Contact() {
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    emailjs.init('rzBTp542LGt-9PFek');
+    emailjs.init('QQa6MrphrNfk73qci');
 
     try {
-      const result = await emailjs.send('service_5d73fzg', 'template_4xfs5ih', {
+      const result = await emailjs.send('service_av8jceg', 'template_w2oc5gh', {
         firstName: first,
         lastName: last,
         email: email,
