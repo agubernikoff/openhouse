@@ -621,7 +621,9 @@ function FAQSection({data}) {
         <Suspense fallback={<div>Loading...</div>}>
           <Await resolve={data}>
             {(faq) => {
-              const {faqs} = normalizeMetaobject(faq.metaobject);
+              const {faqs} = normalizeMetaobject(faq?.metaobject) || {
+                faqs: {references: {nodes: []}},
+              };
 
               return faqs.references.nodes.map((field) => {
                 const {question, answer} = normalizeMetaobject(field);

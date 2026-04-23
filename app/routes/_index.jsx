@@ -132,14 +132,13 @@ function Hero({data}) {
   const {shop} = header;
   const {primaryDomain} = shop;
   const fields = normalizeMetaobject(data);
-  const buttonData = JSON.parse(fields?.button_link?.value);
+  const buttonData = JSON.parse(fields?.button_link?.value || '{}');
   const url =
-    buttonData.url.includes('myshopify.com') ||
-    buttonData.url.includes(publicStoreDomain) ||
-    buttonData.url.includes(primaryDomain.url)
-      ? new URL(buttonData.url).pathname + new URL(buttonData.url).hash
-      : buttonData.url;
-
+    buttonData?.url?.includes('myshopify.com') ||
+    buttonData?.url?.includes(publicStoreDomain) ||
+    buttonData?.url?.includes(primaryDomain.url)
+      ? new URL(buttonData?.url)?.pathname + new URL(buttonData?.url)?.hash
+      : buttonData?.url;
   const videoRef = useRef(null);
 
   // Play/pause based on visibility
@@ -171,11 +170,11 @@ function Hero({data}) {
       <video
         ref={videoRef}
         src={
-          fields.background.reference.sources.find((src) =>
+          fields?.background?.reference?.sources.find((src) =>
             src.url.includes('.mp4'),
           ).url
         }
-        poster={fields.background.reference.previewImage.url}
+        poster={fields?.background?.reference?.previewImage?.url}
         loop
         muted
         playsInline
@@ -210,9 +209,9 @@ function Hero({data}) {
         <span className="rotating-brands-mobile-adj">{' Brands'}</span>
       </h2>
       <div>
-        <p>{fields.subtext.value}</p>
+        <p>{fields?.subtext?.value}</p>
         <Link to={url} className="explore-all">
-          {buttonData.text.toUpperCase()}
+          {buttonData?.text?.toUpperCase()}
         </Link>
       </div>
     </section>
@@ -384,7 +383,7 @@ function FeaturedCollectionContent({response}) {
         <p className="red-dot">FEATURED</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>{response.collection.description}</h3>
+        <h3>{response?.collection?.description}</h3>
         <div className="carousel-wrapper">
           <div className="carousel-viewport">
             <div
@@ -406,7 +405,7 @@ function FeaturedCollectionContent({response}) {
         </div>
         <div className="featured-products-button-container">
           <Link
-            to={`/collections/${response.collection.handle}`}
+            to={`/collections/${response?.collection?.handle}`}
             className="explore-all"
           >
             EXPLORE ALL
