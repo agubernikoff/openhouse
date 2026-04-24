@@ -76,7 +76,7 @@ export function Header({
             onMouseEnter={handleHeaderMouseLeave}
             onClick={close}
           >
-            <Logo />
+            <Logo />.
           </NavLink>
           <HeaderCtas
             isLoggedIn={isLoggedIn}
