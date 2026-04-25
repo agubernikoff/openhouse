@@ -31,9 +31,9 @@ export function PageLayout({
   const {shouldShowPopup} = usePopUp();
   return (
     <Aside.Provider>
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {shouldShowPopup() && <WelcomePopup data={pop_up} />}
-      </AnimatePresence>
+      </AnimatePresence> */}
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -101,7 +101,7 @@ function WelcomePopup({data}) {
             </Await>
           </Suspense>
         </div>
-        {/* <div className="popup-content">
+        <div className="popup-content">
           <h2>Need help with a project?</h2>
           <p>{"We'd love to chat."}</p>
           <a
@@ -112,7 +112,7 @@ function WelcomePopup({data}) {
           >
             Book a call
           </a>
-        </div> */}
+        </div>
       </motion.div>
     </>
   );
