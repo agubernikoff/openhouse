@@ -44,46 +44,26 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [quantity, setQuantity] = useState(minimumQuantity || 1);
   const [bulkAdded, setBulkAdded] = useState(false);
   const [sampleAdded, setSampleAdded] = useState(false);
-  const [readyToShip, setReadyToShip] = useState(false);
-
-  function toggleReadyToShip() {
-    const newValue = !readyToShip;
-    setReadyToShip(newValue);
-
-    if (newValue) {
-      const colorOption = productOptions.find((opt) => opt.name === 'Color');
-      if (colorOption) {
-        const selectedColor = colorOption.optionValues.find((v) => v.selected);
-        if (selectedColor && !selectedColor.variant?.lead_time) {
-          const firstWithLeadTime = colorOption.optionValues.find(
-            (v) => v.variant?.lead_time,
-          );
-          if (firstWithLeadTime) {
-            navigate(`?${firstWithLeadTime.variantUriQuery}`, {
-              replace: true,
-              preventScrollReset: true,
-            });
-          }
-        }
-      }
-    }
-  }
+  const [orderType, setOrderType] = useState('wholesale');
+  const [selectedColors, setSelectedColors] = useState(() => {
+    const colorOption = productOptions.find((opt) => opt.name === 'Color');
+    const current = colorOption?.optionValues?.find((v) => v.selected);
+    return current ? [current.name] : [];
+  });
 
   const bulkPrice = selectedVariant?.price?.amount
     ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
     : '0.00';
 
   const decreaseQuantity = () => {
-    const minQty = minimumQuantity || 1;
-    if (quantity > minQty) setQuantity(quantity - 1);
+    if (quantity > 1) setQuantity(quantity - 1);
   };
 
   const increaseQuantity = () => setQuantity(quantity + 1);
 
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
-    const minQty = minimumQuantity || 1;
-    if (!isNaN(value) && value >= minQty) setQuantity(value);
+    if (!isNaN(value) && value >= 1) setQuantity(value);
   };
 
   const handleBulkAddToCart = () => {
@@ -102,49 +82,83 @@ export function ProductForm({productOptions, selectedVariant}) {
     }, 500);
   };
 
-  const hasVarLeadTime = productOptions
+  const sampleDisabled = !productOptions
     .find((opt) => opt.name === 'Color')
-    ?.optionValues?.some((opt) => opt.variant.lead_time);
+    ?.optionValues?.some((opt) => !opt.variant?.currentlyNotInStock);
+
+  const handleOrderTypeChange = (type) => {
+    setOrderType(type);
+    if (type === 'sample') {
+      if (selectedVariant?.currentlyNotInStock) {
+        const colorOption = productOptions.find((opt) => opt.name === 'Color');
+        const firstInStock = colorOption?.optionValues?.find(
+          (v) => !v.variant?.currentlyNotInStock,
+        );
+        if (firstInStock) {
+          navigate(`?${firstInStock.variantUriQuery}`, {
+            replace: true,
+            preventScrollReset: true,
+          });
+        }
+      }
+    }
+  };
 
   return (
     <div className="product-form">
-      {hasVarLeadTime && (
-        <div
-          className="product-options product-options-color"
-          style={{
-            paddingTop: 24,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 17.5,
-          }}
-        >
-          <button
-            className="product-options-item"
-            style={{
-              border: '1px solid black',
-              opacity: 1,
-              background: 'transparent',
-              color: 'var(--color-oh-black)',
-            }}
-            onClick={toggleReadyToShip}
-          >
-            <div
-              className="product-option-label-swatch"
-              style={{
-                background: 'var(--color-oh-red)',
-                opacity: readyToShip ? 1 : 0,
-                transition: 'opacity 0.3s ease-in-out',
-              }}
-            />
-          </button>{' '}
-          <h5>READY TO SHIP</h5>
+      <div className="product-options" key="order-type">
+        <div className="product-options-header">
+          <h5>
+            <span className="option-bullet">●</span>
+            <span className="option-number">1.</span> ORDER TYPE:{' '}
+            <AnimatePresence mode="popLayout">
+              <motion.span
+                key={orderType}
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                exit={{opacity: 0}}
+              >
+                {orderType.toUpperCase()}
+              </motion.span>
+            </AnimatePresence>
+          </h5>
+          <span className="option-required">REQUIRED</span>
         </div>
-      )}
+        <div className="product-options-grid">
+          {['wholesale', 'sample'].map((type) => {
+            const isSelected = orderType === type;
+            const isDisabled = type === 'sample' && sampleDisabled;
+            return (
+              <button
+                type="button"
+                className={`product-options-item${!isSelected && !isDisabled ? ' link' : ''}`}
+                key={type}
+                style={{
+                  border: isSelected
+                    ? '1px solid black'
+                    : '1px solid transparent',
+                  opacity: isDisabled ? 0.3 : 1,
+                  background: isSelected
+                    ? 'var(--color-oh-black)'
+                    : 'transparent',
+                  color: isSelected
+                    ? 'var(--color-oh-white)'
+                    : 'var(--color-oh-black)',
+                }}
+                disabled={isDisabled}
+                onClick={() => handleOrderTypeChange(type)}
+              >
+                {type.toUpperCase()}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       {filteredOptions.map((option, index) => {
         if (option.optionValues.length === 1) return null;
 
         const isColorOption = option.name === 'Color';
-        const isEmbroideryOption = option.name === 'Embellishment Type';
+        const isSizeOption = option.name === 'Size';
 
         const selectedValue = option.optionValues.find((v) => v.selected);
         const selectedName = selectedValue?.name || '';
@@ -152,202 +166,335 @@ export function ProductForm({productOptions, selectedVariant}) {
         const displayNumber =
           filteredOptions
             .slice(0, index)
-            .filter((opt) => opt.optionValues.length > 1).length + 1;
+            .filter((opt) => opt.optionValues.length > 1).length + 2;
+
+        const inStock = isColorOption
+          ? option.optionValues.filter((v) => !v.variant?.currentlyNotInStock)
+          : [];
+        const madeToOrder = isColorOption
+          ? option.optionValues.filter((v) => v.variant?.currentlyNotInStock)
+          : [];
+
+        const renderValue = (value) => {
+          const {
+            name,
+            handle,
+            variantUriQuery,
+            selected,
+            available,
+            exists,
+            isDifferentProduct,
+            swatch,
+          } = value;
+
+          const isWholesaleColor = isColorOption && orderType === 'wholesale';
+          const isSelected = isWholesaleColor
+            ? selectedColors.includes(name)
+            : selected;
+
+          if (isDifferentProduct) {
+            return (
+              <Link
+                className="product-options-item"
+                key={option.name + name}
+                prefetch="intent"
+                preventScrollReset
+                replace
+                to={`/products/${handle}?${variantUriQuery}`}
+                style={{
+                  border: isSelected
+                    ? '1px solid black'
+                    : '1px solid transparent',
+                  opacity: available ? 1 : 0.3,
+                }}
+              >
+                <ProductOptionSwatch swatch={swatch} name={name} />
+              </Link>
+            );
+          }
+          return (
+            <button
+              type="button"
+              className={`product-options-item${exists && !isSelected ? ' link' : ''}`}
+              key={option.name + name}
+              style={{
+                border: isSelected
+                  ? '1px solid black'
+                  : '1px solid transparent',
+                opacity: available ? 1 : 0.3,
+                background:
+                  isSelected && !isColorOption
+                    ? 'var(--color-oh-black)'
+                    : 'transparent',
+                color:
+                  isSelected && !isColorOption
+                    ? 'var(--color-oh-white)'
+                    : 'var(--color-oh-black)',
+              }}
+              disabled={!exists}
+              onClick={() => {
+                if (isWholesaleColor) {
+                  setSelectedColors((prev) =>
+                    prev.includes(name)
+                      ? prev.filter((c) => c !== name)
+                      : [...prev, name],
+                  );
+                } else if (!isSelected) {
+                  void navigate(`?${variantUriQuery}`, {
+                    replace: true,
+                    preventScrollReset: true,
+                  });
+                }
+              }}
+            >
+              <ProductOptionSwatch swatch={swatch} name={name} />
+            </button>
+          );
+        };
 
         return (
-          <div
-            className={`product-options ${isColorOption ? 'product-options-color' : ''} ${isEmbroideryOption ? 'product-options-embroidery' : ''}`}
+          <motion.div
+            layout="position"
+            className={`product-options ${isColorOption ? 'product-options-color' : ''}`}
             key={option.name}
           >
             <div className="product-options-header">
               <h5>
                 <span className="option-bullet">●</span>
                 <span className="option-number">{displayNumber}.</span>{' '}
-                {(option.name === 'Embellishment Type'
-                  ? 'Embellishment'
-                  : option.name
-                ).toUpperCase()}
-                :{' '}
+                <span style={{display: 'flex'}}>
+                  {option.name.toUpperCase()}
+                  <AnimatePresence>
+                    {isColorOption && orderType === 'wholesale' && (
+                      <motion.span
+                        key="color-s"
+                        initial={{width: 0}}
+                        animate={{width: 'auto'}}
+                        exit={{width: 0}}
+                        style={{overflow: 'hidden', display: 'inline-block'}}
+                      >
+                        S
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  :
+                </span>{' '}
                 <AnimatePresence mode="popLayout">
-                  <motion.span
-                    key={selectedName}
-                    initial={{opacity: 0}}
-                    animate={{opacity: 1}}
-                    exit={{opacity: 0}}
-                  >
-                    {selectedName.toUpperCase()}
-                  </motion.span>
+                  {isColorOption && orderType === 'wholesale' ? (
+                    selectedColors.flatMap((color, i) =>
+                      color.split(' ').map((word, j, words) => {
+                        const isLastWord = j === words.length - 1;
+                        const isLastColor = i === selectedColors.length - 1;
+                        const suffix = isLastWord
+                          ? isLastColor
+                            ? ''
+                            : ', '
+                          : ' ';
+                        return (
+                          <motion.span
+                            key={`${color}-${word}`}
+                            initial={{opacity: 0}}
+                            animate={{opacity: 1}}
+                            exit={{opacity: 0}}
+                            style={{lineHeight: '24px'}}
+                          >
+                            {word.toUpperCase()}
+                            {suffix}
+                          </motion.span>
+                        );
+                      }),
+                    )
+                  ) : (
+                    <motion.span
+                      key={selectedName}
+                      initial={{opacity: 0}}
+                      animate={{opacity: 1}}
+                      exit={{opacity: 0}}
+                    >
+                      {selectedName.toUpperCase()}
+                    </motion.span>
+                  )}
                 </AnimatePresence>
               </h5>
               <span className="option-required">REQUIRED</span>
             </div>
-            <div className="product-options-grid">
-              {option.optionValues.map((value) => {
-                const {
-                  name,
-                  handle,
-                  variantUriQuery,
-                  selected,
-                  available,
-                  exists,
-                  isDifferentProduct,
-                  swatch,
-                } = value;
 
-                if (isDifferentProduct) {
-                  return (
-                    <Link
-                      className="product-options-item"
-                      key={option.name + name}
-                      prefetch="intent"
-                      preventScrollReset
-                      replace
-                      to={`/products/${handle}?${variantUriQuery}`}
-                      style={{
-                        border: selected
-                          ? '1px solid black'
-                          : '1px solid transparent',
-                        opacity: available ? 1 : 0.3,
-                      }}
-                    >
-                      <ProductOptionSwatch swatch={swatch} name={name} />
-                    </Link>
-                  );
-                } else {
-                  return (
-                    <button
-                      type="button"
-                      className={`product-options-item${
-                        exists && !selected ? ' link' : ''
-                      }`}
-                      key={option.name + name}
-                      style={{
-                        border: selected
-                          ? '1px solid black'
-                          : '1px solid transparent',
-                        opacity: available ? 1 : 0.3,
-                        background:
-                          selected && !isColorOption
-                            ? 'var(--color-oh-black)'
-                            : 'transparent',
-                        color:
-                          selected && !isColorOption
-                            ? 'var(--color-oh-white)'
-                            : 'var(--color-oh-black)',
-                      }}
-                      disabled={
-                        !exists ||
-                        (readyToShip &&
-                          !value.variant?.lead_time &&
-                          option.name === 'Color')
-                      }
-                      onClick={() => {
-                        if (!selected) {
-                          void navigate(`?${variantUriQuery}`, {
-                            replace: true,
-                            preventScrollReset: true,
-                          });
-                        }
-                      }}
-                    >
-                      <ProductOptionSwatch swatch={swatch} name={name} />
-                    </button>
-                  );
-                }
-              })}
-            </div>
-          </div>
+            {isColorOption ? (
+              <motion.div layout="position">
+                <ColorOptionGrid
+                  orderType={orderType}
+                  inStock={inStock}
+                  madeToOrder={madeToOrder}
+                  renderValue={renderValue}
+                />
+              </motion.div>
+            ) : isSizeOption ? (
+              <SizeOptionGrid
+                optionValues={option.optionValues}
+                renderValue={renderValue}
+              />
+            ) : (
+              <div className="product-options-grid">
+                {option.optionValues.map(renderValue)}
+              </div>
+            )}
+          </motion.div>
         );
       })}
 
       {/* <ArtworkUpload selectedVariant={selectedVariant} optionNumber={...} /> */}
 
-      {/* Quantity selector */}
-      <div className="quantity-selector">
-        <div className="quantity-controls">
-          <span>QTY</span>
-          <button
-            type="button"
-            onClick={decreaseQuantity}
-            disabled={quantity <= (minimumQuantity || 1)}
+      <AnimatePresence>
+        {orderType === 'sample' && (
+          <motion.div
+            className="quantity-selector"
+            initial={{height: 0}}
+            animate={{height: 'auto'}}
+            exit={{height: 0}}
+            style={{overflow: 'hidden'}}
           >
-            -
-          </button>
-          <input
-            type="number"
-            value={quantity}
-            onChange={handleQuantityChange}
-            min={minimumQuantity || 1}
-          />
-          <button type="button" onClick={increaseQuantity}>
-            +
-          </button>
+            <div className="quantity-controls">
+              <span>QTY</span>
+              <button
+                type="button"
+                onClick={decreaseQuantity}
+                disabled={quantity <= 1}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={handleQuantityChange}
+                min={1}
+              />
+              <button
+                type="button"
+                onClick={increaseQuantity}
+                disabled={quantity === selectedVariant?.quantityAvailable}
+              >
+                +
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div layout="position">
+        {/* Quantity display and bulk order info */}
+        <div className="product-quantity-info">
+          {hasMinimumQuantity && (
+            <p>Minimum Order Quantity: {minimumQuantity} units</p>
+          )}
+          {hasLeadTime && (
+            <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
+              Estimated lead time: {leadTime}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Quantity display and bulk order info */}
-      <div className="product-quantity-info">
-        {hasMinimumQuantity && (
-          <p>Minimum Order Quantity: {minimumQuantity} units</p>
-        )}
-        {hasLeadTime && (
-          <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
-            Estimated lead time: {leadTime}
-          </div>
-        )}
-      </div>
+        {/* Bulk order button */}
+        <AddToCartButton
+          className="add-cart"
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={handleBulkAddToCart}
+          lines={
+            selectedVariant
+              ? [
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity,
+                    selectedVariant,
+                    attributes: [],
+                  },
+                ]
+              : []
+          }
+        >
+          {bulkAdded
+            ? 'ADDED TO CART'
+            : selectedVariant?.availableForSale
+              ? `ADD TO CART - $${bulkPrice}`
+              : 'Sold out'}
+        </AddToCartButton>
 
-      {/* Bulk order button */}
-      <AddToCartButton
-        className="add-cart"
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={handleBulkAddToCart}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: quantity,
-                  selectedVariant,
-                  attributes: [],
-                },
-              ]
-            : []
-        }
-      >
-        {bulkAdded
-          ? 'ADDED TO CART'
-          : selectedVariant?.availableForSale
-            ? `ADD TO CART - $${bulkPrice}`
-            : 'Sold out'}
-      </AddToCartButton>
+        {/* Divider */}
+        <div className="button-divider">
+          <span>OR</span>
+        </div>
 
-      {/* Divider */}
-      <div className="button-divider">
-        <span>OR</span>
-      </div>
-
-      {/* Sample order button */}
-      <AddToCartButton
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={handleSampleAddToCart}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                  attributes: [],
-                },
-              ]
-            : []
-        }
-        className="sample-button"
-      >
-        {sampleAdded ? 'ADDED TO CART' : 'PURCHASE BLANK SAMPLE'}
-      </AddToCartButton>
+        {/* Sample order button */}
+        <AddToCartButton
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={handleSampleAddToCart}
+          lines={
+            selectedVariant
+              ? [
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                    selectedVariant,
+                    attributes: [],
+                  },
+                ]
+              : []
+          }
+          className="sample-button"
+        >
+          {sampleAdded ? 'ADDED TO CART' : 'PURCHASE BLANK SAMPLE'}
+        </AddToCartButton>
+      </motion.div>
     </div>
+  );
+}
+
+function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
+  return (
+    <AnimatePresence mode="sync">
+      {orderType === 'wholesale' && inStock.length > 0 && (
+        <motion.h5
+          key="in-stock-label"
+          className="color-group-label"
+          initial={{height: 0, marginBottom: 0}}
+          animate={{height: 'auto', marginBottom: '0.5rem'}}
+          exit={{height: 0, marginBottom: 0}}
+          style={{overflow: 'hidden'}}
+        >
+          IN STOCK
+        </motion.h5>
+      )}
+      <div className="product-options-grid">{inStock.map(renderValue)}</div>
+      {orderType === 'wholesale' && madeToOrder.length > 0 && (
+        <motion.h5
+          key="made-to-order-label"
+          className="color-group-label"
+          initial={{height: 0, marginTop: 0, marginBottom: 0}}
+          animate={{height: 'auto', marginTop: '1rem', marginBottom: '0.5rem'}}
+          exit={{height: 0, marginTop: 0, marginBottom: 0}}
+          style={{overflow: 'hidden'}}
+        >
+          MADE TO ORDER
+        </motion.h5>
+      )}
+      {orderType === 'wholesale' && madeToOrder.length > 0 && (
+        <motion.div
+          key="made-to-order-grid"
+          className="product-options-grid"
+          initial={{height: 0}}
+          animate={{height: 'auto'}}
+          exit={{height: 0}}
+          style={{overflow: 'hidden'}}
+        >
+          {madeToOrder.map(renderValue)}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SizeOptionGrid({optionValues, renderValue}) {
+  return (
+    <div className="product-options-grid">{optionValues.map(renderValue)}</div>
   );
 }
 
