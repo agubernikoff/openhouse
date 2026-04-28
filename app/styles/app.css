@@ -11,6 +11,7 @@
   --color-oh-white: rgba(244, 242, 234, 1);
   --color-oh-black: #2d2d2b;
   --color-oh-gray-contact: rgba(115, 115, 115, 1);
+  --color-oh-yellow: rgba(195, 155, 60, 1);
   --init-testi-transform: calc(5px + 25vw);
   --unit-testi-transform: calc(5px + 25vw);
 }
@@ -2099,7 +2100,9 @@ div:has(.products-grid) {
   margin-bottom: 16px;
 }
 
-.product-options h5 {
+.product-options h5,
+.color-group-label,
+.moq-label {
   font-family: 'mono';
   font-size: 14px;
   text-transform: uppercase;
@@ -2172,8 +2175,9 @@ div:has(.products-grid) {
   margin: 0;
 }
 
-.product-options:not(.product-options-color) .product-options-item,
-.product-options:not(.product-options-color) .product-options-item:hover,
+.product-options:not(.product-options-color) .product-options-item:not(div),
+.product-options:not(.product-options-color)
+  .product-options-item:not(div):hover,
 .product-options:not(.product-options-color) .product-options-item.link,
 .product-options:not(.product-options-color) .product-options-item.link:hover {
   align-items: center;
@@ -2189,6 +2193,59 @@ div:has(.products-grid) {
   cursor: pointer;
   text-decoration: none;
 }
+div:has(> .color-group-label + div.product-options-grid) {
+  margin-bottom: 16px;
+}
+.color-group-label .option-bullet {
+  color: var(--swatch-color, var(--color-oh-black));
+}
+.moq-label {
+  font-size: 10px;
+  line-height: 10px;
+  margin-top: 4px;
+  float: right;
+}
+div.product-options-item {
+  border: 1px solid var(--color-oh-black);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  gap: 4px;
+  justify-content: space-between;
+  font-family: 'mono';
+  font-size: 14px;
+  position: relative;
+  padding-bottom: 14px;
+}
+div.product-options-item > input {
+  background: transparent;
+  margin: 0;
+  font-family: 'mono';
+  font-size: 14px;
+  padding: 0;
+  border: none;
+  width: 100%;
+  text-align: right;
+}
+div.product-options-item > input:focus-visible {
+  outline: none;
+}
+/* div.product-options-item:has(input:focus-visible) {
+  outline: 1px solid var(--swatch-color, var(--color-oh-black));
+  border-color: var(--swatch-color, var(--color-oh-black));
+} */
+div.product-options-item > p.color-group-label {
+  color: var(--color-oh-gray);
+  text-align: right;
+  font-size: 10px;
+  line-height: 10px;
+  display: block;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+}
+
 .product-options-embroidery .product-options-grid {
   gap: 1rem;
 }

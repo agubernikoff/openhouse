@@ -335,6 +335,7 @@ export default function Product() {
             key={product.id}
             productOptions={reorderedOptions}
             selectedVariant={selectedVariant}
+            variants={product.variants.nodes}
           />
         </div>
         <Analytics.ProductView
@@ -698,6 +699,10 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     availableForSale
     currentlyNotInStock
     quantityAvailable
+    selectedOptions {
+      name
+      value
+    }
     compareAtPrice {
       amount
       currencyCode
@@ -776,6 +781,16 @@ const PRODUCT_FRAGMENT = `#graphql
     }
     adjacentVariants (selectedOptions: $selectedOptions) {
       ...ProductVariant
+    }
+    variants(first: 250) {
+      nodes {
+        quantityAvailable
+        currentlyNotInStock
+        selectedOptions {
+          name
+          value
+        }
+      }
     }
     seo {
       description

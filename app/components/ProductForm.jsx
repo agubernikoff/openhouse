@@ -11,7 +11,7 @@ import mapRichText from '~/helpers/mapRichText';
  *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
  * }}
  */
-export function ProductForm({productOptions, selectedVariant}) {
+export function ProductForm({productOptions, selectedVariant, variants = []}) {
   const navigate = useNavigate();
   const {open} = useAside();
 
@@ -48,7 +48,7 @@ export function ProductForm({productOptions, selectedVariant}) {
   const [selectedColors, setSelectedColors] = useState(() => {
     const colorOption = productOptions.find((opt) => opt.name === 'Color');
     const current = colorOption?.optionValues?.find((v) => v.selected);
-    return current ? [current.name] : [];
+    return current ? [{name: current.name, sizes: {}}] : [];
   });
 
   const bulkPrice = selectedVariant?.price?.amount
@@ -82,9 +82,44 @@ export function ProductForm({productOptions, selectedVariant}) {
     }, 500);
   };
 
-  const sampleDisabled = !productOptions
-    .find((opt) => opt.name === 'Color')
-    ?.optionValues?.some((opt) => !opt.variant?.currentlyNotInStock);
+  const colorOption = productOptions.find((opt) => opt.name === 'Color');
+
+  const sampleDisabled = !colorOption?.optionValues?.some(
+    (opt) => !opt.variant?.currentlyNotInStock,
+  );
+
+  const colorSwatchMap = Object.fromEntries(
+    (colorOption?.optionValues ?? []).map((v) => [v.name, v.swatch?.color]),
+  );
+
+  const colorMOQMap = Object.fromEntries(
+    (colorOption?.optionValues ?? []).map((v) => {
+      const variantMoq = v.variant?.minimumQuantity?.value
+        ? parseInt(v.variant.minimumQuantity.value)
+        : null;
+      return [v.name, variantMoq ?? productMinQty];
+    }),
+  );
+
+  const handleSizeChange = (colorName, sizeName, qty) => {
+    setSelectedColors((prev) =>
+      prev.map((c) =>
+        c.name === colorName ? {...c, sizes: {...c.sizes, [sizeName]: qty}} : c,
+      ),
+    );
+  };
+
+  const variantQuantityMatrix = variants.reduce((acc, variant) => {
+    const color = variant.selectedOptions?.find(
+      (o) => o.name === 'Color',
+    )?.value;
+    const size = variant.selectedOptions?.find((o) => o.name === 'Size')?.value;
+    if (color && size) {
+      if (!acc[color]) acc[color] = {};
+      acc[color][size] = variant.quantityAvailable ?? 0;
+    }
+    return acc;
+  }, {});
 
   const handleOrderTypeChange = (type) => {
     setOrderType(type);
@@ -189,7 +224,7 @@ export function ProductForm({productOptions, selectedVariant}) {
 
           const isWholesaleColor = isColorOption && orderType === 'wholesale';
           const isSelected = isWholesaleColor
-            ? selectedColors.includes(name)
+            ? selectedColors.some((c) => c.name === name)
             : selected;
 
           if (isDifferentProduct) {
@@ -235,9 +270,9 @@ export function ProductForm({productOptions, selectedVariant}) {
               onClick={() => {
                 if (isWholesaleColor) {
                   setSelectedColors((prev) =>
-                    prev.includes(name)
-                      ? prev.filter((c) => c !== name)
-                      : [...prev, name],
+                    prev.some((c) => c.name === name)
+                      ? prev.filter((c) => c.name !== name)
+                      : [...prev, {name, sizes: {}}],
                   );
                 } else if (!isSelected) {
                   void navigate(`?${variantUriQuery}`, {
@@ -281,8 +316,8 @@ export function ProductForm({productOptions, selectedVariant}) {
                 </span>{' '}
                 <AnimatePresence mode="popLayout">
                   {isColorOption && orderType === 'wholesale' ? (
-                    selectedColors.flatMap((color, i) =>
-                      color.split(' ').map((word, j, words) => {
+                    selectedColors.flatMap((colorObj, i) =>
+                      colorObj.name.split(' ').map((word, j, words) => {
                         const isLastWord = j === words.length - 1;
                         const isLastColor = i === selectedColors.length - 1;
                         const suffix = isLastWord
@@ -292,7 +327,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                           : ' ';
                         return (
                           <motion.span
-                            key={`${color}-${word}`}
+                            key={`${colorObj.name}-${word}`}
                             initial={{opacity: 0}}
                             animate={{opacity: 1}}
                             exit={{opacity: 0}}
@@ -304,7 +339,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                         );
                       }),
                     )
-                  ) : (
+                  ) : orderType === 'sample' ? (
                     <motion.span
                       key={selectedName}
                       initial={{opacity: 0}}
@@ -313,7 +348,7 @@ export function ProductForm({productOptions, selectedVariant}) {
                     >
                       {selectedName.toUpperCase()}
                     </motion.span>
-                  )}
+                  ) : null}
                 </AnimatePresence>
               </h5>
               <span className="option-required">REQUIRED</span>
@@ -330,7 +365,13 @@ export function ProductForm({productOptions, selectedVariant}) {
               </motion.div>
             ) : isSizeOption ? (
               <SizeOptionGrid
+                orderType={orderType}
                 optionValues={option.optionValues}
+                selectedColors={selectedColors}
+                colorSwatchMap={colorSwatchMap}
+                colorMOQMap={colorMOQMap}
+                variantQuantityMatrix={variantQuantityMatrix}
+                onSizeChange={handleSizeChange}
                 renderValue={renderValue}
               />
             ) : (
@@ -492,7 +533,130 @@ function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
   );
 }
 
-function SizeOptionGrid({optionValues, renderValue}) {
+function SizeOptionGrid({
+  orderType,
+  optionValues,
+  selectedColors,
+  colorSwatchMap,
+  colorMOQMap,
+  variantQuantityMatrix,
+  onSizeChange,
+  renderValue,
+}) {
+  if (orderType === 'wholesale') {
+    return (
+      <AnimatePresence>
+        {selectedColors.map((colorObj) => {
+          const {name: color, sizes} = colorObj;
+          const total = Object.values(sizes).reduce((sum, q) => sum + q, 0);
+          const moq = colorMOQMap[color];
+          return (
+            <motion.div
+              key={color}
+              initial={{height: 0}}
+              animate={{height: 'auto'}}
+              exit={{height: 0}}
+              style={{
+                '--swatch-color': colorSwatchMap[color],
+                overflow: 'hidden',
+              }}
+            >
+              <div className="product-options-header color-group-label">
+                <h5>
+                  <span className="option-bullet">●</span>
+                  {color.toUpperCase()}
+                </h5>
+                {moq != null && (
+                  <p
+                    className="moq-label"
+                    style={{
+                      color:
+                        total >= moq
+                          ? 'var(--color-oh-gray)'
+                          : 'var(--color-oh-red)',
+                    }}
+                  >
+                    {`TOTAL(${total}) ${total >= moq ? 'MEETS' : `IS BELOW`} MOQ(${moq})`}
+                  </p>
+                )}
+              </div>
+
+              {(() => {
+                const anyExceedsStock = optionValues.some(
+                  ({name}) =>
+                    (sizes[name] ?? 0) >
+                    (variantQuantityMatrix[color]?.[name] ?? 0),
+                );
+                return (
+                  <>
+                    <div className="product-options-grid">
+                      {optionValues.map(({name, exists}) => {
+                        const available =
+                          variantQuantityMatrix[color]?.[name] ?? 0;
+                        const exceeds = (sizes[name] ?? 0) > available;
+                        return (
+                          <div
+                            key={name}
+                            className="product-options-item"
+                            style={{
+                              opacity: exists ? 1 : 0.3,
+                              ...(exceeds && {
+                                borderColor: 'var(--color-oh-yellow)',
+                              }),
+                            }}
+                          >
+                            <label htmlFor={`size-${color}-${name}`}>
+                              {name.toUpperCase()}
+                            </label>
+                            <input
+                              id={`size-${color}-${name}`}
+                              type="number"
+                              min={0}
+                              value={sizes[name] ?? 0}
+                              onChange={(e) =>
+                                onSizeChange(
+                                  color,
+                                  name,
+                                  parseInt(e.target.value) || 0,
+                                )
+                              }
+                              disabled={!exists}
+                            />
+                            <p className="color-group-label">{available}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <AnimatePresence>
+                      {anyExceedsStock && (
+                        <motion.p
+                          className="color-group-label"
+                          initial={{height: 0}}
+                          animate={{height: 'auto'}}
+                          exit={{height: 0}}
+                          style={{
+                            overflow: 'hidden',
+                            color: 'var(--color-oh-yellow)',
+                            fontSize: '12px',
+                            lineHeight: '14px',
+                            marginTop: '0.25rem',
+                          }}
+                        >
+                          THE SELECTED QUANTITY EXCEEDS AVAILABLE STOCK. PLEASE
+                          BE AWARE THIS WILL INCREASE LEAD TIME.
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </>
+                );
+              })()}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div className="product-options-grid">{optionValues.map(renderValue)}</div>
   );
