@@ -11,7 +11,7 @@ import mapRichText from '~/helpers/mapRichText';
  *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
  * }}
  */
-export function ProductForm({productOptions, selectedVariant, variants = []}) {
+export function ProductForm({productOptions, selectedVariant, variants = [], madeToOrderLeadTime}) {
   const navigate = useNavigate();
   const {open} = useAside();
 
@@ -38,8 +38,12 @@ export function ProductForm({productOptions, selectedVariant, variants = []}) {
     ? mapRichText(JSON.parse(selectedVariant.product.lead_time.value))
     : null;
 
-  const leadTime = variantLeadTime ?? productLeadTime ?? null;
-  const hasLeadTime = leadTime !== null;
+  const inStockLeadTime = variantLeadTime ?? productLeadTime ?? null;
+  const hasInStockLeadTime = inStockLeadTime !== null;
+
+  const parsedMadeToOrderLeadTime = madeToOrderLeadTime
+    ? mapRichText(JSON.parse(madeToOrderLeadTime))
+    : null;
 
   const [quantity, setQuantity] = useState(minimumQuantity || 1);
   const [bulkAdded, setBulkAdded] = useState(false);
@@ -432,11 +436,32 @@ export function ProductForm({productOptions, selectedVariant, variants = []}) {
           {hasMinimumQuantity && (
             <p>Minimum Order Quantity: {minimumQuantity} units</p>
           )}
-          {hasLeadTime && (
-            <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
-              Estimated lead time: {leadTime}
-            </div>
-          )}
+          {(() => {
+            const anyExceedsStock = selectedColors.some((colorObj) =>
+              Object.entries(colorObj.sizes).some(
+                ([sizeName, qty]) =>
+                  qty > (variantQuantityMatrix[colorObj.name]?.[sizeName] ?? 0),
+              ),
+            );
+            const isMadeToOrder = anyExceedsStock && parsedMadeToOrderLeadTime;
+            const displayLeadTime = isMadeToOrder
+              ? parsedMadeToOrderLeadTime
+              : hasInStockLeadTime
+                ? inStockLeadTime
+                : null;
+            return displayLeadTime ? (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  color: isMadeToOrder ? 'var(--color-oh-yellow)' : undefined,
+                }}
+              >
+                Estimated lead time: {displayLeadTime}
+              </div>
+            ) : null;
+          })()}
         </div>
 
         {/* Bulk order button */}

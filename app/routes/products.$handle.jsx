@@ -336,6 +336,7 @@ export default function Product() {
             productOptions={reorderedOptions}
             selectedVariant={selectedVariant}
             variants={product.variants.nodes}
+            madeToOrderLeadTime={product.made_to_order_lead_time?.value}
           />
         </div>
         <Analytics.ProductView
@@ -812,6 +813,9 @@ const PRODUCT_FRAGMENT = `#graphql
       }
     }
     lead_time: metafield(namespace: "custom", key: "lead_time") {
+      value
+    }
+    made_to_order_lead_time: metafield(namespace: "custom", key: "made_to_order_lead_time") {
       value
     }
     material: metafield(namespace: "custom", key: "material") {
