@@ -109,6 +109,10 @@ export function ProductForm({productOptions, selectedVariant, variants = []}) {
     );
   };
 
+  const handleRemoveColor = (colorName) => {
+    setSelectedColors((prev) => prev.filter((c) => c.name !== colorName));
+  };
+
   const variantQuantityMatrix = variants.reduce((acc, variant) => {
     const color = variant.selectedOptions?.find(
       (o) => o.name === 'Color',
@@ -372,6 +376,7 @@ export function ProductForm({productOptions, selectedVariant, variants = []}) {
                 colorMOQMap={colorMOQMap}
                 variantQuantityMatrix={variantQuantityMatrix}
                 onSizeChange={handleSizeChange}
+                onRemoveColor={handleRemoveColor}
                 renderValue={renderValue}
               />
             ) : (
@@ -541,6 +546,7 @@ function SizeOptionGrid({
   colorMOQMap,
   variantQuantityMatrix,
   onSizeChange,
+  onRemoveColor,
   renderValue,
 }) {
   if (orderType === 'wholesale') {
@@ -566,19 +572,18 @@ function SizeOptionGrid({
                   <span className="option-bullet">●</span>
                   {color.toUpperCase()}
                 </h5>
-                {moq != null && (
-                  <p
-                    className="moq-label"
-                    style={{
-                      color:
-                        total >= moq
-                          ? 'var(--color-oh-gray)'
-                          : 'var(--color-oh-red)',
-                    }}
-                  >
-                    {`TOTAL(${total}) ${total >= moq ? 'MEETS' : `IS BELOW`} MOQ(${moq})`}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  className="color-group-label"
+                  onClick={() => onRemoveColor(color)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  X
+                </button>
               </div>
 
               {(() => {
@@ -612,6 +617,7 @@ function SizeOptionGrid({
                               id={`size-${color}-${name}`}
                               type="number"
                               min={0}
+                              max={9999}
                               value={sizes[name] ?? 0}
                               onChange={(e) =>
                                 onSizeChange(
@@ -627,26 +633,59 @@ function SizeOptionGrid({
                         );
                       })}
                     </div>
-                    <AnimatePresence>
-                      {anyExceedsStock && (
-                        <motion.p
-                          className="color-group-label"
-                          initial={{height: 0}}
-                          animate={{height: 'auto'}}
-                          exit={{height: 0}}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <AnimatePresence>
+                        {anyExceedsStock && (
+                          <motion.p
+                            className="moq-label"
+                            initial={{height: 0}}
+                            animate={{height: 'auto'}}
+                            exit={{height: 0}}
+                            style={{
+                              overflow: 'hidden',
+                              color: 'var(--color-oh-yellow)',
+                            }}
+                          >
+                            +LEAD TIME
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                      {moq != null && (
+                        <p
+                          className="moq-label"
                           style={{
-                            overflow: 'hidden',
-                            color: 'var(--color-oh-yellow)',
-                            fontSize: '12px',
-                            lineHeight: '14px',
-                            marginTop: '0.25rem',
+                            marginLeft: 'auto',
+                            color:
+                              total >= moq
+                                ? 'var(--color-oh-black)'
+                                : 'var(--color-oh-red)',
                           }}
                         >
-                          THE SELECTED QUANTITY EXCEEDS AVAILABLE STOCK. PLEASE
-                          BE AWARE THIS WILL INCREASE LEAD TIME.
-                        </motion.p>
+                          {`TOTAL(${total})`}
+                          <AnimatePresence>
+                            {total < moq && (
+                              <motion.span
+                                key="below-moq"
+                                initial={{width: 0, paddingLeft: 0}}
+                                animate={{width: 'auto', paddingLeft: 4}}
+                                exit={{width: 0, paddingLeft: 0}}
+                                style={{
+                                  overflow: 'hidden',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                {`IS BELOW MOQ(${moq})`}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                        </p>
                       )}
-                    </AnimatePresence>
+                    </div>
                   </>
                 );
               })()}

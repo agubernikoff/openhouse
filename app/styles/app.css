@@ -2201,13 +2201,15 @@ div:has(.products-grid) {
   line-height: 10px;
   margin-top: 4px;
   float: right;
+  gap: 0;
+  white-space: nowrap;
 }
 div.product-options-item {
   border: 1px solid var(--color-oh-black);
   border-radius: 5px;
   display: flex;
   flex-direction: column;
-  /* align-items: center; */
+  flex: 1;
   gap: 4px;
   justify-content: space-between;
   font-family: 'mono';
@@ -2227,6 +2229,9 @@ div.product-options-item > input {
 }
 div.product-options-item > input:focus-visible {
   outline: none;
+}
+div.product-options-item > input::-webkit-inner-spin-button {
+  flex: 1;
 }
 /* div.product-options-item:has(input:focus-visible) {
   outline: 1px solid var(--swatch-color, var(--color-oh-black));
