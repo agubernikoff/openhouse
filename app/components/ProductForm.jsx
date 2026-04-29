@@ -574,15 +574,19 @@ function SizeOptionGrid({
                 </h5>
                 <button
                   type="button"
-                  className="color-group-label"
                   onClick={() => onRemoveColor(color)}
                   style={{
-                    background: 'transparent',
+                    background: 'none',
                     border: 'none',
+                    textDecoration: 'underline',
                     cursor: 'pointer',
+                    color: 'var(--color-oh-black)',
+                    fontFamily: 'apfel',
+                    fontWeight: 400,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  X
+                  Delete
                 </button>
               </div>
 
