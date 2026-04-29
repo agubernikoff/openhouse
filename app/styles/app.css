@@ -2193,9 +2193,9 @@ div:has(.products-grid) {
   cursor: pointer;
   text-decoration: none;
 }
-div:has(> .color-group-label + div.product-options-grid) {
+/* div:has(> .color-group-label + div.product-options-grid) {
   margin-bottom: 16px;
-}
+} */
 .color-group-label .option-bullet {
   color: var(--swatch-color, var(--color-oh-black));
 }

@@ -553,9 +553,9 @@ function SizeOptionGrid({
           return (
             <motion.div
               key={color}
-              initial={{height: 0}}
-              animate={{height: 'auto'}}
-              exit={{height: 0}}
+              initial={{height: 0, marginBottom: 0}}
+              animate={{height: 'auto', marginBottom: '1rem'}}
+              exit={{height: 0, marginBottom: 0}}
               style={{
                 '--swatch-color': colorSwatchMap[color],
                 overflow: 'hidden',
