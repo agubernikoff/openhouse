@@ -2216,7 +2216,7 @@ div.product-options-item {
   font-size: 14px;
   position: relative;
   padding-bottom: 14px;
-  max-width: calc((100%) / 6);
+  max-width: 102.84px;
 }
 div.product-options-item > input {
   background: transparent;
