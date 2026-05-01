@@ -1,4 +1,4 @@
-import {Link, useNavigate} from 'react-router';
+import {Link, NavLink, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
 import {useState} from 'react';
@@ -536,6 +536,21 @@ export function ProductForm({
             </AddToCartButton>
           );
         })()}
+
+        <div className="button-divider">
+          <span>OR</span>
+        </div>
+
+        <div className="custom-cta">
+          <h5>CUSTOM</h5>
+          <p>
+            Want to change body shape, use a Pantone color, or modify weight or
+            material?
+          </p>
+          <NavLink to="/contact" className="sample-button">
+            GET IN TOUCH
+          </NavLink>
+        </div>
       </motion.div>
     </div>
   );

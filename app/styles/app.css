@@ -2102,7 +2102,8 @@ div:has(.products-grid) {
 
 .product-options h5,
 .color-group-label,
-.moq-label {
+.moq-label,
+.custom-cta h5 {
   font-family: 'mono';
   font-size: 14px;
   text-transform: uppercase;
@@ -2395,6 +2396,28 @@ div.product-options-item > p.color-group-label {
 
 .sample-button {
   color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.sample-button:hover {
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+  text-decoration: none;
+}
+
+.custom-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.custom-cta h5 {
+  margin-bottom: 1rem;
+}
+.custom-cta p {
+  font-family: 'mono';
+  font-size: 12px;
 }
 
 .add-cart {
