@@ -183,7 +183,8 @@ export function ProductForm({
         </div>
       </div>
       {filteredOptions.map((option, index) => {
-        if (option.optionValues.length === 1) return null;
+        if (option.optionValues.length === 1 && option.name !== 'Size')
+          return null;
 
         const isColorOption = option.name === 'Color';
         const isSizeOption = option.name === 'Size';
@@ -460,38 +461,41 @@ export function ProductForm({
               ]
             : [];
 
-          const wholesaleLines = selectedColors.flatMap(({name: color, sizes}) =>
-            Object.entries(sizes)
-              .filter(([, qty]) => qty > 0)
-              .map(([sizeName, qty]) => {
-                const variant = variants.find(
-                  (v) =>
-                    v.selectedOptions?.find(
-                      (o) => o.name === 'Color' && o.value === color,
-                    ) &&
-                    v.selectedOptions?.find(
-                      (o) => o.name === 'Size' && o.value === sizeName,
-                    ),
-                );
-                return variant
-                  ? {
-                      merchandiseId: variant.id,
-                      quantity: qty,
-                      selectedVariant: variant,
-                      attributes: [
-                        {key: '_color', value: color},
-                        {key: '_order_type', value: 'wholesale'},
-                      ],
-                    }
-                  : null;
-              })
-              .filter(Boolean),
+          const wholesaleLines = selectedColors.flatMap(
+            ({name: color, sizes}) =>
+              Object.entries(sizes)
+                .filter(([, qty]) => qty > 0)
+                .map(([sizeName, qty]) => {
+                  const variant = variants.find(
+                    (v) =>
+                      v.selectedOptions?.find(
+                        (o) => o.name === 'Color' && o.value === color,
+                      ) &&
+                      v.selectedOptions?.find(
+                        (o) => o.name === 'Size' && o.value === sizeName,
+                      ),
+                  );
+                  return variant
+                    ? {
+                        merchandiseId: variant.id,
+                        quantity: qty,
+                        selectedVariant: variant,
+                        attributes: [
+                          {key: '_color', value: color},
+                          {key: '_order_type', value: 'wholesale'},
+                        ],
+                      }
+                    : null;
+                })
+                .filter(Boolean),
           );
 
           const wholesaleTotal = wholesaleLines
             .reduce((sum, line) => {
               const variant = variants.find((v) => v.id === line.merchandiseId);
-              return sum + parseFloat(variant?.price?.amount ?? 0) * line.quantity;
+              return (
+                sum + parseFloat(variant?.price?.amount ?? 0) * line.quantity
+              );
             }, 0)
             .toFixed(2);
 
