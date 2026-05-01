@@ -46,7 +46,12 @@ export function CartLineItem({layout, line}) {
               }
             }}
           >
-            <p>{product.title}</p>
+            <p>
+              {product.title}
+              {attributes?.some(
+                (a) => a.key === '_order_type' && a.value === 'sample',
+              ) && ' (Sample)'}
+            </p>
           </Link>
           <ProductPrice price={line?.cost?.totalAmount} />
         </div>
@@ -83,6 +88,101 @@ export function CartLineItem({layout, line}) {
       {/* Actions div for delete and edit */}
       <div className="cart-line-actions">
         <CartLineRemoveButton lineIds={[id]} disabled={!!line.isOptimistic} />
+      </div>
+    </li>
+  );
+}
+
+/**
+ * A grouped cart entry for wholesale line items sharing a color.
+ */
+export function CartLineGroup({color, lines, layout}) {
+  const {close} = useAside();
+  const firstLine = lines[0];
+  const {product, image, selectedOptions} = firstLine.merchandise;
+  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+  const groupTotal = lines
+    .reduce(
+      (sum, line) => sum + parseFloat(line.cost?.totalAmount?.amount ?? 0),
+      0,
+    )
+    .toFixed(2);
+  const currencyCode = firstLine.cost?.totalAmount?.currencyCode ?? 'USD';
+  const allLineIds = lines.map((l) => l.id);
+
+  return (
+    <li className="cart-line">
+      <div className="cart-line-image">
+        {image && (
+          <Image
+            alt={product.title}
+            data={image}
+            loading="lazy"
+            width={200}
+            sizes="200px"
+          />
+        )}
+      </div>
+      <div className="cart-line-details">
+        <div className="cart-line-header">
+          <Link
+            prefetch="intent"
+            to={lineItemUrl}
+            onClick={() => layout === 'aside' && close()}
+          >
+            <p>{product.title}</p>
+          </Link>
+          <ProductPrice price={{amount: groupTotal, currencyCode}} />
+        </div>
+        <div className="cart-line-options">
+          <div style={{display: 'flex', gap: '8px'}}>
+            {[...lines]
+              .sort((a, b) => {
+                const sizeOrder = [
+                  'XS',
+                  'S',
+                  'M',
+                  'L',
+                  'XL',
+                  'XXL',
+                  '2XL',
+                  'XXXL',
+                  '3XL',
+                ];
+                const sizeA =
+                  a.merchandise.selectedOptions
+                    .find((o) => o.name === 'Size')
+                    ?.value?.toUpperCase() ?? '';
+                const sizeB =
+                  b.merchandise.selectedOptions
+                    .find((o) => o.name === 'Size')
+                    ?.value?.toUpperCase() ?? '';
+                const iA = sizeOrder.indexOf(sizeA);
+                const iB = sizeOrder.indexOf(sizeB);
+                return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
+              })
+              .map((line) => {
+                const size = line.merchandise.selectedOptions.find(
+                  (o) => o.name === 'Size',
+                )?.value;
+                return (
+                  <li key={line.id}>
+                    {size}: {line.quantity}
+                  </li>
+                );
+              })}
+          </div>
+          <ul>
+            <li>{`Color: ${color}`}</li>
+            <li>{`Quantity: ${lines.reduce((sum, line) => sum + line.quantity, 0)}`}</li>
+          </ul>
+        </div>
+      </div>
+      <div className="cart-line-actions">
+        <CartLineRemoveButton
+          lineIds={allLineIds}
+          disabled={lines.some((l) => !!l.isOptimistic)}
+        />
       </div>
     </li>
   );

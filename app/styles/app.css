@@ -2399,6 +2399,12 @@ div.product-options-item > p.color-group-label {
 .add-cart {
   background-color: var(--color-oh-black);
   color: var(--color-oh-white);
+  transition: all 300ms ease-in-out;
+}
+.add-cart:disabled {
+  background: var(--color-oh-gray);
+  border-color: var(--color-oh-gray);
+  cursor: not-allowed;
 }
 
 .home-featured-collection > div:has(> .dropdown) {
@@ -2480,7 +2486,6 @@ div:has(> .pdp-additional-info-image) {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
 }
 
 .quantity-controls span {

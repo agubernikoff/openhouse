@@ -11,7 +11,12 @@ import mapRichText from '~/helpers/mapRichText';
  *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
  * }}
  */
-export function ProductForm({productOptions, selectedVariant, variants = [], madeToOrderLeadTime}) {
+export function ProductForm({
+  productOptions,
+  selectedVariant,
+  variants = [],
+  madeToOrderLeadTime,
+}) {
   const navigate = useNavigate();
   const {open} = useAside();
 
@@ -19,16 +24,9 @@ export function ProductForm({productOptions, selectedVariant, variants = [], mad
     (option) => option.name !== 'Order Type',
   );
 
-  const variantMinQty = selectedVariant?.minimumQuantity?.value
-    ? parseInt(selectedVariant.minimumQuantity.value)
-    : null;
-
   const productMinQty = selectedVariant?.product?.minimumQuantity?.value
     ? parseInt(selectedVariant.product.minimumQuantity.value)
     : null;
-
-  const minimumQuantity = variantMinQty ?? productMinQty ?? null;
-  const hasMinimumQuantity = minimumQuantity !== null;
 
   const variantLeadTime = selectedVariant?.lead_time?.value
     ? mapRichText(JSON.parse(selectedVariant.lead_time.value))
@@ -45,19 +43,14 @@ export function ProductForm({productOptions, selectedVariant, variants = [], mad
     ? mapRichText(JSON.parse(madeToOrderLeadTime))
     : null;
 
-  const [quantity, setQuantity] = useState(minimumQuantity || 1);
-  const [bulkAdded, setBulkAdded] = useState(false);
-  const [sampleAdded, setSampleAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
   const [orderType, setOrderType] = useState('wholesale');
   const [selectedColors, setSelectedColors] = useState(() => {
     const colorOption = productOptions.find((opt) => opt.name === 'Color');
     const current = colorOption?.optionValues?.find((v) => v.selected);
     return current ? [{name: current.name, sizes: {}}] : [];
   });
-
-  const bulkPrice = selectedVariant?.price?.amount
-    ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
-    : '0.00';
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -70,18 +63,10 @@ export function ProductForm({productOptions, selectedVariant, variants = [], mad
     if (!isNaN(value) && value >= 1) setQuantity(value);
   };
 
-  const handleBulkAddToCart = () => {
-    setBulkAdded(true);
+  const handleAddToCart = () => {
+    setAdded(true);
     setTimeout(() => {
-      setBulkAdded(false);
-      open('cart');
-    }, 500);
-  };
-
-  const handleSampleAddToCart = () => {
-    setSampleAdded(true);
-    setTimeout(() => {
-      setSampleAdded(false);
+      setAdded(false);
       open('cart');
     }, 500);
   };
@@ -394,48 +379,47 @@ export function ProductForm({productOptions, selectedVariant, variants = [], mad
 
       {/* <ArtworkUpload selectedVariant={selectedVariant} optionNumber={...} /> */}
 
-      <AnimatePresence>
-        {orderType === 'sample' && (
-          <motion.div
-            className="quantity-selector"
-            initial={{height: 0}}
-            animate={{height: 'auto'}}
-            exit={{height: 0}}
-            style={{overflow: 'hidden'}}
-          >
-            <div className="quantity-controls">
-              <span>QTY</span>
-              <button
-                type="button"
-                onClick={decreaseQuantity}
-                disabled={quantity <= 1}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                value={quantity}
-                onChange={handleQuantityChange}
-                min={1}
-              />
-              <button
-                type="button"
-                onClick={increaseQuantity}
-                disabled={quantity === selectedVariant?.quantityAvailable}
-              >
-                +
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.div layout="position">
         {/* Quantity display and bulk order info */}
         <div className="product-quantity-info">
-          {hasMinimumQuantity && (
+          {/* {hasMinimumQuantity && (
             <p>Minimum Order Quantity: {minimumQuantity} units</p>
-          )}
+          )} */}
+          <AnimatePresence>
+            {/* {orderType === 'sample' && ( */}
+            <motion.div
+              className="quantity-selector"
+              initial={{height: 0}}
+              animate={{height: orderType === 'sample' ? 'auto' : 0}}
+              // exit={{height: 0}}
+              style={{overflow: 'hidden'}}
+            >
+              <div className="quantity-controls">
+                <span>QTY</span>
+                <button
+                  type="button"
+                  onClick={decreaseQuantity}
+                  disabled={quantity <= 1}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                  min={1}
+                />
+                <button
+                  type="button"
+                  onClick={increaseQuantity}
+                  disabled={quantity === selectedVariant?.quantityAvailable}
+                >
+                  +
+                </button>
+              </div>
+            </motion.div>
+            {/* )} */}
+          </AnimatePresence>
           {(() => {
             const anyExceedsStock = selectedColors.some((colorObj) =>
               Object.entries(colorObj.sizes).some(
@@ -464,56 +448,90 @@ export function ProductForm({productOptions, selectedVariant, variants = [], mad
           })()}
         </div>
 
-        {/* Bulk order button */}
-        <AddToCartButton
-          className="add-cart"
-          disabled={!selectedVariant || !selectedVariant.availableForSale}
-          onClick={handleBulkAddToCart}
-          lines={
-            selectedVariant
-              ? [
-                  {
-                    merchandiseId: selectedVariant.id,
-                    quantity,
-                    selectedVariant,
-                    attributes: [],
-                  },
-                ]
-              : []
-          }
-        >
-          {bulkAdded
-            ? 'ADDED TO CART'
-            : selectedVariant?.availableForSale
-              ? `ADD TO CART - $${bulkPrice}`
-              : 'Sold out'}
-        </AddToCartButton>
+        {(() => {
+          const sampleLines = selectedVariant
+            ? [
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity,
+                  selectedVariant,
+                  attributes: [{key: '_order_type', value: 'sample'}],
+                },
+              ]
+            : [];
 
-        {/* Divider */}
-        <div className="button-divider">
-          <span>OR</span>
-        </div>
+          const wholesaleLines = selectedColors.flatMap(({name: color, sizes}) =>
+            Object.entries(sizes)
+              .filter(([, qty]) => qty > 0)
+              .map(([sizeName, qty]) => {
+                const variant = variants.find(
+                  (v) =>
+                    v.selectedOptions?.find(
+                      (o) => o.name === 'Color' && o.value === color,
+                    ) &&
+                    v.selectedOptions?.find(
+                      (o) => o.name === 'Size' && o.value === sizeName,
+                    ),
+                );
+                return variant
+                  ? {
+                      merchandiseId: variant.id,
+                      quantity: qty,
+                      selectedVariant: variant,
+                      attributes: [
+                        {key: '_color', value: color},
+                        {key: '_order_type', value: 'wholesale'},
+                      ],
+                    }
+                  : null;
+              })
+              .filter(Boolean),
+          );
 
-        {/* Sample order button */}
-        <AddToCartButton
-          disabled={!selectedVariant || !selectedVariant.availableForSale}
-          onClick={handleSampleAddToCart}
-          lines={
-            selectedVariant
-              ? [
-                  {
-                    merchandiseId: selectedVariant.id,
-                    quantity: 1,
-                    selectedVariant,
-                    attributes: [],
-                  },
-                ]
-              : []
-          }
-          className="sample-button"
-        >
-          {sampleAdded ? 'ADDED TO CART' : 'PURCHASE BLANK SAMPLE'}
-        </AddToCartButton>
+          const wholesaleTotal = wholesaleLines
+            .reduce((sum, line) => {
+              const variant = variants.find((v) => v.id === line.merchandiseId);
+              return sum + parseFloat(variant?.price?.amount ?? 0) * line.quantity;
+            }, 0)
+            .toFixed(2);
+
+          const sampleTotal = selectedVariant?.price?.amount
+            ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
+            : '0.00';
+
+          const anyColorBelowMOQ = selectedColors.some((colorObj) => {
+            const moq = colorMOQMap[colorObj.name];
+            if (moq == null) return false;
+            const total = Object.values(colorObj.sizes).reduce(
+              (sum, q) => sum + q,
+              0,
+            );
+            return total < moq;
+          });
+
+          const lines = orderType === 'sample' ? sampleLines : wholesaleLines;
+          const isDisabled =
+            orderType === 'sample'
+              ? !selectedVariant || !selectedVariant.availableForSale
+              : wholesaleLines.length === 0 || anyColorBelowMOQ;
+
+          return (
+            <AddToCartButton
+              className="add-cart"
+              disabled={isDisabled}
+              onClick={handleAddToCart}
+              lines={lines}
+            >
+              {added
+                ? 'ADDED TO CART'
+                : orderType === 'sample'
+                  ? selectedVariant?.availableForSale
+                    ? `ADD TO CART - $${sampleTotal}`
+                    : 'SOLD OUT'
+                  : `ADD TO CART - $${wholesaleTotal}`}
+            </AddToCartButton>
+          );
+        })()}
       </motion.div>
     </div>
   );
@@ -726,7 +744,18 @@ function SizeOptionGrid({
   }
 
   return (
-    <div className="product-options-grid">{optionValues.map(renderValue)}</div>
+    <motion.div
+      key={'sample-size-grid'}
+      initial={{height: 0}}
+      animate={{height: 'auto'}}
+      exit={{height: 0}}
+      style={{
+        overflow: 'hidden',
+      }}
+      className="product-options-grid"
+    >
+      {optionValues.map(renderValue)}
+    </motion.div>
   );
 }
 

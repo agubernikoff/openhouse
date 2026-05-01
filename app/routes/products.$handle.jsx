@@ -785,8 +785,13 @@ const PRODUCT_FRAGMENT = `#graphql
     }
     variants(first: 250) {
       nodes {
+        id
         quantityAvailable
         currentlyNotInStock
+        price {
+          amount
+          currencyCode
+        }
         selectedOptions {
           name
           value
