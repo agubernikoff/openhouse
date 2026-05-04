@@ -49,7 +49,7 @@ export function CartLineItem({layout, line}) {
             <p>
               {product.title}
               {attributes?.some(
-                (a) => a.key === '_order_type' && a.value === 'sample',
+                (a) => a.key === 'Order Type' && a.value === 'Sample',
               ) && ' (Sample)'}
             </p>
           </Link>
@@ -68,10 +68,8 @@ export function CartLineItem({layout, line}) {
                   : {option.value}
                 </li>
               ))}
-            {/* Add attributes display here */}
             {attributes?.map((attribute) => {
-              // Only show attributes that don't start with underscore
-              if (!attribute.key.startsWith('_')) {
+              if (!attribute.key.startsWith('_') && attribute.key !== 'Order Type') {
                 return (
                   <li key={attribute.key}>
                     {attribute.key}: {attribute.value}

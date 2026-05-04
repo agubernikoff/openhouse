@@ -456,7 +456,7 @@ export function ProductForm({
                   merchandiseId: selectedVariant.id,
                   quantity,
                   selectedVariant,
-                  attributes: [{key: '_order_type', value: 'sample'}],
+                  attributes: [{key: 'Order Type', value: 'Sample'}],
                 },
               ]
             : [];
