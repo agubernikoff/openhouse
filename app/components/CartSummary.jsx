@@ -152,6 +152,7 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
               overflow: 'hidden',
               transition: 'max-height 0.2s ease-out, margin-top 0.2s ease-out',
               marginTop: isOpen ? '8px' : '0',
+              paddingRight: isOpen ? '1px' : '0',
             }}
           >
             <textarea

@@ -972,7 +972,7 @@ div:has(> .testimonials-container) {
 
 /* Details column - takes up remaining space */
 .cart-line-details {
-  grid-column: span 2;
+  grid-column: span 3;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1002,6 +1002,15 @@ div:has(> .testimonials-container) {
   font-size: 14px;
   line-height: 14px;
   color: #737373;
+}
+.cart-line-quantity p > span > form > button {
+  height: 14px;
+  aspect-ratio: 1.5 / 1;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .cart-line-options {

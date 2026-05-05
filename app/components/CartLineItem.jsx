@@ -3,6 +3,8 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
+import {useState} from 'react';
+import {AnimatePresence, motion} from 'motion/react';
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
@@ -13,10 +15,11 @@ import {useAside} from './Aside';
  * }}
  */
 export function CartLineItem({layout, line}) {
-  const {id, merchandise, attributes} = line; // Add attributes here
+  const {id, merchandise, attributes} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <li key={id} className="cart-line">
@@ -69,7 +72,10 @@ export function CartLineItem({layout, line}) {
                 </li>
               ))}
             {attributes?.map((attribute) => {
-              if (!attribute.key.startsWith('_') && attribute.key !== 'Order Type') {
+              if (
+                !attribute.key.startsWith('_') &&
+                attribute.key !== 'Order Type'
+              ) {
                 return (
                   <li key={attribute.key}>
                     {attribute.key}: {attribute.value}
@@ -79,13 +85,17 @@ export function CartLineItem({layout, line}) {
               return null;
             })}
           </ul>
-          <CartLineQuantity line={line} />
+          <CartLineQuantity line={line} isEditing={isEditing} />
         </div>
       </div>
 
-      {/* Actions div for delete and edit */}
       <div className="cart-line-actions">
         <CartLineRemoveButton lineIds={[id]} disabled={!!line.isOptimistic} />
+        {layout === 'page' && (
+          <button type="button" onClick={() => setIsEditing((e) => !e)}>
+            {isEditing ? 'Done' : 'Edit'}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -192,38 +202,45 @@ export function CartLineGroup({color, lines, layout}) {
  * hasn't yet responded that it was successfully added to the cart.
  * @param {{line: CartLine}}
  */
-function CartLineQuantity({line}) {
+function CartLineQuantity({line, isEditing}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+  const prevQuantity = Math.max(1, quantity - 1);
+  const nextQuantity = quantity + 1;
 
   return (
     <div className="cart-line-quantity">
-      <p>Quantity: {quantity} &nbsp;&nbsp;</p>
-      {/* <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
-        <button
-          aria-label="Decrease quantity"
-          disabled={quantity <= 1 || !!isOptimistic}
-          name="decrease-quantity"
-          value={prevQuantity}
+      <p style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+        Quantity:{' '}
+        <motion.span
+          key="decrease"
+          initial={{width: 0}}
+          animate={{width: isEditing ? 'auto' : 0}}
+          style={{overflow: 'hidden'}}
         >
-          <span>&#8722; </span>
-        </button>
-      </CartLineUpdateButton>
-      &nbsp;
-      <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
-        <button
-          aria-label="Increase quantity"
-          name="increase-quantity"
-          value={nextQuantity}
-          disabled={!!isOptimistic}
+          <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
+            <button
+              type="submit"
+              disabled={quantity <= 1 || !!isOptimistic || !isEditing}
+            >
+              -
+            </button>
+          </CartLineUpdateButton>
+        </motion.span>
+        <motion.span layout="position">{quantity}</motion.span>
+        <motion.span
+          key="increase"
+          initial={{width: 0}}
+          animate={{width: isEditing ? 'auto' : 0}}
+          style={{overflow: 'hidden'}}
         >
-          <span>&#43;</span>
-        </button>
-      </CartLineUpdateButton>
-      &nbsp;
-      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} /> */}
+          <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
+            <button type="submit" disabled={!!isOptimistic || !isEditing}>
+              +
+            </button>
+          </CartLineUpdateButton>
+        </motion.span>
+      </p>
     </div>
   );
 }
