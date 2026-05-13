@@ -939,6 +939,7 @@ div:has(> .testimonials-container) {
   display: grid;
   grid-template-columns: subgrid;
   grid-column: span 9;
+  min-height: 174px;
 }
 
 .cart-line:last-child {
@@ -953,7 +954,9 @@ div:has(> .testimonials-container) {
 
 .cart-line-image {
   grid-column: span 2;
-  aspect-ratio: 1/1;
+}
+.home-featured-collection .cart-line .cart-line-image {
+  aspect-ratio: auto;
 }
 
 .header-dropdown-content .cart-line-image img {
@@ -967,7 +970,7 @@ div:has(> .testimonials-container) {
   display: block;
   border-radius: 10px;
   background: white;
-  max-width: calc((100vw - 2rem) / 6);
+  /* max-width: calc((100vw - 2rem) / 6); */
 }
 
 /* Details column - takes up remaining space */
@@ -998,12 +1001,12 @@ div:has(> .testimonials-container) {
 
 .cart-line-header .product-price div,
 .cart-line-options li,
-.cart-line-quantity p {
+.cart-line-quantity div {
   font-size: 14px;
   line-height: 14px;
   color: #737373;
 }
-.cart-line-quantity p > span > form > button {
+.cart-line-quantity div > span > form > button {
   height: 14px;
   aspect-ratio: 1.5 / 1;
   box-sizing: border-box;
@@ -1029,20 +1032,14 @@ div:has(> .testimonials-container) {
 .cart-line-actions {
   flex-shrink: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-start;
+  align-items: flex-end;
   grid-column-start: 9;
 }
 
 .cart-line-actions form {
   display: flex;
-}
-
-.cart-line-actions form button {
-  color: #737373;
-  font-family: 'apfel';
-  font-weight: 400 !important;
 }
 
 .cart-line-actions button {
@@ -1052,6 +1049,9 @@ div:has(> .testimonials-container) {
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
+  color: #737373;
+  font-family: 'apfel';
+  font-weight: 400 !important;
 }
 
 /* Cart summary */
@@ -1070,6 +1070,14 @@ div:has(> .testimonials-container) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-block: 0.25rem;
+}
+@media (max-width: 499px) {
+  .cart-line-quantity {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.25rem !important;
+  }
 }
 
 .cart-discount {
@@ -3928,6 +3936,7 @@ div:has(> .sticky-scroll-image) {
     padding: 0;
     box-sizing: border-box;
     border-radius: 0;
+    max-height: calc(100vh - var(--header-height));
   }
 
   .home-featured-collection .cart-main,
@@ -3960,7 +3969,7 @@ div:has(> .sticky-scroll-image) {
   }
 
   .cart-line-details {
-    gap: 16px;
+    gap: 8px;
   }
 
   .cart-subtotal {

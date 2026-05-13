@@ -4,7 +4,7 @@ import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 import {useState} from 'react';
-import {AnimatePresence, motion} from 'motion/react';
+import {motion} from 'motion/react';
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
@@ -60,6 +60,7 @@ export function CartLineItem({layout, line}) {
         </div>
 
         <div className="cart-line-options">
+          <CartLineQuantity line={line} isEditing={isEditing} />
           <ul>
             {selectedOptions
               .filter((option) => option.name !== 'Order Type') // Filter out Order Type
@@ -85,7 +86,6 @@ export function CartLineItem({layout, line}) {
               return null;
             })}
           </ul>
-          <CartLineQuantity line={line} isEditing={isEditing} />
         </div>
       </div>
 
@@ -104,8 +104,29 @@ export function CartLineItem({layout, line}) {
 /**
  * A grouped cart entry for wholesale line items sharing a color.
  */
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', 'XXXL', '3XL'];
+
+function sortBySize(lines) {
+  return [...lines].sort((a, b) => {
+    const sizeA =
+      a.merchandise.selectedOptions
+        .find((o) => o.name === 'Size')
+        ?.value?.toUpperCase() ?? '';
+    const sizeB =
+      b.merchandise.selectedOptions
+        .find((o) => o.name === 'Size')
+        ?.value?.toUpperCase() ?? '';
+    const iA = SIZE_ORDER.indexOf(sizeA);
+    const iB = SIZE_ORDER.indexOf(sizeB);
+    return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
+  });
+}
+
 export function CartLineGroup({color, lines, layout}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLayout, setEditLayout] = useState(false);
   const {close} = useAside();
+
   const firstLine = lines[0];
   const {product, image, selectedOptions} = firstLine.merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
@@ -117,6 +138,18 @@ export function CartLineGroup({color, lines, layout}) {
     .toFixed(2);
   const currencyCode = firstLine.cost?.totalAmount?.currencyCode ?? 'USD';
   const allLineIds = lines.map((l) => l.id);
+  const sorted = sortBySize(lines);
+  const exitDuration = sorted.length * 100 + 150;
+
+  const handleToggle = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setTimeout(() => setEditLayout(false), exitDuration);
+    } else {
+      setEditLayout(true);
+      setIsEditing(true);
+    }
+  };
 
   return (
     <li className="cart-line">
@@ -143,42 +176,88 @@ export function CartLineGroup({color, lines, layout}) {
           <ProductPrice price={{amount: groupTotal, currencyCode}} />
         </div>
         <div className="cart-line-options">
-          <div style={{display: 'flex', gap: '8px'}}>
-            {[...lines]
-              .sort((a, b) => {
-                const sizeOrder = [
-                  'XS',
-                  'S',
-                  'M',
-                  'L',
-                  'XL',
-                  'XXL',
-                  '2XL',
-                  'XXXL',
-                  '3XL',
-                ];
-                const sizeA =
-                  a.merchandise.selectedOptions
-                    .find((o) => o.name === 'Size')
-                    ?.value?.toUpperCase() ?? '';
-                const sizeB =
-                  b.merchandise.selectedOptions
-                    .find((o) => o.name === 'Size')
-                    ?.value?.toUpperCase() ?? '';
-                const iA = sizeOrder.indexOf(sizeA);
-                const iB = sizeOrder.indexOf(sizeB);
-                return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
-              })
-              .map((line) => {
-                const size = line.merchandise.selectedOptions.find(
-                  (o) => o.name === 'Size',
-                )?.value;
-                return (
-                  <li key={line.id}>
-                    {size}: {line.quantity}
-                  </li>
-                );
-              })}
+          <div
+            className="cart-line-quantity"
+            style={{
+              flexDirection: editLayout ? 'column' : 'row ',
+              alignItems: editLayout ? 'flex-start' : 'center',
+              gap: editLayout ? '.125rem' : '.5rem',
+            }}
+          >
+            {sorted.map((line, i) => {
+              const size = line.merchandise.selectedOptions.find(
+                (o) => o.name === 'Size',
+              )?.value;
+              return (
+                <div
+                  key={line.id}
+                  style={{display: 'flex', alignItems: 'center', gap: '4px'}}
+                >
+                  <motion.span
+                    layout="position"
+                    transition={{
+                      delay: isEditing
+                        ? i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    {size}:{' '}
+                  </motion.span>
+                  <motion.span
+                    key={`decrease-${line.id}`}
+                    animate={{width: isEditing ? 'auto' : 0}}
+                    style={{overflow: 'hidden', width: 0}}
+                    transition={{
+                      delay: isEditing
+                        ? 0.3 + i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    <CartLineUpdateButton
+                      lines={[
+                        {id: line.id, quantity: Math.max(1, line.quantity - 1)},
+                      ]}
+                    >
+                      <button
+                        type="submit"
+                        disabled={line.quantity <= 1 || !!line.isOptimistic}
+                      >
+                        -
+                      </button>
+                    </CartLineUpdateButton>
+                  </motion.span>
+                  <motion.span
+                    key={`qty-${line.id}`}
+                    layout="position"
+                    transition={{
+                      delay: isEditing
+                        ? i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    {line.quantity}
+                  </motion.span>
+                  <motion.span
+                    key={`increase-${line.id}`}
+                    animate={{width: isEditing ? 'auto' : 0}}
+                    style={{overflow: 'hidden', width: 0}}
+                    transition={{
+                      delay: isEditing
+                        ? 0.3 + i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    <CartLineUpdateButton
+                      lines={[{id: line.id, quantity: line.quantity + 1}]}
+                    >
+                      <button type="submit" disabled={!!line.isOptimistic}>
+                        +
+                      </button>
+                    </CartLineUpdateButton>
+                  </motion.span>
+                </div>
+              );
+            })}
           </div>
           <ul>
             <li>{`Color: ${color}`}</li>
@@ -191,6 +270,11 @@ export function CartLineGroup({color, lines, layout}) {
           lineIds={allLineIds}
           disabled={lines.some((l) => !!l.isOptimistic)}
         />
+        {layout === 'page' && (
+          <button type="button" onClick={handleToggle}>
+            {isEditing ? 'Done' : 'Edit'}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -210,13 +294,12 @@ function CartLineQuantity({line, isEditing}) {
 
   return (
     <div className="cart-line-quantity">
-      <p style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
         Quantity:{' '}
         <motion.span
-          key="decrease"
-          initial={{width: 0}}
+          key={`decrease-${lineId}`}
           animate={{width: isEditing ? 'auto' : 0}}
-          style={{overflow: 'hidden'}}
+          style={{overflow: 'hidden', width: 0}}
         >
           <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
             <button
@@ -229,10 +312,9 @@ function CartLineQuantity({line, isEditing}) {
         </motion.span>
         <motion.span layout="position">{quantity}</motion.span>
         <motion.span
-          key="increase"
-          initial={{width: 0}}
+          key={`increase-${lineId}`}
           animate={{width: isEditing ? 'auto' : 0}}
-          style={{overflow: 'hidden'}}
+          style={{overflow: 'hidden', width: 0}}
         >
           <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
             <button type="submit" disabled={!!isOptimistic || !isEditing}>
@@ -240,7 +322,7 @@ function CartLineQuantity({line, isEditing}) {
             </button>
           </CartLineUpdateButton>
         </motion.span>
-      </p>
+      </div>
     </div>
   );
 }
