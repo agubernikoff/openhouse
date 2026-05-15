@@ -172,7 +172,7 @@ export default function Homepage() {
         <div>
           <h1 className="red-dot">We&rsquo;ll be back soon.</h1>
           <p>
-            We&rsquo;re making some updates.
+            Our site is undergoing maintenance.
             <br />
             Contact us at{' '}
             <a href="mailto:sales@byopenhouse.com">sales@byopenhouse.com</a> to
