@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, data} from 'react-router';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
@@ -128,6 +129,7 @@ export async function action({request, context}) {
  * @param {Route.LoaderArgs}
  */
 export async function loader({context}) {
+  await checkMaintenanceRedirect({context});
   const {cart, storefront} = context;
 
   // Get cart data

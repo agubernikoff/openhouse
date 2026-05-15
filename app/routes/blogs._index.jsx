@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {Link, useLoaderData} from 'react-router';
 import {getPaginationVariables, Image, Pagination} from '@shopify/hydrogen';
 import dispatch from '../assets/dispatch.svg';
@@ -14,6 +15,7 @@ export const meta = () => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
+  await checkMaintenanceRedirect(args);
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 

@@ -1,4 +1,12 @@
-import {Await, useLoaderData, Link, useRouteLoaderData} from 'react-router';
+import {
+  Await,
+  useLoaderData,
+  Link,
+  useRouteLoaderData,
+  useActionData,
+  Form,
+  redirect,
+} from 'react-router';
 import React, {Suspense, useState, useRef, useEffect} from 'react';
 import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
@@ -38,6 +46,29 @@ export const meta = () => {
   ];
 };
 
+export async function action({request, context}) {
+  const {storefront, session} = context;
+  const formData = await request.formData();
+  const password = String(formData.get('password') ?? '');
+
+  const data = await storefront.query(MAINTENANCE_QUERY, {
+    cache: storefront.CacheShort(),
+  });
+  const maintenance = normalizeMetaobject(data?.shop?.maintenance?.reference);
+
+  if (
+    !maintenance?.password?.value ||
+    password !== maintenance.password.value
+  ) {
+    return {error: 'Incorrect password'};
+  }
+
+  session.set('maintenanceBypass', password);
+  return redirect('/', {
+    headers: {'Set-Cookie': await session.commit()},
+  });
+}
+
 /**
  * @param {Route.LoaderArgs} args
  */
@@ -57,14 +88,28 @@ export async function loader(args) {
  * @param {Route.LoaderArgs}
  */
 async function loadCriticalData({context}) {
-  const [x, partnersData] = await Promise.all([
+  const [x, partnersData, maintenanceData] = await Promise.all([
     context.storefront.query(HERO_QUERY),
     context.storefront.query(PARTNERS_QUERY, {variables: {first: 10}}),
+    context.storefront.query(MAINTENANCE_QUERY, {
+      cache: context.storefront.CacheShort(),
+    }),
   ]);
+
+  const maintenanceMode = normalizeMetaobject(
+    maintenanceData?.shop?.maintenance?.reference,
+  );
+  const maintenanceBypassed =
+    maintenanceMode?.is_under_maintenance?.value === 'true'
+      ? context.session.get('maintenanceBypass') ===
+        maintenanceMode?.password?.value
+      : false;
 
   return {
     hero: x.metaobject,
     partners: partnersData.metaobject,
+    maintenanceMode,
+    maintenanceBypassed,
   };
 }
 
@@ -116,6 +161,46 @@ function loadDeferredData({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
+  const actionData = useActionData();
+
+  if (
+    data.maintenanceMode?.is_under_maintenance?.value === 'true' &&
+    !data.maintenanceBypassed
+  ) {
+    return (
+      <div className="maintenance-page">
+        <div>
+          <h1 className="red-dot">We&rsquo;ll be back soon.</h1>
+          <p>
+            We&rsquo;re making some updates.
+            <br />
+            Contact us at{' '}
+            <a href="mailto:sales@byopenhouse.com">sales@byopenhouse.com</a> to
+            place an order.
+          </p>
+        </div>
+        <div>
+          <p>Enter the password to access the site.</p>
+          <Form method="post" className="footer-newsletter-form">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              autoComplete="current-password"
+              className="footer-newsletter-input"
+            />
+            <button type="submit" className="footer-newsletter-button">
+              Enter
+            </button>
+          </Form>
+          {actionData?.error && (
+            <p className="maintenance-error">{actionData.error}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home">
       <Hero data={data.hero} />
@@ -559,6 +644,23 @@ function CollectionsHeroContent({data}) {
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+
+const MAINTENANCE_QUERY = `#graphql
+  query MaintenanceMode {
+    shop {
+      maintenance: metafield(namespace: "custom", key: "maintenance") {
+        reference {
+          ... on Metaobject {
+            fields {
+              key
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 const HERO_QUERY = `#graphql
 query GetLocationVideos {

@@ -1,9 +1,11 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, Link} from 'react-router';
 
 /**
  * @param {Route.LoaderArgs}
  */
 export async function loader({context}) {
+  await checkMaintenanceRedirect({context});
   const data = await context.storefront.query(POLICIES_QUERY);
 
   const shopPolicies = data.shop;

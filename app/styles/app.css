@@ -4394,3 +4394,58 @@ div:has(> .sticky-scroll-image) {
     line-height: 16px;
   }
 }
+
+/*
+* --------------------------------------------------
+* Maintainence page
+* --------------------------------------------------
+*/
+.maintenance-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  gap: 3rem;
+}
+.maintenance-page > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.maintenance-page > div:has(> form) {
+  gap: 0.5rem;
+  position: relative;
+}
+.maintenance-page h1 {
+  font-size: 36px;
+  line-height: 36px;
+  font-family: 'apfel';
+  font-weight: normal;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.maintenance-page p {
+  font-family: 'mono';
+  font-weight: normal;
+  text-align: center;
+}
+.maintenance-page > div:has(> form) p {
+  font-size: 12px;
+}
+.maintenance-page .footer-newsletter-form {
+  width: 25%;
+  border: 1px solid #ccc;
+}
+.maintenance-error {
+  color: var(--color-oh-red);
+  position: absolute;
+  bottom: -1.5rem;
+}
+.maintenance-page a {
+  text-decoration: underline;
+}
