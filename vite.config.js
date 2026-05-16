@@ -27,6 +27,9 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['.tryhydrogen.dev'],
+    allowedHosts: [
+      '.tryhydrogen.dev',
+      'kitten-composed-notably.ngrok-free.app',
+    ],
   },
 });

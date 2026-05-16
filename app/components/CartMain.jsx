@@ -1,7 +1,7 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from 'react-router';
 import {useAside} from '~/components/Aside';
-import {CartLineItem} from '~/components/CartLineItem';
+import {CartLineItem, CartLineGroup} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
 
 /**
@@ -27,9 +27,48 @@ export function CartMain({layout, cart: originalCart}) {
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
           <ul>
-            {(cart?.lines?.nodes ?? []).map((line) => (
-              <CartLineItem key={line.id} line={line} layout={layout} />
-            ))}
+            {(() => {
+              const lines = (cart?.lines?.nodes ?? []).filter(
+                (line) => !line.isOptimistic || line.merchandise?.product,
+              );
+
+              const wholesaleGroups = {};
+              const otherLines = [];
+
+              lines.forEach((line) => {
+                const colorAttr = line.attributes?.find(
+                  (a) => a.key === '_color',
+                );
+                if (colorAttr) {
+                  const key = `${line.merchandise.product.id}-${colorAttr.value}`;
+                  if (!wholesaleGroups[key]) {
+                    wholesaleGroups[key] = {
+                      color: colorAttr.value,
+                      lines: [],
+                    };
+                  }
+                  wholesaleGroups[key].lines.push(line);
+                } else {
+                  otherLines.push(line);
+                }
+              });
+
+              return (
+                <>
+                  {Object.values(wholesaleGroups).map(({color, lines: groupLines}) => (
+                    <CartLineGroup
+                      key={`${groupLines[0].merchandise.product.id}-${color}`}
+                      color={color}
+                      lines={groupLines}
+                      layout={layout}
+                    />
+                  ))}
+                  {otherLines.map((line) => (
+                    <CartLineItem key={line.id} line={line} layout={layout} />
+                  ))}
+                </>
+              );
+            })()}
           </ul>
         </div>
         {cartHasItems && <CartSummary cart={cart} layout={layout} />}

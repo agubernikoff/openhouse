@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
@@ -18,6 +19,7 @@ export const meta = () => {
  * @param {Route.LoaderArgs}
  */
 export async function loader({request, context}) {
+  await checkMaintenanceRedirect({context});
   const url = new URL(request.url);
   const isPredictive = url.searchParams.has('predictive');
   const searchPromise = isPredictive

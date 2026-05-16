@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {Link, useLoaderData} from 'react-router';
 
 /**
@@ -11,6 +12,7 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs}
  */
 export async function loader({params, context}) {
+  await checkMaintenanceRedirect({context});
   if (!params.handle) {
     throw new Response('No handle was passed in', {status: 404});
   }

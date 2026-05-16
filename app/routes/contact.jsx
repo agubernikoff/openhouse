@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData} from 'react-router';
 import React, {useState} from 'react';
 import emailjs from '@emailjs/browser';
@@ -20,6 +21,7 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
+  await checkMaintenanceRedirect(args);
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
   return {...deferredData, ...criticalData};

@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, Link, Await} from 'react-router';
 import {
   getSelectedProductOptions,
@@ -59,6 +60,7 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
+  await checkMaintenanceRedirect(args);
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -335,6 +337,8 @@ export default function Product() {
             key={product.id}
             productOptions={reorderedOptions}
             selectedVariant={selectedVariant}
+            variants={product.variants.nodes}
+            madeToOrderLeadTime={product.made_to_order_lead_time?.value}
           />
         </div>
         <Analytics.ProductView
@@ -621,7 +625,9 @@ function FAQSection({data}) {
         <Suspense fallback={<div>Loading...</div>}>
           <Await resolve={data}>
             {(faq) => {
-              const {faqs} = normalizeMetaobject(faq.metaobject);
+              const {faqs} = normalizeMetaobject(faq?.metaobject) || {
+                faqs: {references: {nodes: []}},
+              };
 
               return faqs.references.nodes.map((field) => {
                 const {question, answer} = normalizeMetaobject(field);
@@ -694,6 +700,12 @@ function YouMayAlsoLike({compliments, recs}) {
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
     availableForSale
+    currentlyNotInStock
+    quantityAvailable
+    selectedOptions {
+      name
+      value
+    }
     compareAtPrice {
       amount
       currencyCode
@@ -773,6 +785,21 @@ const PRODUCT_FRAGMENT = `#graphql
     adjacentVariants (selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
+    variants(first: 250) {
+      nodes {
+        id
+        quantityAvailable
+        currentlyNotInStock
+        price {
+          amount
+          currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
     seo {
       description
       title
@@ -793,6 +820,9 @@ const PRODUCT_FRAGMENT = `#graphql
       }
     }
     lead_time: metafield(namespace: "custom", key: "lead_time") {
+      value
+    }
+    made_to_order_lead_time: metafield(namespace: "custom", key: "made_to_order_lead_time") {
       value
     }
     material: metafield(namespace: "custom", key: "material") {

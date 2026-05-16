@@ -95,8 +95,14 @@ function WelcomePopup({data}) {
             <Await resolve={data}>
               {(data) => {
                 const {metaobject} = data;
-                const {image} = normalizeMetaobject(metaobject);
-                return <Image data={image?.reference?.image} sizes="500px" />;
+                const {image} = normalizeMetaobject(metaobject) || {
+                  image: null,
+                };
+                return (
+                  image && (
+                    <Image data={image?.reference?.image} sizes="500px" />
+                  )
+                );
               }}
             </Await>
           </Suspense>

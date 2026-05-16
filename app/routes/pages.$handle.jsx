@@ -1,3 +1,4 @@
+import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, useLocation, Link} from 'react-router';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -32,6 +33,7 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
+  await checkMaintenanceRedirect(args);
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
   return {...deferredData, ...criticalData};

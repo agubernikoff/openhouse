@@ -3,6 +3,8 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
+import {useState} from 'react';
+import {motion} from 'motion/react';
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
@@ -13,10 +15,11 @@ import {useAside} from './Aside';
  * }}
  */
 export function CartLineItem({layout, line}) {
-  const {id, merchandise, attributes} = line; // Add attributes here
+  const {id, merchandise, attributes} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <li key={id} className="cart-line">
@@ -46,12 +49,18 @@ export function CartLineItem({layout, line}) {
               }
             }}
           >
-            <p>{product.title}</p>
+            <p>
+              {product.title}
+              {attributes?.some(
+                (a) => a.key === 'Order Type' && a.value === 'Sample',
+              ) && ' (Sample)'}
+            </p>
           </Link>
           <ProductPrice price={line?.cost?.totalAmount} />
         </div>
 
         <div className="cart-line-options">
+          <CartLineQuantity line={line} isEditing={isEditing} />
           <ul>
             {selectedOptions
               .filter((option) => option.name !== 'Order Type') // Filter out Order Type
@@ -63,10 +72,11 @@ export function CartLineItem({layout, line}) {
                   : {option.value}
                 </li>
               ))}
-            {/* Add attributes display here */}
             {attributes?.map((attribute) => {
-              // Only show attributes that don't start with underscore
-              if (!attribute.key.startsWith('_')) {
+              if (
+                !attribute.key.startsWith('_') &&
+                attribute.key !== 'Order Type'
+              ) {
                 return (
                   <li key={attribute.key}>
                     {attribute.key}: {attribute.value}
@@ -76,13 +86,195 @@ export function CartLineItem({layout, line}) {
               return null;
             })}
           </ul>
-          <CartLineQuantity line={line} />
         </div>
       </div>
 
-      {/* Actions div for delete and edit */}
       <div className="cart-line-actions">
         <CartLineRemoveButton lineIds={[id]} disabled={!!line.isOptimistic} />
+        {layout === 'page' && (
+          <button type="button" onClick={() => setIsEditing((e) => !e)}>
+            {isEditing ? 'Done' : 'Edit'}
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * A grouped cart entry for wholesale line items sharing a color.
+ */
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', 'XXXL', '3XL'];
+
+function sortBySize(lines) {
+  return [...lines].sort((a, b) => {
+    const sizeA =
+      a.merchandise.selectedOptions
+        .find((o) => o.name === 'Size')
+        ?.value?.toUpperCase() ?? '';
+    const sizeB =
+      b.merchandise.selectedOptions
+        .find((o) => o.name === 'Size')
+        ?.value?.toUpperCase() ?? '';
+    const iA = SIZE_ORDER.indexOf(sizeA);
+    const iB = SIZE_ORDER.indexOf(sizeB);
+    return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
+  });
+}
+
+export function CartLineGroup({color, lines, layout}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLayout, setEditLayout] = useState(false);
+  const {close} = useAside();
+
+  const firstLine = lines[0];
+  const {product, image, selectedOptions} = firstLine.merchandise;
+  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+  const groupTotal = lines
+    .reduce(
+      (sum, line) => sum + parseFloat(line.cost?.totalAmount?.amount ?? 0),
+      0,
+    )
+    .toFixed(2);
+  const currencyCode = firstLine.cost?.totalAmount?.currencyCode ?? 'USD';
+  const allLineIds = lines.map((l) => l.id);
+  const sorted = sortBySize(lines);
+  const exitDuration = sorted.length * 100 + 150;
+
+  const handleToggle = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setTimeout(() => setEditLayout(false), exitDuration);
+    } else {
+      setEditLayout(true);
+      setIsEditing(true);
+    }
+  };
+
+  return (
+    <li className="cart-line">
+      <div className="cart-line-image">
+        {image && (
+          <Image
+            alt={product.title}
+            data={image}
+            loading="lazy"
+            width={200}
+            sizes="200px"
+          />
+        )}
+      </div>
+      <div className="cart-line-details">
+        <div className="cart-line-header">
+          <Link
+            prefetch="intent"
+            to={lineItemUrl}
+            onClick={() => layout === 'aside' && close()}
+          >
+            <p>{product.title}</p>
+          </Link>
+          <ProductPrice price={{amount: groupTotal, currencyCode}} />
+        </div>
+        <div className="cart-line-options">
+          <div
+            className="cart-line-quantity"
+            style={{
+              flexDirection: editLayout ? 'column' : 'row ',
+              alignItems: editLayout ? 'flex-start' : 'center',
+              gap: editLayout ? '.125rem' : '.5rem',
+            }}
+          >
+            {sorted.map((line, i) => {
+              const size = line.merchandise.selectedOptions.find(
+                (o) => o.name === 'Size',
+              )?.value;
+              return (
+                <div
+                  key={line.id}
+                  style={{display: 'flex', alignItems: 'center', gap: '4px'}}
+                >
+                  <motion.span
+                    layout="position"
+                    transition={{
+                      delay: isEditing
+                        ? i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    {size}:{' '}
+                  </motion.span>
+                  <motion.span
+                    key={`decrease-${line.id}`}
+                    animate={{width: isEditing ? 'auto' : 0}}
+                    style={{overflow: 'hidden', width: 0}}
+                    transition={{
+                      delay: isEditing
+                        ? 0.3 + i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    <CartLineUpdateButton
+                      lines={[
+                        {id: line.id, quantity: Math.max(1, line.quantity - 1)},
+                      ]}
+                    >
+                      <button
+                        type="submit"
+                        disabled={line.quantity <= 1 || !!line.isOptimistic}
+                      >
+                        -
+                      </button>
+                    </CartLineUpdateButton>
+                  </motion.span>
+                  <motion.span
+                    key={`qty-${line.id}`}
+                    layout="position"
+                    transition={{
+                      delay: isEditing
+                        ? i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    {line.quantity}
+                  </motion.span>
+                  <motion.span
+                    key={`increase-${line.id}`}
+                    animate={{width: isEditing ? 'auto' : 0}}
+                    style={{overflow: 'hidden', width: 0}}
+                    transition={{
+                      delay: isEditing
+                        ? 0.3 + i * 0.1
+                        : (sorted.length - 1 - i) * 0.1,
+                    }}
+                  >
+                    <CartLineUpdateButton
+                      lines={[{id: line.id, quantity: line.quantity + 1}]}
+                    >
+                      <button type="submit" disabled={!!line.isOptimistic}>
+                        +
+                      </button>
+                    </CartLineUpdateButton>
+                  </motion.span>
+                </div>
+              );
+            })}
+          </div>
+          <ul>
+            <li>{`Color: ${color}`}</li>
+            <li>{`Quantity: ${lines.reduce((sum, line) => sum + line.quantity, 0)}`}</li>
+          </ul>
+        </div>
+      </div>
+      <div className="cart-line-actions">
+        <CartLineRemoveButton
+          lineIds={allLineIds}
+          disabled={lines.some((l) => !!l.isOptimistic)}
+        />
+        {layout === 'page' && (
+          <button type="button" onClick={handleToggle}>
+            {isEditing ? 'Done' : 'Edit'}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -94,38 +286,43 @@ export function CartLineItem({layout, line}) {
  * hasn't yet responded that it was successfully added to the cart.
  * @param {{line: CartLine}}
  */
-function CartLineQuantity({line}) {
+function CartLineQuantity({line, isEditing}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+  const prevQuantity = Math.max(1, quantity - 1);
+  const nextQuantity = quantity + 1;
 
   return (
     <div className="cart-line-quantity">
-      <p>Quantity: {quantity} &nbsp;&nbsp;</p>
-      {/* <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
-        <button
-          aria-label="Decrease quantity"
-          disabled={quantity <= 1 || !!isOptimistic}
-          name="decrease-quantity"
-          value={prevQuantity}
+      <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+        Quantity:{' '}
+        <motion.span
+          key={`decrease-${lineId}`}
+          animate={{width: isEditing ? 'auto' : 0}}
+          style={{overflow: 'hidden', width: 0}}
         >
-          <span>&#8722; </span>
-        </button>
-      </CartLineUpdateButton>
-      &nbsp;
-      <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
-        <button
-          aria-label="Increase quantity"
-          name="increase-quantity"
-          value={nextQuantity}
-          disabled={!!isOptimistic}
+          <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
+            <button
+              type="submit"
+              disabled={quantity <= 1 || !!isOptimistic || !isEditing}
+            >
+              -
+            </button>
+          </CartLineUpdateButton>
+        </motion.span>
+        <motion.span layout="position">{quantity}</motion.span>
+        <motion.span
+          key={`increase-${lineId}`}
+          animate={{width: isEditing ? 'auto' : 0}}
+          style={{overflow: 'hidden', width: 0}}
         >
-          <span>&#43;</span>
-        </button>
-      </CartLineUpdateButton>
-      &nbsp;
-      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} /> */}
+          <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
+            <button type="submit" disabled={!!isOptimistic || !isEditing}>
+              +
+            </button>
+          </CartLineUpdateButton>
+        </motion.span>
+      </div>
     </div>
   );
 }

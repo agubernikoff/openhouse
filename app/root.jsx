@@ -8,6 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
+  redirect,
 } from 'react-router';
 import favicon from '~/assets/favicon.png';
 import {
@@ -22,6 +23,7 @@ import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 import {NavigationProvider} from './context/NavigationContext';
 import {PopUpProvider} from './context/PopUpContext';
+import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -70,17 +72,29 @@ export function links() {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const {request, context} = args;
+  const url = new URL(request.url);
 
-  // Await the critical data required to render initial state of the page
+  const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
+
+  const maintenance = criticalData.maintenanceMode;
+  const maintenanceActive = maintenance?.is_under_maintenance?.value === 'true';
+  const maintenanceBypass = context.session.get('maintenanceBypass');
+  const maintenanceBypassed = maintenanceActive
+    ? maintenanceBypass === maintenance?.password?.value
+    : false;
+
+  if (maintenanceActive && url.pathname !== '/' && !maintenanceBypassed) {
+    throw redirect('/');
+  }
 
   const {storefront, env} = args.context;
 
   return {
     ...deferredData,
     ...criticalData,
+    maintenanceBypassed,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop: getShopAnalytics({
       storefront,
@@ -105,17 +119,21 @@ export async function loader(args) {
 async function loadCriticalData({context}) {
   const {storefront} = context;
 
-  const [header] = await Promise.all([
+  const [header, maintenanceData] = await Promise.all([
     storefront.query(HEADER_QUERY, {
       cache: storefront.CacheLong(),
       variables: {
-        headerMenuHandle: 'main-menu-auw', // Adjust to your header menu handle
+        headerMenuHandle: 'main-menu-auw',
       },
     }),
-    // Add other queries here, so that they are loaded in parallel
+    storefront.query(MAINTENANCE_QUERY, {cache: storefront.CacheShort()}),
   ]);
 
-  return {header};
+  const maintenanceMode = normalizeMetaobject(
+    maintenanceData?.shop?.maintenance?.reference,
+  );
+
+  return {header, maintenanceMode};
 }
 
 /**
@@ -222,6 +240,14 @@ export default function App() {
     return <Outlet />;
   }
 
+  const inMaintenance =
+    data.maintenanceMode?.is_under_maintenance?.value === 'true' &&
+    !data.maintenanceBypassed;
+
+  if (inMaintenance) {
+    return <Outlet />;
+  }
+
   return (
     <Analytics.Provider
       cart={data.cart}
@@ -259,6 +285,23 @@ export function ErrorBoundary() {
     </div>
   );
 }
+
+const MAINTENANCE_QUERY = `#graphql
+  query MaintenanceMode {
+    shop {
+      maintenance: metafield(namespace: "custom", key: "maintenance") {
+        reference {
+          ... on Metaobject {
+            fields {
+              key
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 /** @typedef {LoaderReturnData} RootLoader */
 
