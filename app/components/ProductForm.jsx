@@ -180,8 +180,8 @@ export function ProductForm({
         </div>
       </div>
       {filteredOptions.map((option, index) => {
-        const isColorOption = option.name === 'Color';
-        const isSizeOption = option.name === 'Size';
+        const isColorOption = option.name.toLowerCase() === 'color';
+        const isSizeOption = option.name.toLowerCase() === 'size';
 
         if (option.optionValues.length === 1 && !isColorOption && !isSizeOption)
           return null;
