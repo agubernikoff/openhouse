@@ -99,7 +99,6 @@ export function ProductForm({
   const handleRemoveColor = (colorName) => {
     setSelectedColors((prev) => prev.filter((c) => c.name !== colorName));
   };
-  console.log(variants);
   const variantQuantityMatrix = variants.reduce((acc, variant) => {
     const color = variant.selectedOptions?.find(
       (o) => o.name === 'Color',
@@ -181,11 +180,11 @@ export function ProductForm({
         </div>
       </div>
       {filteredOptions.map((option, index) => {
-        if (option.optionValues.length === 1 && option.name !== 'Size')
-          return null;
-
         const isColorOption = option.name === 'Color';
         const isSizeOption = option.name === 'Size';
+
+        if (option.optionValues.length === 1 && !isColorOption && !isSizeOption)
+          return null;
 
         const selectedValue = option.optionValues.find((v) => v.selected);
         const selectedName = selectedValue?.name || '';
@@ -609,7 +608,6 @@ function SizeOptionGrid({
   onRemoveColor,
   renderValue,
 }) {
-  console.log(variantQuantityMatrix);
   if (orderType === 'wholesale') {
     return (
       <AnimatePresence>
