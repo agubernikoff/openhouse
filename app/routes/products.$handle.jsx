@@ -16,6 +16,7 @@ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import React, {
   useState,
   useEffect,
+  useMemo,
   Suspense,
   useRef,
   startTransition,
@@ -145,40 +146,77 @@ export default function Product() {
   });
 
   // Reorder options: Color and Embellishment Type first
-  const optionOrder = ['Color', 'Embellishment Type', 'Order Type'];
-  const reorderedOptions = [...productOptions].sort((a, b) => {
-    const indexA = optionOrder.indexOf(a.name);
-    const indexB = optionOrder.indexOf(b.name);
+  const reorderedOptions = useMemo(() => {
+    const optionOrder = ['Color', 'Embellishment Type', 'Order Type'];
+    return [...productOptions].sort((a, b) => {
+      const indexA = optionOrder.indexOf(a.name);
+      const indexB = optionOrder.indexOf(b.name);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }, [productOptions]);
 
-    // If not in optionOrder array, push to end
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-
-    return indexA - indexB;
+  const [orderType, setOrderType] = useState('wholesale');
+  const [selectedColors, setSelectedColors] = useState(() => {
+    const colorOption = reorderedOptions.find((opt) => opt.name === 'Color');
+    const current = colorOption?.optionValues?.find((v) => v.selected);
+    return current ? [{name: current.name, sizes: {}}] : [];
   });
 
   const {title, descriptionHtml} = product;
-  const productImages = product.images.nodes
-    .sort((a, b) => {
-      return (
-        (b.altText !== undefined && b.altText !== null ? 1 : 0) -
-        (a.altText !== undefined && a.altText !== null ? 1 : 0)
-      );
-    })
-    .filter((img) => {
-      if (selectedVariant && img.altText)
-        return selectedVariant.selectedOptions
-          .map((s) => s.value.toLowerCase())
-          .includes(img.altText.toLowerCase());
-      else return true;
-    });
+  const allProductImages = product.images.nodes;
+
+  const productImages = useMemo(() => {
+    if (orderType === 'wholesale') {
+      const colorImages = [...selectedColors]
+        .reverse()
+        .flatMap(({name: color}) =>
+          allProductImages.filter(
+            (img) => img.altText?.toLowerCase() === color.toLowerCase(),
+          ),
+        );
+      const nonColorImages = allProductImages.filter((img) => !img.altText);
+      return [...colorImages, ...nonColorImages];
+    }
+    return allProductImages
+      .sort((a, b) => (b.altText != null ? 1 : 0) - (a.altText != null ? 1 : 0))
+      .filter((img) => {
+        if (selectedVariant && img.altText)
+          return selectedVariant.selectedOptions
+            .map((s) => s.value.toLowerCase())
+            .includes(img.altText.toLowerCase());
+        return true;
+      });
+  }, [orderType, selectedColors, allProductImages, selectedVariant]);
+
   const [selectedImage, setSelectedImage] = useState(productImages[0]);
   const scrollContainerRef = useRef(null);
   const wrapperRef = useRef(null);
 
   useEffect(() => {
-    setSelectedImage(productImages[0]);
-  }, [selectedVariant]);
+    setOrderType('wholesale');
+    const colorOption = reorderedOptions.find((opt) => opt.name === 'Color');
+    const current = colorOption?.optionValues?.find((v) => v.selected);
+    setSelectedColors(current ? [{name: current.name, sizes: {}}] : []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
+  useEffect(() => {
+    if (orderType !== 'wholesale') setSelectedImage(productImages[0]);
+  }, [selectedVariant, orderType, productImages]);
+
+  useEffect(() => {
+    if (orderType === 'wholesale') {
+      if (selectedColors.length > 0) {
+        const lastColor = selectedColors[selectedColors.length - 1];
+        const colorImage = allProductImages.find(
+          (img) => img.altText?.toLowerCase() === lastColor.name.toLowerCase(),
+        );
+        if (colorImage) setSelectedImage(colorImage);
+      } else setSelectedImage(allProductImages.find((img) => !img.altText));
+    }
+  }, [selectedColors, allProductImages, orderType]);
 
   // Handle scroll indicators
   useEffect(() => {
@@ -339,6 +377,10 @@ export default function Product() {
             selectedVariant={selectedVariant}
             variants={product.variants.nodes}
             madeToOrderLeadTime={product.made_to_order_lead_time?.value}
+            orderType={orderType}
+            setOrderType={setOrderType}
+            selectedColors={selectedColors}
+            setSelectedColors={setSelectedColors}
           />
         </div>
         <Analytics.ProductView

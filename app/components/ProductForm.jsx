@@ -16,6 +16,10 @@ export function ProductForm({
   selectedVariant,
   variants = [],
   madeToOrderLeadTime,
+  orderType,
+  setOrderType,
+  selectedColors,
+  setSelectedColors,
 }) {
   const navigate = useNavigate();
   const {open} = useAside();
@@ -45,12 +49,6 @@ export function ProductForm({
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const [orderType, setOrderType] = useState('wholesale');
-  const [selectedColors, setSelectedColors] = useState(() => {
-    const colorOption = productOptions.find((opt) => opt.name === 'Color');
-    const current = colorOption?.optionValues?.find((v) => v.selected);
-    return current ? [{name: current.name, sizes: {}}] : [];
-  });
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -101,7 +99,7 @@ export function ProductForm({
   const handleRemoveColor = (colorName) => {
     setSelectedColors((prev) => prev.filter((c) => c.name !== colorName));
   };
-
+  console.log(variants);
   const variantQuantityMatrix = variants.reduce((acc, variant) => {
     const color = variant.selectedOptions?.find(
       (o) => o.name === 'Color',
@@ -109,7 +107,7 @@ export function ProductForm({
     const size = variant.selectedOptions?.find((o) => o.name === 'Size')?.value;
     if (color && size) {
       if (!acc[color]) acc[color] = {};
-      acc[color][size] = variant.quantityAvailable ?? 0;
+      acc[color][size] = Math.max(0, variant.quantityAvailable ?? 0);
     }
     return acc;
   }, {});
@@ -611,6 +609,7 @@ function SizeOptionGrid({
   onRemoveColor,
   renderValue,
 }) {
+  console.log(variantQuantityMatrix);
   if (orderType === 'wholesale') {
     return (
       <AnimatePresence>
@@ -662,8 +661,10 @@ function SizeOptionGrid({
                   <>
                     <div className="product-options-grid">
                       {optionValues.map(({name, exists}) => {
-                        const available =
-                          variantQuantityMatrix[color]?.[name] ?? 0;
+                        const available = Math.max(
+                          0,
+                          variantQuantityMatrix[color]?.[name] ?? 0,
+                        );
                         const exceeds = (sizes[name] ?? 0) > available;
                         return (
                           <div
