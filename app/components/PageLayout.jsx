@@ -31,9 +31,9 @@ export function PageLayout({
   const {shouldShowPopup} = usePopUp();
   return (
     <Aside.Provider>
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {shouldShowPopup() && <WelcomePopup data={pop_up} />}
-      </AnimatePresence> */}
+      </AnimatePresence>
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -83,42 +83,90 @@ function WelcomePopup({data}) {
         exit={{opacity: 0}}
         transition={{delay: shouldShowPopup() ? 1 : 0}}
       >
-        <button
-          className="popup-close"
-          onClick={handleClose}
-          aria-label="Close popup"
-        >
-          ×
-        </button>
-        <div>
+        {data && (
           <Suspense>
             <Await resolve={data}>
-              {(data) => {
-                const {metaobject} = data;
-                const {image} = normalizeMetaobject(metaobject) || {
+              {(resolved) => {
+                const fields = normalizeMetaobject(resolved?.metaobject) ?? {};
+                const functionality = fields.functionality?.value ?? null;
+                const imageData = fields.image?.reference?.image ?? {
                   image: null,
                 };
+                const hasContent =
+                  fields.heading?.value ||
+                  fields.body?.value ||
+                  fields.cta_url?.value ||
+                  functionality === 'newsletter';
+
                 return (
-                  image && (
-                    <Image data={image?.reference?.image} sizes="500px" />
-                  )
+                  <>
+                    <button
+                      className={`popup-close ${functionality ? ` popup-close--${functionality}` : ''}`}
+                      onClick={handleClose}
+                      aria-label="Close popup"
+                    >
+                      ×
+                    </button>
+                    {imageData && (
+                      <div>
+                        <Image data={imageData} sizes="500px" />
+                      </div>
+                    )}
+                    {hasContent && (
+                      <div
+                        className={`popup-content ${functionality ? ` popup-content--${functionality}` : ''}`}
+                      >
+                        {fields.heading?.value && (
+                          <h2>{fields.heading.value}</h2>
+                        )}
+                        {fields.body?.value && <p>{fields.body.value}</p>}
+                        {functionality === 'newsletter' ? (
+                          <form className="popup-newsletter-form">
+                            <input type="email" placeholder="Your email" />
+                            <button type="submit" aria-label="Subscribe">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 18 18"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <g transform="translate(0, -1)">
+                                  <path
+                                    d="M2 9H14"
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    strokeLinecap="square"
+                                  />
+                                  <path
+                                    d="M9 3L15 9L9 15"
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    strokeLinejoin="miter"
+                                    strokeLinecap="square"
+                                  />
+                                </g>
+                              </svg>
+                            </button>
+                          </form>
+                        ) : fields.cta_url?.value ? (
+                          <a
+                            className="explore-all"
+                            href={fields.cta_url.value}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {fields.cta_text?.value ?? 'Book a call'}
+                          </a>
+                        ) : null}
+                      </div>
+                    )}
+                  </>
                 );
               }}
             </Await>
           </Suspense>
-        </div>
-        <div className="popup-content">
-          <h2>Need help with a project?</h2>
-          <p>{"We'd love to chat."}</p>
-          <a
-            className="explore-all"
-            href="https://calendly.com/byopenhouse-sales/30min"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Book a call
-          </a>
-        </div>
+        )}
       </motion.div>
     </>
   );
