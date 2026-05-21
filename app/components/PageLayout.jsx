@@ -1,4 +1,4 @@
-import {Await, Link} from 'react-router';
+import {Await, Link, useFetcher} from 'react-router';
 import {Suspense, useId, useEffect, useState} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
@@ -31,9 +31,9 @@ export function PageLayout({
   const {shouldShowPopup} = usePopUp();
   return (
     <Aside.Provider>
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {shouldShowPopup() && <WelcomePopup data={pop_up} />}
-      </AnimatePresence> */}
+      </AnimatePresence>
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -58,10 +58,10 @@ export function PageLayout({
 function WelcomePopup({data}) {
   const {markPopupAsShown, shouldShowPopup} = usePopUp();
 
-  const handleClose = () => {
+  const handleClose = (timeout = 300) => {
     setTimeout(() => {
       markPopupAsShown();
-    }, 300);
+    }, timeout);
   };
 
   return (
@@ -83,44 +83,178 @@ function WelcomePopup({data}) {
         exit={{opacity: 0}}
         transition={{delay: shouldShowPopup() ? 1 : 0}}
       >
-        <button
-          className="popup-close"
-          onClick={handleClose}
-          aria-label="Close popup"
-        >
-          ×
-        </button>
-        <div>
+        {data && (
           <Suspense>
             <Await resolve={data}>
-              {(data) => {
-                const {metaobject} = data;
-                const {image} = normalizeMetaobject(metaobject) || {
+              {(resolved) => {
+                const fields = normalizeMetaobject(resolved?.metaobject) ?? {};
+                if (fields.enabled?.value === 'false') return null;
+                const functionality = fields.functionality?.value ?? null;
+                const imageData = fields.image?.reference?.image ?? {
                   image: null,
                 };
+                const hasContent =
+                  fields.heading?.value ||
+                  fields.body?.value ||
+                  fields.cta_url?.value ||
+                  functionality === 'newsletter';
+
                 return (
-                  image && (
-                    <Image data={image?.reference?.image} sizes="500px" />
-                  )
+                  <>
+                    <button
+                      className={`popup-close ${functionality ? ` popup-close--${functionality}` : ''}`}
+                      onClick={handleClose}
+                      aria-label="Close popup"
+                    >
+                      ×
+                    </button>
+                    {imageData && (
+                      <div>
+                        <Image data={imageData} sizes="500px" />
+                      </div>
+                    )}
+                    {hasContent && (
+                      <div
+                        className={`popup-content ${functionality ? ` popup-content--${functionality}` : ''}`}
+                      >
+                        {fields.heading?.value && (
+                          <h2>{fields.heading.value}</h2>
+                        )}
+                        {fields.body?.value && <p>{fields.body.value}</p>}
+                        {functionality === 'newsletter' ? (
+                          <NewsletterForm handleClose={handleClose} />
+                        ) : fields.cta_url?.value ? (
+                          <a
+                            className="explore-all"
+                            href={fields.cta_url.value}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {fields.cta_text?.value ?? 'Book a call'}
+                          </a>
+                        ) : null}
+                      </div>
+                    )}
+                  </>
                 );
               }}
             </Await>
           </Suspense>
-        </div>
-        <div className="popup-content">
-          <h2>Need help with a project?</h2>
-          <p>{"We'd love to chat."}</p>
-          <a
-            className="explore-all"
-            href="https://calendly.com/byopenhouse-sales/30min"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Book a call
-          </a>
-        </div>
+        )}
       </motion.div>
     </>
+  );
+}
+
+export function NewsletterForm({handleClose}) {
+  const fetcher = useFetcher();
+  const [email, setEmail] = useState('');
+
+  const isSubmitting = fetcher.state === 'submitting';
+  const isSuccess = fetcher.data?.success;
+  const successMessage = fetcher.data?.message;
+  const error = fetcher.data?.error;
+  const [displayErr, setDisplayErr] = useState('');
+  const [displaySucc, setDisplaySucc] = useState('');
+
+  useEffect(() => {
+    if (error) {
+      setDisplayErr(error);
+      setDisplaySucc(''); // Clear success message
+      const timer = setTimeout(() => setDisplayErr(''), 1600);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setEmail('');
+      setDisplaySucc(successMessage);
+      setDisplayErr(''); // Clear error message
+      const timer = setTimeout(() => {
+        setDisplaySucc('');
+        handleClose(0);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, successMessage, handleClose]);
+
+  const handleSubmit = (e) => {
+    setDisplayErr('');
+    setDisplaySucc('');
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('email', email);
+    fetcher.submit(formData, {
+      method: 'post',
+      action: '/api/newsletter',
+    });
+  };
+
+  return (
+    <div className="footer-newsletter">
+      <form className="footer-newsletter-form" onSubmit={handleSubmit}>
+        <input
+          id="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="footer-newsletter-input"
+          autoComplete="off"
+          disabled={isSubmitting}
+        />
+        <button type="submit" aria-label="Subscribe" disabled={isSubmitting}>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g transform="translate(0, -1)">
+              <path
+                d="M2 9H14"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinecap="square"
+              />
+              <path
+                d="M9 3L15 9L9 15"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinejoin="miter"
+                strokeLinecap="square"
+              />
+            </g>
+          </svg>
+        </button>
+      </form>
+      <AnimatePresence>
+        {displayErr && (
+          <motion.p
+            key="error"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-error"
+          >
+            {displayErr}
+          </motion.p>
+        )}
+        {displaySucc && (
+          <motion.p
+            key="success"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-success"
+          >
+            {displaySucc}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
