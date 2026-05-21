@@ -1,4 +1,4 @@
-import {Await, Link} from 'react-router';
+import {Await, Link, useFetcher} from 'react-router';
 import {Suspense, useId, useEffect, useState} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
@@ -58,10 +58,10 @@ export function PageLayout({
 function WelcomePopup({data}) {
   const {markPopupAsShown, shouldShowPopup} = usePopUp();
 
-  const handleClose = () => {
+  const handleClose = (timeout = 300) => {
     setTimeout(() => {
       markPopupAsShown();
-    }, 300);
+    }, timeout);
   };
 
   return (
@@ -88,6 +88,7 @@ function WelcomePopup({data}) {
             <Await resolve={data}>
               {(resolved) => {
                 const fields = normalizeMetaobject(resolved?.metaobject) ?? {};
+                if (fields.enabled?.value === 'false') return null;
                 const functionality = fields.functionality?.value ?? null;
                 const imageData = fields.image?.reference?.image ?? {
                   image: null,
@@ -121,34 +122,7 @@ function WelcomePopup({data}) {
                         )}
                         {fields.body?.value && <p>{fields.body.value}</p>}
                         {functionality === 'newsletter' ? (
-                          <form className="popup-newsletter-form">
-                            <input type="email" placeholder="Your email" />
-                            <button type="submit" aria-label="Subscribe">
-                              <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 18 18"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <g transform="translate(0, -1)">
-                                  <path
-                                    d="M2 9H14"
-                                    stroke="currentColor"
-                                    strokeWidth="1"
-                                    strokeLinecap="square"
-                                  />
-                                  <path
-                                    d="M9 3L15 9L9 15"
-                                    stroke="currentColor"
-                                    strokeWidth="1"
-                                    strokeLinejoin="miter"
-                                    strokeLinecap="square"
-                                  />
-                                </g>
-                              </svg>
-                            </button>
-                          </form>
+                          <NewsletterForm handleClose={handleClose} />
                         ) : fields.cta_url?.value ? (
                           <a
                             className="explore-all"
@@ -169,6 +143,118 @@ function WelcomePopup({data}) {
         )}
       </motion.div>
     </>
+  );
+}
+
+export function NewsletterForm({handleClose}) {
+  const fetcher = useFetcher();
+  const [email, setEmail] = useState('');
+
+  const isSubmitting = fetcher.state === 'submitting';
+  const isSuccess = fetcher.data?.success;
+  const successMessage = fetcher.data?.message;
+  const error = fetcher.data?.error;
+  const [displayErr, setDisplayErr] = useState('');
+  const [displaySucc, setDisplaySucc] = useState('');
+
+  useEffect(() => {
+    if (error) {
+      setDisplayErr(error);
+      setDisplaySucc(''); // Clear success message
+      const timer = setTimeout(() => setDisplayErr(''), 1600);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setEmail('');
+      setDisplaySucc(successMessage);
+      setDisplayErr(''); // Clear error message
+      const timer = setTimeout(() => {
+        setDisplaySucc('');
+        handleClose(0);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, successMessage, handleClose]);
+
+  const handleSubmit = (e) => {
+    setDisplayErr('');
+    setDisplaySucc('');
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('email', email);
+    fetcher.submit(formData, {
+      method: 'post',
+      action: '/api/newsletter',
+    });
+  };
+
+  return (
+    <div className="footer-newsletter">
+      <form className="footer-newsletter-form" onSubmit={handleSubmit}>
+        <input
+          id="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="footer-newsletter-input"
+          autoComplete="off"
+          disabled={isSubmitting}
+        />
+        <button type="submit" aria-label="Subscribe" disabled={isSubmitting}>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g transform="translate(0, -1)">
+              <path
+                d="M2 9H14"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinecap="square"
+              />
+              <path
+                d="M9 3L15 9L9 15"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinejoin="miter"
+                strokeLinecap="square"
+              />
+            </g>
+          </svg>
+        </button>
+      </form>
+      <AnimatePresence>
+        {displayErr && (
+          <motion.p
+            key="error"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-error"
+          >
+            {displayErr}
+          </motion.p>
+        )}
+        {displaySucc && (
+          <motion.p
+            key="success"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            className="footer-newsletter-success"
+          >
+            {displaySucc}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
