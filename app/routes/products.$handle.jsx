@@ -199,24 +199,12 @@ export default function Product() {
     const colorOption = reorderedOptions.find((opt) => opt.name === 'Color');
     const current = colorOption?.optionValues?.find((v) => v.selected);
     setSelectedColors(current ? [{name: current.name, sizes: {}}] : []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
   useEffect(() => {
-    if (orderType !== 'wholesale') setSelectedImage(productImages[0]);
-  }, [selectedVariant, orderType, productImages]);
-
-  useEffect(() => {
-    if (orderType === 'wholesale') {
-      if (selectedColors.length > 0) {
-        const lastColor = selectedColors[selectedColors.length - 1];
-        const colorImage = allProductImages.find(
-          (img) => img.altText?.toLowerCase() === lastColor.name.toLowerCase(),
-        );
-        if (colorImage) setSelectedImage(colorImage);
-      } else setSelectedImage(allProductImages.find((img) => !img.altText));
-    }
-  }, [selectedColors, allProductImages, orderType]);
+    setSelectedImage(productImages[0]);
+  }, [selectedColors, allProductImages, orderType, productImages]);
 
   // Handle scroll indicators
   useEffect(() => {
@@ -299,7 +287,7 @@ export default function Product() {
             {product.images.nodes.map((img) => (
               <ProductImage key={img.id} image={img} hidden />
             ))}
-            <ProductImage image={selectedImage} />
+            {selectedImage && <ProductImage image={selectedImage} />}
           </div>
           <div className="product-image-previews-wrapper" ref={wrapperRef}>
             <div
