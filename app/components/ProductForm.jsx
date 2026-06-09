@@ -1,7 +1,7 @@
 import {Link, NavLink, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {AnimatePresence, motion} from 'motion/react';
 import mapRichText from '~/helpers/mapRichText';
 
@@ -58,7 +58,13 @@ export function ProductForm({
 
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 1) setQuantity(value);
+    if (!isNaN(value) && value >= 1) {
+      setQuantity(
+        selectedVariantQty !== null
+          ? Math.min(value, selectedVariantQty)
+          : value,
+      );
+    }
   };
 
   const handleAddToCart = () => {
@@ -71,8 +77,19 @@ export function ProductForm({
 
   const colorOption = productOptions.find((opt) => opt.name === 'Color');
 
+  // A color is in stock if at least one of its size variants is not currentlyNotInStock.
+  const colorInStockMap = variants.reduce((acc, variant) => {
+    const color = variant.selectedOptions?.find(
+      (o) => o.name === 'Color',
+    )?.value;
+    if (color && !variant.currentlyNotInStock) {
+      acc[color] = true;
+    }
+    return acc;
+  }, {});
+
   const sampleDisabled = !colorOption?.optionValues?.some(
-    (opt) => !opt.variant?.currentlyNotInStock,
+    (opt) => colorInStockMap[opt.name],
   );
 
   const colorSwatchMap = Object.fromEntries(
@@ -100,24 +117,47 @@ export function ProductForm({
     setSelectedColors((prev) => prev.filter((c) => c.name !== colorName));
   };
   const variantQuantityMatrix = variants.reduce((acc, variant) => {
-    const color = variant.selectedOptions?.find(
-      (o) => o.name === 'Color',
-    )?.value;
+    const color =
+      variant.selectedOptions?.find((o) => o.name === 'Color')?.value ?? '';
     const size = variant.selectedOptions?.find((o) => o.name === 'Size')?.value;
-    if (color && size) {
+    if (size) {
       if (!acc[color]) acc[color] = {};
       acc[color][size] = Math.max(0, variant.quantityAvailable ?? 0);
     }
     return acc;
   }, {});
 
+  const selectedVariantColor =
+    selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')?.value ??
+    '';
+  const selectedVariantSize =
+    selectedVariant?.selectedOptions?.find((o) => o.name === 'Size')?.value ??
+    '';
+  // null means inventory is untracked — no cap; 0 means out of stock
+  const selectedVariantQty =
+    selectedVariantColor || selectedVariantSize
+      ? (variantQuantityMatrix[selectedVariantColor]?.[selectedVariantSize] ??
+        null)
+      : null;
+
+  useEffect(() => {
+    if (selectedVariantQty !== null) {
+      setQuantity((prev) => Math.min(prev, Math.max(1, selectedVariantQty)));
+    }
+  }, [selectedVariantQty]);
+
   const handleOrderTypeChange = (type) => {
     setOrderType(type);
     if (type === 'sample') {
-      if (selectedVariant?.currentlyNotInStock) {
+      if (
+        !colorInStockMap[
+          selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')
+            ?.value
+        ]
+      ) {
         const colorOption = productOptions.find((opt) => opt.name === 'Color');
         const firstInStock = colorOption?.optionValues?.find(
-          (v) => !v.variant?.currentlyNotInStock,
+          (v) => colorInStockMap[v.name],
         );
         if (firstInStock) {
           navigate(`?${firstInStock.variantUriQuery}`, {
@@ -193,12 +233,11 @@ export function ProductForm({
           filteredOptions
             .slice(0, index)
             .filter((opt) => opt.optionValues.length > 1).length + 2;
-
         const inStock = isColorOption
-          ? option.optionValues.filter((v) => !v.variant?.currentlyNotInStock)
+          ? option.optionValues.filter((v) => colorInStockMap[v.name])
           : [];
         const madeToOrder = isColorOption
-          ? option.optionValues.filter((v) => v.variant?.currentlyNotInStock)
+          ? option.optionValues.filter((v) => !colorInStockMap[v.name])
           : [];
 
         const renderValue = (value) => {
@@ -217,6 +256,15 @@ export function ProductForm({
           const isSelected = isWholesaleColor
             ? selectedColors.some((c) => c.name === name)
             : selected;
+
+          const isSampleSize = isSizeOption && orderType === 'sample';
+          const sampleSelectedColor = isSampleSize
+            ? (selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')
+                ?.value ?? '')
+            : null;
+          const isSampleSizeOutOfStock =
+            isSampleSize &&
+            (variantQuantityMatrix[sampleSelectedColor]?.[name] ?? 0) === 0;
 
           if (isDifferentProduct) {
             return (
@@ -241,13 +289,13 @@ export function ProductForm({
           return (
             <button
               type="button"
-              className={`product-options-item${exists && !isSelected ? ' link' : ''}`}
+              className={`product-options-item${exists && !isSelected && !isSampleSizeOutOfStock ? ' link' : ''}`}
               key={option.name + name}
               style={{
                 border: isSelected
                   ? '1px solid black'
                   : '1px solid transparent',
-                opacity: available ? 1 : 0.3,
+                opacity: available && !isSampleSizeOutOfStock ? 1 : 0.3,
                 background:
                   isSelected && !isColorOption
                     ? 'var(--color-oh-black)'
@@ -257,7 +305,7 @@ export function ProductForm({
                     ? 'var(--color-oh-white)'
                     : 'var(--color-oh-black)',
               }}
-              disabled={!exists}
+              disabled={!exists || isSampleSizeOutOfStock}
               onClick={() => {
                 if (isWholesaleColor) {
                   setSelectedColors((prev) =>
@@ -410,7 +458,10 @@ export function ProductForm({
                 <button
                   type="button"
                   onClick={increaseQuantity}
-                  disabled={quantity === selectedVariant?.quantityAvailable}
+                  disabled={
+                    selectedVariantQty !== null &&
+                    quantity >= selectedVariantQty
+                  }
                 >
                   +
                 </button>
@@ -510,10 +561,15 @@ export function ProductForm({
             return total < moq;
           });
 
+          const sampleAvailable =
+            !!selectedVariant?.availableForSale &&
+            (selectedVariantQty === null ||
+              (selectedVariantQty > 0 && quantity <= selectedVariantQty));
+
           const lines = orderType === 'sample' ? sampleLines : wholesaleLines;
           const isDisabled =
             orderType === 'sample'
-              ? !selectedVariant || !selectedVariant.availableForSale
+              ? !selectedVariant || !sampleAvailable
               : wholesaleLines.length === 0 || anyColorBelowMOQ;
 
           return (
@@ -526,7 +582,7 @@ export function ProductForm({
               {added
                 ? 'ADDED TO CART'
                 : orderType === 'sample'
-                  ? selectedVariant?.availableForSale
+                  ? sampleAvailable
                     ? `ADD TO CART - $${sampleTotal}`
                     : 'SOLD OUT'
                   : `ADD TO CART - $${wholesaleTotal}`}
