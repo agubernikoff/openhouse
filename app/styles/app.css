@@ -2171,7 +2171,7 @@ div:has(.products-grid) {
 }
 .product-options-item:disabled {
   opacity: 0.33 !important;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
 }
 
 /* Color option - circular swatches */
@@ -2554,6 +2554,7 @@ div:has(> .pdp-additional-info-image) {
 
 .quantity-controls button:disabled {
   cursor: not-allowed;
+  opacity: 0.33;
 }
 
 .quantity-controls input[type='number'] {
