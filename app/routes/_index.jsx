@@ -255,7 +255,7 @@ function Hero({data}) {
       <video
         ref={videoRef}
         src={
-          fields?.background?.reference?.sources.find((src) =>
+          fields?.background?.reference?.sources?.find((src) =>
             src.url.includes('.mp4'),
           ).url
         }
