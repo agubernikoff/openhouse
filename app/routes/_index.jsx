@@ -250,25 +250,39 @@ function Hero({data}) {
 
     return () => observer.unobserve(video);
   }, []);
+
+  const isVideo = fields?.background?.reference?.sources?.find((src) =>
+    src.url.includes('.mp4'),
+  );
+  const isImage = fields?.background?.reference?.image;
   return (
     <section className="hero-section">
-      <video
-        ref={videoRef}
-        src={
-          fields?.background?.reference?.sources?.find((src) =>
-            src.url.includes('.mp4'),
-          ).url
-        }
-        poster={fields?.background?.reference?.previewImage?.url}
-        loop
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        className="media-element"
-      >
-        <track kind="captions" />
-      </video>
+      {isVideo && (
+        <video
+          ref={videoRef}
+          src={
+            fields?.background?.reference?.sources?.find((src) =>
+              src.url.includes('.mp4'),
+            ).url
+          }
+          poster={fields?.background?.reference?.previewImage?.url}
+          loop
+          muted
+          playsInline
+          autoPlay
+          preload="auto"
+          className="media-element"
+        >
+          <track kind="captions" />
+        </video>
+      )}
+      {isImage && (
+        <Image
+          data={fields?.background?.reference?.image}
+          sizes="100vw"
+          className="media-element"
+        />
+      )}
       <h2>
         <em className="rotating-brands-mobile-adj">
           Custom Product Collections
