@@ -123,7 +123,7 @@ function loadDeferredData({context}) {
   const featuredCollection = context.storefront
     .query(COLLECTION_QUERY, {
       variables: {
-        handle: 'signature-collection',
+        handle: 'new-arrivals',
         first: 12,
       },
     })
