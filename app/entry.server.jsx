@@ -32,6 +32,7 @@ export default async function handleRequest(
       'data:',
       'https://checkout.byopenhouse.com/',
       'https://www.google.com/',
+      'https://px.ads.linkedin.com',
     ],
     connectSrc: [
       "'self'",
@@ -54,6 +55,7 @@ export default async function handleRequest(
       'https://cdn.shopify.com',
       'https://b2bjsstore.s3.us-west-2.amazonaws.com',
       'https://www.googletagmanager.com',
+      'https://snap.licdn.com',
     ],
     mediaSrc: [
       'https://openhouse.store/',
