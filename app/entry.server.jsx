@@ -33,6 +33,7 @@ export default async function handleRequest(
       'https://checkout.byopenhouse.com/',
       'https://www.google.com/',
       'https://px.ads.linkedin.com',
+      'https://px4.ads.linkedin.com',
     ],
     connectSrc: [
       "'self'",
@@ -48,6 +49,7 @@ export default async function handleRequest(
       'https://www.google.com/',
       'https://www.googletagmanager.com',
       'https://www.google-analytics.com',
+      'https://px.ads.linkedin.com',
     ],
     scriptSrc: [
       "'self'",
