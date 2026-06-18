@@ -1,5 +1,46 @@
 // app/routes/api.newsletter.jsx
 
+const LINKEDIN_NEWSLETTER_CONVERSION_URN = 'REPLACE_WITH_CONVERSION_URN';
+
+async function hashEmail(email) {
+  const normalized = email.trim().toLowerCase();
+  const data = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function trackLinkedInConversion(email, context) {
+  if (process.env.NODE_ENV !== 'production') return;
+  const accessToken = context.env.LINKEDIN_ACCESS_TOKEN;
+  if (!accessToken) return;
+
+  const hashedEmail = await hashEmail(email);
+
+  await fetch('https://api.linkedin.com/rest/conversionEvents', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'LinkedIn-Version': '202409',
+      'X-Restli-Protocol-Version': '2.0.0',
+    },
+    body: JSON.stringify({
+      conversion: LINKEDIN_NEWSLETTER_CONVERSION_URN,
+      conversionHappenedAt: Date.now(),
+      user: {
+        userIds: [
+          {
+            idType: 'SHA256_EMAIL',
+            idValue: hashedEmail,
+          },
+        ],
+      },
+    }),
+  }).catch((err) => console.error('LinkedIn CAPI error:', err));
+}
+
 export async function action({request, context}) {
   if (request.method !== 'POST') {
     return Response.json({error: 'Method not allowed'}, {status: 405});
@@ -27,14 +68,13 @@ export async function action({request, context}) {
       },
       body: JSON.stringify({
         email_address: email,
-        status: 'subscribed', // or 'pending' for double opt-in
+        status: 'subscribed',
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      // Handle Mailchimp errors
       if (data.title === 'Member Exists') {
         return Response.json(
           {error: 'This email is already subscribed'},
@@ -46,6 +86,8 @@ export async function action({request, context}) {
         {status: 400},
       );
     }
+
+    trackLinkedInConversion(email, context);
 
     return Response.json({success: true, message: 'Successfully subscribed!'});
   } catch (error) {
