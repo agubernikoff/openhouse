@@ -221,6 +221,7 @@ export function Layout({children}) {
           }}
         />
         <script
+          nonce={nonce}
           src="https://t.contentsquare.net/uxa/769fcf27b170e.js"
           defer
         ></script>
