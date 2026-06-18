@@ -52,6 +52,10 @@ export default async function handleRequest(
       'https://www.google-analytics.com',
       'https://px.ads.linkedin.com',
       'https://ad.doubleclick.net',
+      'https://t.contentsquare.net',
+      'https://tcvsapi.contentsquare.com',
+      'https://c.ba.contentsquare.net',
+      'https://k.ba.contentsquare.net',
     ],
     scriptSrc: [
       "'self'",
