@@ -65,6 +65,7 @@ export default async function handleRequest(
       'https://www.googletagmanager.com',
       'https://snap.licdn.com',
       'https://t.contentsquare.net',
+      'https://b-code.liadm.com',
     ],
     mediaSrc: [
       'https://openhouse.store/',
