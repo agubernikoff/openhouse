@@ -1,4 +1,59 @@
-// app/routes/api.newsletter.jsx
+const LINKEDIN_NEWSLETTER_CONVERSION_URN =
+  'urn:lla:llaPartnerConversion:28622466';
+
+async function hashEmail(email) {
+  const normalized = email.trim().toLowerCase();
+  const data = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function trackLinkedInConversion(email, context) {
+  if (process.env.NODE_ENV !== 'production') return;
+  const accessToken = context.env.LINKEDIN_ACCESS_TOKEN;
+  if (!accessToken) return;
+
+  const hashedEmail = await hashEmail(email);
+
+  try {
+    const response = await fetch(
+      'https://api.linkedin.com/rest/conversionEvents',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'LinkedIn-Version': '202606',
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+        body: JSON.stringify({
+          conversion: LINKEDIN_NEWSLETTER_CONVERSION_URN,
+          conversionHappenedAt: Date.now(),
+          user: {
+            userIds: [
+              {
+                idType: 'SHA256_EMAIL',
+                idValue: hashedEmail,
+              },
+            ],
+          },
+        }),
+      },
+    );
+
+    const responseBody = await response.text();
+
+    if (!response.ok) {
+      console.error(
+        `LinkedIn CAPI error: ${response.status} ${response.statusText} - ${responseBody}`,
+      );
+    }
+  } catch (err) {
+    console.error('LinkedIn CAPI request failed:', err);
+  }
+}
 
 export async function action({request, context}) {
   if (request.method !== 'POST') {
@@ -27,14 +82,13 @@ export async function action({request, context}) {
       },
       body: JSON.stringify({
         email_address: email,
-        status: 'subscribed', // or 'pending' for double opt-in
+        status: 'subscribed',
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      // Handle Mailchimp errors
       if (data.title === 'Member Exists') {
         return Response.json(
           {error: 'This email is already subscribed'},
@@ -46,6 +100,8 @@ export async function action({request, context}) {
         {status: 400},
       );
     }
+
+    context.waitUntil(trackLinkedInConversion(email, context));
 
     return Response.json({success: true, message: 'Successfully subscribed!'});
   } catch (error) {
