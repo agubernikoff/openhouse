@@ -1,6 +1,5 @@
-// app/routes/api.newsletter.jsx
-
-const LINKEDIN_NEWSLETTER_CONVERSION_URN = 'REPLACE_WITH_CONVERSION_URN';
+const LINKEDIN_NEWSLETTER_CONVERSION_URN =
+  'urn:lla:llaPartnerConversion:28622466';
 
 async function hashEmail(email) {
   const normalized = email.trim().toLowerCase();
@@ -18,27 +17,42 @@ async function trackLinkedInConversion(email, context) {
 
   const hashedEmail = await hashEmail(email);
 
-  await fetch('https://api.linkedin.com/rest/conversionEvents', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'LinkedIn-Version': '202409',
-      'X-Restli-Protocol-Version': '2.0.0',
-    },
-    body: JSON.stringify({
-      conversion: LINKEDIN_NEWSLETTER_CONVERSION_URN,
-      conversionHappenedAt: Date.now(),
-      user: {
-        userIds: [
-          {
-            idType: 'SHA256_EMAIL',
-            idValue: hashedEmail,
+  try {
+    const response = await fetch(
+      'https://api.linkedin.com/rest/conversionEvents',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'LinkedIn-Version': '202606',
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+        body: JSON.stringify({
+          conversion: LINKEDIN_NEWSLETTER_CONVERSION_URN,
+          conversionHappenedAt: Date.now(),
+          user: {
+            userIds: [
+              {
+                idType: 'SHA256_EMAIL',
+                idValue: hashedEmail,
+              },
+            ],
           },
-        ],
+        }),
       },
-    }),
-  }).catch((err) => console.error('LinkedIn CAPI error:', err));
+    );
+
+    const responseBody = await response.text();
+
+    if (!response.ok) {
+      console.error(
+        `LinkedIn CAPI error: ${response.status} ${response.statusText} - ${responseBody}`,
+      );
+    }
+  } catch (err) {
+    console.error('LinkedIn CAPI request failed:', err);
+  }
 }
 
 export async function action({request, context}) {
@@ -87,7 +101,7 @@ export async function action({request, context}) {
       );
     }
 
-    trackLinkedInConversion(email, context);
+    context.waitUntil(trackLinkedInConversion(email, context));
 
     return Response.json({success: true, message: 'Successfully subscribed!'});
   } catch (error) {

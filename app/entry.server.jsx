@@ -34,6 +34,7 @@ export default async function handleRequest(
       'https://www.google.com/',
       'https://px.ads.linkedin.com',
       'https://px4.ads.linkedin.com',
+      'https://www.linkedin.com',
     ],
     connectSrc: [
       "'self'",
@@ -50,6 +51,11 @@ export default async function handleRequest(
       'https://www.googletagmanager.com',
       'https://www.google-analytics.com',
       'https://px.ads.linkedin.com',
+      'https://ad.doubleclick.net',
+      'https://t.contentsquare.net',
+      'https://tcvsapi.contentsquare.com',
+      'https://c.ba.contentsquare.net',
+      'https://k.ba.contentsquare.net',
     ],
     scriptSrc: [
       "'self'",
@@ -58,6 +64,7 @@ export default async function handleRequest(
       'https://b2bjsstore.s3.us-west-2.amazonaws.com',
       'https://www.googletagmanager.com',
       'https://snap.licdn.com',
+      'https://t.contentsquare.net',
     ],
     mediaSrc: [
       'https://openhouse.store/',
