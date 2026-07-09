@@ -2116,6 +2116,9 @@ div:has(.products-grid) {
   align-items: flex-start;
   margin-bottom: 16px;
 }
+.product-options-header > h5 > span:nth-of-type(n + 3) {
+  text-wrap: nowrap;
+}
 
 .product-options h5,
 .color-group-label,
@@ -2158,6 +2161,10 @@ div:has(.products-grid) {
 
 .product-options-color .product-options-grid {
   flex-wrap: wrap;
+}
+
+.product-options-grid .product-options-item:only-child {
+  max-width: 102.84px;
 }
 
 .product-options-item,
@@ -2234,7 +2241,6 @@ div.product-options-item {
   font-size: 14px;
   position: relative;
   padding-bottom: 14px;
-  max-width: 102.84px;
 }
 div.product-options-item > input {
   background: transparent;
