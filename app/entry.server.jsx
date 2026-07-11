@@ -38,6 +38,7 @@ export default async function handleRequest(
     ],
     connectSrc: [
       "'self'",
+      'https://api.geoapify.com',
       'https://openhouse-custom-artwork.s3.us-east-1.amazonaws.com',
       'https://s3.us-east-1.amazonaws.com',
       'https://api.emailjs.com',

@@ -4563,3 +4563,266 @@ div:has(> .sticky-scroll-image) {
 .maintenance-page a {
   text-decoration: underline;
 }
+
+/*
+* --------------------------------------------------
+* routes/wholesale
+* --------------------------------------------------
+*/
+.wholesale {
+  display: flex;
+  justify-content: center;
+}
+
+.wholesale-card {
+  width: 100%;
+  max-width: 930px;
+  background: var(--color-oh-white);
+  border: 1px solid var(--color-oh-gray);
+  border-radius: 12px;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.wholesale-title {
+  font-family: 'apfel';
+  margin: 0 0 20px;
+  color: var(--color-oh-black);
+
+  font-weight: normal;
+  font-size: 36px;
+  line-height: 36px;
+}
+
+.wholesale-form {
+  display: grid;
+  row-gap: 20px;
+}
+
+.wholesale-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wholesale-section-title {
+  font-family: 'mono';
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-oh-gray-contact);
+  margin: 0;
+  margin-bottom: 8px;
+  font-weight: normal;
+}
+
+.wholesale-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wholesale-toggle-label {
+  font-family: 'apfel';
+  color: var(--color-oh-black);
+}
+
+.wholesale-toggle {
+  display: flex;
+  border: 1px solid var(--color-oh-gray);
+  border-radius: 999px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.wholesale-toggle-option {
+  position: relative;
+  font-family: 'mono';
+  font-size: 12px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-oh-black);
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: color 200ms ease-in-out;
+}
+
+.wholesale-toggle-option.selected {
+  color: var(--color-oh-white);
+}
+
+.wholesale-toggle-pill {
+  position: absolute;
+  inset: 0;
+  background: var(--color-oh-black);
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.wholesale-toggle-option-label {
+  position: relative;
+  z-index: 1;
+}
+
+.wholesale-submit {
+  margin-top: 8px;
+  font-family: 'mono';
+  font-size: 14px;
+  text-transform: uppercase;
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+  border: none;
+  border-radius: 5px;
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: opacity 200ms ease-in-out;
+}
+
+.wholesale-submit:hover {
+  opacity: 0.85;
+}
+
+.wholesale-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wholesale-disclaimer {
+  font-family: 'mono';
+  font-size: 11px;
+  color: var(--color-oh-gray-contact);
+  text-align: center;
+  margin: 0;
+}
+
+.wholesale input,
+.wholesale textarea,
+.wholesale select {
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid var(--color-oh-gray);
+  color: var(--color-oh-black);
+  font-family: 'apfel';
+  transition: border-color 150ms ease-in-out;
+  margin: 0;
+  padding: 12px;
+}
+
+.wholesale input::placeholder,
+.wholesale textarea::placeholder {
+  color: var(--color-oh-gray-contact);
+}
+
+.wholesale input:focus-visible,
+.wholesale textarea:focus-visible,
+.wholesale select:focus-visible {
+  border-color: var(--color-oh-black);
+  outline: none;
+}
+
+.contact-success-message,
+.contact-error-message {
+  text-align: center;
+  font-family: 'mono';
+  font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 5px;
+}
+
+.contact-success-message {
+  background: rgba(60, 130, 80, 0.12);
+  color: rgb(45, 110, 65);
+}
+
+.contact-error-message {
+  background: rgba(216, 36, 12, 0.08);
+  color: var(--color-oh-red);
+}
+
+.contact-form-field select {
+  &,
+  &::picker(select) {
+    appearance: base-select;
+  }
+}
+.wholesale .contact-form-field select,
+.wholesale .contact-form-field input,
+.wholesale .contact-form-field textarea,
+.wholesale-toggle {
+  background: #ffffff;
+}
+
+.wholesale .geocoder-container {
+  width: 100%;
+}
+
+.wholesale .geoapify-autocomplete-input {
+  width: 100%;
+  height: auto;
+  line-height: normal;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid var(--color-oh-gray);
+  background: #ffffff;
+  color: var(--color-oh-black);
+  padding: 12px 36px 12px 12px;
+  transition: border-color 150ms ease-in-out;
+  font-size: 1rem;
+  font-family: 'apfel';
+}
+
+.wholesale .geoapify-autocomplete-input::placeholder {
+  color: var(--color-oh-gray-contact);
+}
+
+.wholesale .geoapify-autocomplete-input:focus-visible {
+  border-color: var(--color-oh-black);
+  outline: none;
+}
+
+.wholesale .geoapify-autocomplete-items {
+  background: white;
+  border: 1px solid var(--color-oh-gray);
+  border-radius: 5px;
+  margin-top: 4px;
+  overflow: hidden;
+  font-family: 'apfel';
+  font-size: 14px;
+}
+
+.wholesale .geoapify-autocomplete-items div:hover,
+.wholesale .geoapify-autocomplete-items .active {
+  background-color: var(--color-oh-gray);
+}
+
+.wholesale .geoapify-close-button {
+  color: var(--color-oh-gray-contact);
+  position: absolute;
+  right: 6px;
+  top: 0px;
+}
+
+@media (max-width: 767px) {
+  .wholesale-card {
+    padding: 0px;
+    border: none;
+  }
+  .wholesale-title {
+    font-size: 32px;
+    line-height: 32px;
+  }
+  .wholesale-toggle-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .wholesale-toggle {
+    align-self: flex-end;
+  }
+  .contact-form-row > .contact-form-field:last-of-type {
+    margin-bottom: 0;
+  }
+}
