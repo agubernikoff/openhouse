@@ -2963,11 +2963,13 @@ div:has(> .pdp-additional-info-image) {
   gap: 8px;
 }
 .contact input,
-.contact textarea {
+.contact textarea,
+.contact select {
   border-radius: 5px;
   background: transparent;
   border: 1px solid var(--color-oh-gray);
   color: var(--color-oh-white);
+  font-family: 'apfel';
   transition: border-color 150ms ease-in-out;
   margin: 0;
   padding: 12px;
@@ -2977,9 +2979,13 @@ div:has(> .pdp-additional-info-image) {
   color: var(--color-oh-gray-contact);
 }
 .contact input:focus-visible,
-.contact textarea:focus-visible {
+.contact textarea:focus-visible,
+.contact select:focus-visible {
   border-color: var(--color-oh-white);
   outline: none;
+}
+.contact select option {
+  color: var(--color-oh-black);
 }
 .contact form > button {
   margin-top: 1rem;
