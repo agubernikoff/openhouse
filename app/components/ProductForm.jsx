@@ -16,10 +16,6 @@ export function ProductForm({
   selectedVariant,
   variants = [],
   madeToOrderLeadTime,
-  orderType,
-  setOrderType,
-  selectedColors,
-  setSelectedColors,
 }) {
   const navigate = useNavigate();
   const {open} = useAside();
@@ -28,9 +24,16 @@ export function ProductForm({
     (option) => option.name !== 'Order Type',
   );
 
-  const productMinQty = selectedVariant?.product?.minimumQuantity?.value
-    ? parseInt(selectedVariant.product.minimumQuantity.value)
-    : null;
+  // A color is in stock if at least one of its size variants is not currentlyNotInStock.
+  const colorInStockMap = variants.reduce((acc, variant) => {
+    const color = variant.selectedOptions?.find(
+      (o) => o.name === 'Color',
+    )?.value;
+    if (color && !variant.currentlyNotInStock) {
+      acc[color] = true;
+    }
+    return acc;
+  }, {});
 
   const variantLeadTime = selectedVariant?.lead_time?.value
     ? mapRichText(JSON.parse(selectedVariant.lead_time.value))
@@ -47,8 +50,22 @@ export function ProductForm({
     ? mapRichText(JSON.parse(madeToOrderLeadTime))
     : null;
 
+  // A variant that's sellable but out of physical stock (backorder) is made-to-order.
+  const isMadeToOrder = !!selectedVariant?.currentlyNotInStock;
+  const displayLeadTime =
+    isMadeToOrder && parsedMadeToOrderLeadTime
+      ? parsedMadeToOrderLeadTime
+      : hasInStockLeadTime
+        ? inStockLeadTime
+        : null;
+
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  // null means untracked or made-to-order — no cap; 0 means truly out of stock
+  const selectedVariantQty = isMadeToOrder
+    ? null
+    : (selectedVariant?.quantityAvailable ?? null);
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -75,150 +92,36 @@ export function ProductForm({
     }, 500);
   };
 
-  const colorOption = productOptions.find((opt) => opt.name === 'Color');
-
-  // A color is in stock if at least one of its size variants is not currentlyNotInStock.
-  const colorInStockMap = variants.reduce((acc, variant) => {
-    const color = variant.selectedOptions?.find(
-      (o) => o.name === 'Color',
-    )?.value;
-    if (color && !variant.currentlyNotInStock) {
-      acc[color] = true;
-    }
-    return acc;
-  }, {});
-
-  const sampleDisabled = !colorOption?.optionValues?.some(
-    (opt) => colorInStockMap[opt.name],
-  );
-
-  const colorSwatchMap = Object.fromEntries(
-    (colorOption?.optionValues ?? []).map((v) => [v.name, v.swatch?.color]),
-  );
-
-  const colorMOQMap = Object.fromEntries(
-    (colorOption?.optionValues ?? []).map((v) => {
-      const variantMoq = v.variant?.minimumQuantity?.value
-        ? parseInt(v.variant.minimumQuantity.value)
-        : null;
-      return [v.name, variantMoq ?? productMinQty];
-    }),
-  );
-
-  const handleSizeChange = (colorName, sizeName, qty) => {
-    setSelectedColors((prev) =>
-      prev.map((c) =>
-        c.name === colorName ? {...c, sizes: {...c.sizes, [sizeName]: qty}} : c,
-      ),
-    );
-  };
-
-  const handleRemoveColor = (colorName) => {
-    setSelectedColors((prev) => prev.filter((c) => c.name !== colorName));
-  };
-  const variantQuantityMatrix = variants.reduce((acc, variant) => {
-    const color =
-      variant.selectedOptions?.find((o) => o.name === 'Color')?.value ?? '';
-    const size = variant.selectedOptions?.find((o) => o.name === 'Size')?.value;
-    if (size) {
-      if (!acc[color]) acc[color] = {};
-      acc[color][size] = Math.max(0, variant.quantityAvailable ?? 0);
-    }
-    return acc;
-  }, {});
-
-  const selectedVariantColor =
-    selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')?.value ??
-    '';
-  const selectedVariantSize =
-    selectedVariant?.selectedOptions?.find((o) => o.name === 'Size')?.value ??
-    '';
-  // null means inventory is untracked — no cap; 0 means out of stock
-  const selectedVariantQty =
-    selectedVariantColor || selectedVariantSize
-      ? (variantQuantityMatrix[selectedVariantColor]?.[selectedVariantSize] ??
-        null)
-      : null;
-
   useEffect(() => {
     if (selectedVariantQty !== null) {
       setQuantity((prev) => Math.min(prev, Math.max(1, selectedVariantQty)));
     }
   }, [selectedVariantQty]);
 
-  const handleOrderTypeChange = (type) => {
-    setOrderType(type);
-    if (type === 'sample') {
-      if (
-        !colorInStockMap[
-          selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')
-            ?.value
-        ]
-      ) {
-        const colorOption = productOptions.find((opt) => opt.name === 'Color');
-        const firstInStock = colorOption?.optionValues?.find(
-          (v) => colorInStockMap[v.name],
-        );
-        if (firstInStock) {
-          navigate(`?${firstInStock.variantUriQuery}`, {
-            replace: true,
-            preventScrollReset: true,
-          });
-        }
-      }
-    }
-  };
+  const available =
+    !!selectedVariant?.availableForSale &&
+    (selectedVariantQty === null ||
+      (selectedVariantQty > 0 && quantity <= selectedVariantQty));
+
+  const lines = selectedVariant
+    ? [
+        {
+          merchandiseId: selectedVariant.id,
+          quantity,
+          selectedVariant,
+          attributes: [{key: 'Order Type', value: 'Sample'}],
+        },
+      ]
+    : [];
+
+  const total = selectedVariant?.price?.amount
+    ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
+    : '0.00';
+
+  const isDisabled = !selectedVariant || !available;
 
   return (
     <div className="product-form">
-      <div className="product-options" key="order-type">
-        <div className="product-options-header">
-          <h5>
-            <span className="option-bullet">●</span>
-            <span className="option-number">1.</span> ORDER TYPE:{' '}
-            <AnimatePresence mode="popLayout">
-              <motion.span
-                key={orderType}
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                exit={{opacity: 0}}
-              >
-                {orderType.toUpperCase()}
-              </motion.span>
-            </AnimatePresence>
-          </h5>
-          <span className="option-required">REQUIRED</span>
-        </div>
-        <div className="product-options-grid">
-          {['wholesale', 'sample'].map((type) => {
-            const isSelected = orderType === type;
-            const isDisabled = type === 'sample' && sampleDisabled;
-            return (
-              <button
-                type="button"
-                className={`product-options-item${!isSelected && !isDisabled ? ' link' : ''}`}
-                key={type}
-                style={{
-                  border: isSelected
-                    ? '1px solid black'
-                    : '1px solid transparent',
-                  opacity: isDisabled ? 0.3 : 1,
-                  background: isSelected
-                    ? 'var(--color-oh-black)'
-                    : 'transparent',
-                  color: isSelected
-                    ? 'var(--color-oh-white)'
-                    : 'var(--color-oh-black)',
-                }}
-                disabled={isDisabled}
-                onClick={() => handleOrderTypeChange(type)}
-              >
-                {type.toUpperCase()}
-              </button>
-            );
-          })}
-        </div>
-      </div>
       {filteredOptions.map((option, index) => {
         const isColorOption = option.name.toLowerCase() === 'color';
         const isSizeOption = option.name.toLowerCase() === 'size';
@@ -232,7 +135,8 @@ export function ProductForm({
         const displayNumber =
           filteredOptions
             .slice(0, index)
-            .filter((opt) => opt.optionValues.length > 1).length + 2;
+            .filter((opt) => opt.optionValues.length > 1).length + 1;
+
         const inStock = isColorOption
           ? option.optionValues.filter((v) => colorInStockMap[v.name])
           : [];
@@ -252,20 +156,6 @@ export function ProductForm({
             swatch,
           } = value;
 
-          const isWholesaleColor = isColorOption && orderType === 'wholesale';
-          const isSelected = isWholesaleColor
-            ? selectedColors.some((c) => c.name === name)
-            : selected;
-
-          const isSampleSize = isSizeOption && orderType === 'sample';
-          const sampleSelectedColor = isSampleSize
-            ? (selectedVariant?.selectedOptions?.find((o) => o.name === 'Color')
-                ?.value ?? '')
-            : null;
-          const isSampleSizeOutOfStock =
-            isSampleSize &&
-            (variantQuantityMatrix[sampleSelectedColor]?.[name] ?? 0) === 0;
-
           if (isDifferentProduct) {
             return (
               <Link
@@ -276,7 +166,7 @@ export function ProductForm({
                 replace
                 to={`/products/${handle}?${variantUriQuery}`}
                 style={{
-                  border: isSelected
+                  border: selected
                     ? '1px solid black'
                     : '1px solid transparent',
                   opacity: available ? 1 : 0.3,
@@ -289,31 +179,23 @@ export function ProductForm({
           return (
             <button
               type="button"
-              className={`product-options-item${exists && !isSelected && !isSampleSizeOutOfStock ? ' link' : ''}`}
+              className={`product-options-item${exists && !selected ? ' link' : ''}`}
               key={option.name + name}
               style={{
-                border: isSelected
-                  ? '1px solid black'
-                  : '1px solid transparent',
-                opacity: available && !isSampleSizeOutOfStock ? 1 : 0.3,
+                border: selected ? '1px solid black' : '1px solid transparent',
+                opacity: available ? 1 : 0.3,
                 background:
-                  isSelected && !isColorOption
+                  selected && !isColorOption
                     ? 'var(--color-oh-black)'
                     : 'transparent',
                 color:
-                  isSelected && !isColorOption
+                  selected && !isColorOption
                     ? 'var(--color-oh-white)'
                     : 'var(--color-oh-black)',
               }}
-              disabled={!exists || isSampleSizeOutOfStock}
+              disabled={!exists}
               onClick={() => {
-                if (isWholesaleColor) {
-                  setSelectedColors((prev) =>
-                    prev.some((c) => c.name === name)
-                      ? prev.filter((c) => c.name !== name)
-                      : [...prev, {name, sizes: {}}],
-                  );
-                } else if (!isSelected) {
+                if (!selected) {
                   void navigate(`?${variantUriQuery}`, {
                     replace: true,
                     preventScrollReset: true,
@@ -336,58 +218,16 @@ export function ProductForm({
               <h5>
                 <span className="option-bullet">●</span>
                 <span className="option-number">{displayNumber}.</span>{' '}
-                <span style={{display: 'flex'}}>
-                  {option.name.toUpperCase()}
-                  <AnimatePresence>
-                    {isColorOption && orderType === 'wholesale' && (
-                      <motion.span
-                        key="color-s"
-                        initial={{width: 0}}
-                        animate={{width: 'auto'}}
-                        exit={{width: 0}}
-                        style={{overflow: 'hidden', display: 'inline-block'}}
-                      >
-                        S
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                  :
-                </span>{' '}
+                {option.name.toUpperCase()}:{' '}
                 <AnimatePresence mode="popLayout">
-                  {isColorOption && orderType === 'wholesale' ? (
-                    selectedColors.flatMap((colorObj, i) =>
-                      colorObj.name.split(' ').map((word, j, words) => {
-                        const isLastWord = j === words.length - 1;
-                        const isLastColor = i === selectedColors.length - 1;
-                        const suffix = isLastWord
-                          ? isLastColor
-                            ? ''
-                            : ', '
-                          : ' ';
-                        return (
-                          <motion.span
-                            key={`${colorObj.name}-${word}`}
-                            initial={{opacity: 0}}
-                            animate={{opacity: 1}}
-                            exit={{opacity: 0}}
-                            style={{lineHeight: '24px'}}
-                          >
-                            {word.toUpperCase()}
-                            {suffix}
-                          </motion.span>
-                        );
-                      }),
-                    )
-                  ) : orderType === 'sample' ? (
-                    <motion.span
-                      key={selectedName}
-                      initial={{opacity: 0}}
-                      animate={{opacity: 1}}
-                      exit={{opacity: 0}}
-                    >
-                      {selectedName.toUpperCase()}
-                    </motion.span>
-                  ) : null}
+                  <motion.span
+                    key={selectedName}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                  >
+                    {selectedName.toUpperCase()}
+                  </motion.span>
                 </AnimatePresence>
               </h5>
               <span className="option-required">REQUIRED</span>
@@ -396,24 +236,11 @@ export function ProductForm({
             {isColorOption ? (
               <motion.div layout="position">
                 <ColorOptionGrid
-                  orderType={orderType}
                   inStock={inStock}
                   madeToOrder={madeToOrder}
                   renderValue={renderValue}
                 />
               </motion.div>
-            ) : isSizeOption ? (
-              <SizeOptionGrid
-                orderType={orderType}
-                optionValues={option.optionValues}
-                selectedColors={selectedColors}
-                colorSwatchMap={colorSwatchMap}
-                colorMOQMap={colorMOQMap}
-                variantQuantityMatrix={variantQuantityMatrix}
-                onSizeChange={handleSizeChange}
-                onRemoveColor={handleRemoveColor}
-                renderValue={renderValue}
-              />
             ) : (
               <div className="product-options-grid">
                 {option.optionValues.map(renderValue)}
@@ -426,169 +253,60 @@ export function ProductForm({
       {/* <ArtworkUpload selectedVariant={selectedVariant} optionNumber={...} /> */}
 
       <motion.div layout="position">
-        {/* Quantity display and bulk order info */}
         <div className="product-quantity-info">
-          {/* {hasMinimumQuantity && (
-            <p>Minimum Order Quantity: {minimumQuantity} units</p>
-          )} */}
-          <AnimatePresence>
-            {/* {orderType === 'sample' && ( */}
-            <motion.div
-              className="quantity-selector"
-              initial={{height: 0}}
-              animate={{height: orderType === 'sample' ? 'auto' : 0}}
-              // exit={{height: 0}}
-              style={{overflow: 'hidden'}}
-            >
-              <div className="quantity-controls">
-                <span>QTY</span>
-                <button
-                  type="button"
-                  onClick={decreaseQuantity}
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  min={1}
-                />
-                <button
-                  type="button"
-                  onClick={increaseQuantity}
-                  disabled={
-                    selectedVariantQty !== null &&
-                    quantity >= selectedVariantQty
-                  }
-                >
-                  +
-                </button>
-              </div>
-            </motion.div>
-            {/* )} */}
-          </AnimatePresence>
-          {(() => {
-            const anyExceedsStock = selectedColors.some((colorObj) =>
-              Object.entries(colorObj.sizes).some(
-                ([sizeName, qty]) =>
-                  qty > (variantQuantityMatrix[colorObj.name]?.[sizeName] ?? 0),
-              ),
-            );
-            const isMadeToOrder = anyExceedsStock && parsedMadeToOrderLeadTime;
-            const displayLeadTime = isMadeToOrder
-              ? parsedMadeToOrderLeadTime
-              : hasInStockLeadTime
-                ? inStockLeadTime
-                : null;
-            return displayLeadTime ? (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                  color: isMadeToOrder ? 'var(--color-oh-yellow)' : undefined,
-                }}
+          <div className="quantity-selector">
+            <div className="quantity-controls">
+              <span>QTY</span>
+              <button
+                type="button"
+                onClick={decreaseQuantity}
+                disabled={quantity <= 1}
               >
-                Estimated lead time: {displayLeadTime}
-              </div>
-            ) : null;
-          })()}
+                -
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={handleQuantityChange}
+                min={1}
+              />
+              <button
+                type="button"
+                onClick={increaseQuantity}
+                disabled={
+                  selectedVariantQty !== null && quantity >= selectedVariantQty
+                }
+              >
+                +
+              </button>
+            </div>
+          </div>
+          {displayLeadTime ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                color: isMadeToOrder ? 'var(--color-oh-yellow)' : undefined,
+              }}
+            >
+              Estimated lead time: {displayLeadTime}
+            </div>
+          ) : null}
         </div>
 
-        {(() => {
-          const sampleLines = selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity,
-                  selectedVariant,
-                  attributes: [{key: 'Order Type', value: 'Sample'}],
-                },
-              ]
-            : [];
-
-          const wholesaleLines = selectedColors.flatMap(
-            ({name: color, sizes}) =>
-              Object.entries(sizes)
-                .filter(([, qty]) => qty > 0)
-                .map(([sizeName, qty]) => {
-                  const variant = variants.find(
-                    (v) =>
-                      v.selectedOptions?.find(
-                        (o) => o.name === 'Color' && o.value === color,
-                      ) &&
-                      v.selectedOptions?.find(
-                        (o) => o.name === 'Size' && o.value === sizeName,
-                      ),
-                  );
-                  return variant
-                    ? {
-                        merchandiseId: variant.id,
-                        quantity: qty,
-                        selectedVariant: variant,
-                        attributes: [
-                          {key: '_color', value: color},
-                          {key: '_order_type', value: 'wholesale'},
-                        ],
-                      }
-                    : null;
-                })
-                .filter(Boolean),
-          );
-
-          const wholesaleTotal = wholesaleLines
-            .reduce((sum, line) => {
-              const variant = variants.find((v) => v.id === line.merchandiseId);
-              return (
-                sum + parseFloat(variant?.price?.amount ?? 0) * line.quantity
-              );
-            }, 0)
-            .toFixed(2);
-
-          const sampleTotal = selectedVariant?.price?.amount
-            ? (parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)
-            : '0.00';
-
-          const anyColorBelowMOQ = selectedColors.some((colorObj) => {
-            const moq = colorMOQMap[colorObj.name];
-            if (moq == null) return false;
-            const total = Object.values(colorObj.sizes).reduce(
-              (sum, q) => sum + q,
-              0,
-            );
-            return total < moq;
-          });
-
-          const sampleAvailable =
-            !!selectedVariant?.availableForSale &&
-            (selectedVariantQty === null ||
-              (selectedVariantQty > 0 && quantity <= selectedVariantQty));
-
-          const lines = orderType === 'sample' ? sampleLines : wholesaleLines;
-          const isDisabled =
-            orderType === 'sample'
-              ? !selectedVariant || !sampleAvailable
-              : wholesaleLines.length === 0 || anyColorBelowMOQ;
-
-          return (
-            <AddToCartButton
-              className="add-cart"
-              disabled={isDisabled}
-              onClick={handleAddToCart}
-              lines={lines}
-            >
-              {added
-                ? 'ADDED TO CART'
-                : orderType === 'sample'
-                  ? sampleAvailable
-                    ? `ADD TO CART - $${sampleTotal}`
-                    : 'SOLD OUT'
-                  : `ADD TO CART - $${wholesaleTotal}`}
-            </AddToCartButton>
-          );
-        })()}
+        <AddToCartButton
+          className="add-cart"
+          disabled={isDisabled}
+          onClick={handleAddToCart}
+          lines={lines}
+        >
+          {added
+            ? 'ADDED TO CART'
+            : available
+              ? `ADD TO CART - $${total}`
+              : 'SOLD OUT'}
+        </AddToCartButton>
 
         <div className="button-divider">
           <span>OR</span>
@@ -609,10 +327,10 @@ export function ProductForm({
   );
 }
 
-function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
+function ColorOptionGrid({inStock, madeToOrder, renderValue}) {
   return (
     <AnimatePresence mode="sync">
-      {orderType === 'wholesale' && inStock.length > 0 && (
+      {inStock.length > 0 && (
         <motion.h5
           key="in-stock-label"
           className="color-group-label"
@@ -625,7 +343,7 @@ function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
         </motion.h5>
       )}
       <div className="product-options-grid">{inStock.map(renderValue)}</div>
-      {orderType === 'wholesale' && madeToOrder.length > 0 && (
+      {madeToOrder.length > 0 && (
         <motion.h5
           key="made-to-order-label"
           className="color-group-label"
@@ -637,7 +355,7 @@ function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
           MADE TO ORDER
         </motion.h5>
       )}
-      {orderType === 'wholesale' && madeToOrder.length > 0 && (
+      {madeToOrder.length > 0 && (
         <motion.div
           key="made-to-order-grid"
           className="product-options-grid"
@@ -650,186 +368,6 @@ function ColorOptionGrid({orderType, inStock, madeToOrder, renderValue}) {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-function SizeOptionGrid({
-  orderType,
-  optionValues,
-  selectedColors,
-  colorSwatchMap,
-  colorMOQMap,
-  variantQuantityMatrix,
-  onSizeChange,
-  onRemoveColor,
-  renderValue,
-}) {
-  if (orderType === 'wholesale') {
-    return (
-      <AnimatePresence>
-        {selectedColors.map((colorObj) => {
-          const {name: color, sizes} = colorObj;
-          const total = Object.values(sizes).reduce((sum, q) => sum + q, 0);
-          const moq = colorMOQMap[color];
-          return (
-            <motion.div
-              key={color}
-              initial={{height: 0, marginBottom: 0}}
-              animate={{height: 'auto', marginBottom: '1rem'}}
-              exit={{height: 0, marginBottom: 0}}
-              style={{
-                '--swatch-color': colorSwatchMap[color],
-                overflow: 'hidden',
-              }}
-            >
-              <div className="product-options-header color-group-label">
-                <h5>
-                  <span className="option-bullet">●</span>
-                  {color.toUpperCase()}
-                </h5>
-                <button
-                  type="button"
-                  onClick={() => onRemoveColor(color)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    color: 'var(--color-oh-black)',
-                    fontFamily: 'apfel',
-                    fontWeight: 400,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-
-              {(() => {
-                const anyExceedsStock = optionValues.some(
-                  ({name}) =>
-                    (sizes[name] ?? 0) >
-                    (variantQuantityMatrix[color]?.[name] ?? 0),
-                );
-                return (
-                  <>
-                    <div className="product-options-grid">
-                      {optionValues.map(({name, exists}) => {
-                        const available = Math.max(
-                          0,
-                          variantQuantityMatrix[color]?.[name] ?? 0,
-                        );
-                        const exceeds = (sizes[name] ?? 0) > available;
-                        return (
-                          <div
-                            key={name}
-                            className="product-options-item"
-                            style={{
-                              opacity: exists ? 1 : 0.3,
-                              ...(exceeds && {
-                                borderColor: 'var(--color-oh-yellow)',
-                              }),
-                            }}
-                          >
-                            <label htmlFor={`size-${color}-${name}`}>
-                              {name.toUpperCase()}
-                            </label>
-                            <input
-                              id={`size-${color}-${name}`}
-                              type="number"
-                              min={0}
-                              max={9999}
-                              value={sizes[name] ?? 0}
-                              onChange={(e) =>
-                                onSizeChange(
-                                  color,
-                                  name,
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              disabled={!exists}
-                            />
-                            <p className="color-group-label">{available}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <AnimatePresence>
-                        {anyExceedsStock && (
-                          <motion.p
-                            className="moq-label"
-                            initial={{height: 0}}
-                            animate={{height: 'auto'}}
-                            exit={{height: 0}}
-                            style={{
-                              overflow: 'hidden',
-                              color: 'var(--color-oh-yellow)',
-                            }}
-                          >
-                            +LEAD TIME
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
-                      {moq != null && (
-                        <p
-                          className="moq-label"
-                          style={{
-                            marginLeft: 'auto',
-                            color:
-                              total >= moq
-                                ? 'var(--color-oh-black)'
-                                : 'var(--color-oh-red)',
-                          }}
-                        >
-                          {`TOTAL(${total})`}
-                          <AnimatePresence>
-                            {total < moq && (
-                              <motion.span
-                                key="below-moq"
-                                initial={{width: 0, paddingLeft: 0}}
-                                animate={{width: 'auto', paddingLeft: 4}}
-                                exit={{width: 0, paddingLeft: 0}}
-                                style={{
-                                  overflow: 'hidden',
-                                  display: 'inline-block',
-                                }}
-                              >
-                                {`IS BELOW MOQ(${moq})`}
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                        </p>
-                      )}
-                    </div>
-                  </>
-                );
-              })()}
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-    );
-  }
-
-  return (
-    <motion.div
-      key={'sample-size-grid'}
-      initial={{height: 0}}
-      animate={{height: 'auto'}}
-      exit={{height: 0}}
-      style={{
-        overflow: 'hidden',
-      }}
-      className="product-options-grid"
-    >
-      {optionValues.map(renderValue)}
-    </motion.div>
   );
 }
 

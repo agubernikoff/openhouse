@@ -3,6 +3,7 @@ import {useLoaderData} from 'react-router';
 import React, {useState} from 'react';
 import emailjs from '@emailjs/browser';
 import {Image} from '@shopify/hydrogen';
+import {HEAR_ABOUT_US_OPTIONS} from '~/lib/constants';
 
 /**
  * @type {Route.MetaFunction}
@@ -51,6 +52,7 @@ export default function Contact() {
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
+  const [howHeard, setHowHeard] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
 
@@ -65,10 +67,11 @@ export default function Contact() {
       const result = await emailjs.send('service_av8jceg', 'template_w2oc5gh', {
         firstName: first,
         lastName: last,
-        email: email,
-        phone: phone,
-        company: company,
-        message: message,
+        email,
+        phone,
+        company,
+        message,
+        howHeard,
       });
 
       console.log('Email sent successfully:', result);
@@ -80,6 +83,7 @@ export default function Contact() {
       setPhone('');
       setCompany('');
       setMessage('');
+      setHowHeard('');
     } catch (error) {
       console.error('Email send failed:', error);
       setSubmitStatus('error');
@@ -194,6 +198,27 @@ export default function Contact() {
           value={company}
           setter={setCompany}
         />
+        <div className="contact-form-field">
+          <label htmlFor="howHeard" className="contact-label">
+            How did you hear about us?
+          </label>
+          <select
+            id="howHeard"
+            className="contact-input"
+            value={howHeard}
+            onChange={(e) => setHowHeard(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Select one
+            </option>
+            {HEAR_ABOUT_US_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="contact-form-field">
           <label htmlFor="message">{'Order / Special Instructions'}</label>
           <textarea
