@@ -320,10 +320,6 @@ export default function Wholesale() {
           >
             {isSubmitting ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
           </button>
-          <p className="wholesale-disclaimer">
-            Saved to your Shopify customer profile. Storefront always shows
-            retail pricing.
-          </p>
           {submitStatus === 'success' && (
             <div className="contact-success-message">
               Thank you! Your application has been submitted for review.
