@@ -884,7 +884,7 @@ query GetFAQ() {
   metaobject(
     handle: {
       type: "faq_section"
-      handle: "faq-section-xp0vokbs"}
+      handle: "faq-section-qh2drvpe"}
   ) {
     id
     type
