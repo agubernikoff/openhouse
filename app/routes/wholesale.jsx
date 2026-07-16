@@ -2,7 +2,14 @@ import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData} from 'react-router';
 import {useState, useEffect, useRef} from 'react';
 import {motion} from 'motion/react';
+import emailjs from '@emailjs/browser';
 import {HEAR_ABOUT_US_OPTIONS} from '~/lib/constants';
+
+// Same EmailJS account/service as the contact form (contact.jsx) — only the
+// template differs, since this is a distinct notification email.
+const EMAILJS_PUBLIC_KEY = 'QQa6MrphrNfk73qci';
+const EMAILJS_SERVICE_ID = 'service_av8jceg';
+const EMAILJS_NOTIFICATION_TEMPLATE_ID = 'template_o4bteou';
 
 /**
  * @type {Route.MetaFunction}
@@ -109,6 +116,34 @@ export default function Wholesale() {
 
       if (!response.ok || result.error) {
         throw new Error(result.error || 'Something went wrong.');
+      }
+
+      try {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_NOTIFICATION_TEMPLATE_ID,
+          {
+            buyerType,
+            meetsMinimumOrder,
+            hasBusinessWebsite,
+            hasBusinessDocuments,
+            firstName,
+            lastName,
+            email,
+            phone,
+            companyName,
+            businessWebsite,
+            businessAddress,
+            einTaxId,
+            estimatedMonthlyVolume,
+            howHeard,
+            notes,
+            customerUrl: result.customerUrl,
+          },
+        );
+      } catch (notifyError) {
+        console.error('Wholesale notification email failed:', notifyError);
       }
 
       setSubmitStatus('success');

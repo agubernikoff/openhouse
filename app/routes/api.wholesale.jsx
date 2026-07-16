@@ -91,13 +91,102 @@ export async function action({request, context}) {
       variables: {id: payload.customer.id, tags: [WHOLESALE_APPLICANT_TAG]},
     });
 
-    return Response.json({success: true});
+    const customerUrl = buildCustomerUrl(payload.customer.id, context);
+    context.waitUntil(notifySlack(data, context, customerUrl));
+
+    return Response.json({success: true, customerUrl});
   } catch (error) {
     console.error('Wholesale application submission failed:', error);
     return Response.json(
       {error: 'Something went wrong. Please try again.'},
       {status: 500},
     );
+  }
+}
+
+function buildCustomerUrl(customerId, context) {
+  const numericCustomerId = customerId.split('/').pop();
+  const storeHandle = context.env.PUBLIC_STORE_DOMAIN.replace(
+    /\.myshopify\.com$/,
+    '',
+  );
+  return `https://admin.shopify.com/store/${storeHandle}/customers/${numericCustomerId}`;
+}
+
+async function notifySlack(data, context, customerUrl) {
+  const webhookUrl = context.env.SLACK_WHOLESALE_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        text: `New wholesale application: ${data.firstName} ${data.lastName} (${data.companyName})`,
+        blocks: [
+          {
+            type: 'header',
+            text: {type: 'plain_text', text: 'New Wholesale Application'},
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: [
+                `*Company:* ${data.companyName}`,
+                `*Contact:* ${data.firstName} ${data.lastName}`,
+                `*Email:* ${data.email}`,
+                `*Phone:* ${data.phone || '—'}`,
+              ].join('\n'),
+            },
+          },
+          {type: 'divider'},
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: [
+                '*Qualifying Questions*',
+                `*Buyer type:* ${data.buyerType}`,
+                `*Meets 50-unit minimum:* ${data.meetsMinimumOrder}`,
+                `*Has business website:* ${data.hasBusinessWebsite}`,
+                `*Has business documents:* ${data.hasBusinessDocuments}`,
+              ].join('\n'),
+            },
+          },
+          {type: 'divider'},
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: [
+                '*Business Details*',
+                `*Business website:* ${data.businessWebsite}`,
+                `*Business address:* ${data.businessAddress}`,
+                `*EIN / Tax ID:* ${data.einTaxId || '—'}`,
+                `*Estimated monthly volume:* ${data.estimatedMonthlyVolume || '—'}`,
+                `*How they heard about us:* ${data.howHeard}`,
+                `*Notes:* ${data.notes || '—'}`,
+              ].join('\n'),
+            },
+          },
+          {type: 'divider'},
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `<${customerUrl}|View customer in Shopify>`,
+            },
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Slack notification failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Slack notification request failed:', error);
   }
 }
 
