@@ -312,17 +312,39 @@ export function ProductForm({
           <span>OR</span>
         </div>
 
-        <div className="custom-cta">
-          <h5>CUSTOM</h5>
-          <p>
-            Want to change body shape, use a Pantone color, or modify weight or
-            material?
-          </p>
-          <NavLink to="/contact" className="sample-button">
-            GET IN TOUCH
-          </NavLink>
-        </div>
+        {/* <AdditionalCTA
+          text="Want to change body shape, use a Pantone color, or modify weight or
+            material?"
+          link="/contact"
+          linkText="GET IN TOUCH"
+          header="CUSTOM"
+        />
+
+        <div className="button-divider">
+          <span>OR</span>
+        </div> */}
+
+        <AdditionalCTA
+          text="Looking to order in bulk?"
+          link="/wholesale"
+          linkText="APPLY FOR A WHOLESALE ACCOUNT"
+          header="BULK ORDERS"
+        />
       </motion.div>
+    </div>
+  );
+}
+
+function AdditionalCTA({text, link, linkText, header}) {
+  return (
+    <div className="custom-cta">
+      <h5>{header}</h5>
+      <div className="additional-cta">
+        <p>{text}</p>
+        <NavLink to={link} className="sample-button">
+          {linkText}
+        </NavLink>
+      </div>
     </div>
   );
 }
