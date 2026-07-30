@@ -279,11 +279,12 @@ function Hero({data}) {
       {isImage && (
         <Image
           data={fields?.background?.reference?.image}
+          alt=""
           sizes="100vw"
           className="media-element"
         />
       )}
-      <h2>
+      <h1>
         <em className="rotating-brands-mobile-adj">
           Custom Product Collections
           <br />
@@ -306,7 +307,7 @@ function Hero({data}) {
           ]}
         />
         <span className="rotating-brands-mobile-adj">{' Brands'}</span>
-      </h2>
+      </h1>
       <div>
         <p>{fields?.subtext?.value}</p>
         <Link to={url} className="explore-all">
@@ -512,6 +513,7 @@ function FeaturedCollectionContent({response}) {
           <div>
             <button
               className="carousel-btn left"
+              aria-label="Previous products"
               onClick={prev}
               disabled={index === 0}
             >
@@ -520,6 +522,7 @@ function FeaturedCollectionContent({response}) {
                 height="15"
                 viewBox="0 0 32 15"
                 fill="none"
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
@@ -530,6 +533,7 @@ function FeaturedCollectionContent({response}) {
             </button>
             <button
               className="carousel-btn right"
+              aria-label="Next products"
               onClick={next}
               disabled={index === maxIndex}
             >
@@ -538,6 +542,7 @@ function FeaturedCollectionContent({response}) {
                 height="15"
                 viewBox="0 0 32 15"
                 fill="none"
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
@@ -577,6 +582,7 @@ function CollectionGrid({collections}) {
                       <Link to={`/collections/${coll.handle}`}>
                         <Image
                           data={coll.image}
+                          alt={coll.image?.altText || coll.title}
                           sizes="(min-width: 500px) 30vw, 100vw"
                         />
                         <p>{coll.title}</p>
@@ -626,10 +632,17 @@ function CollectionsHeroContent({data}) {
           animate={{opacity: 1}}
           exit={{opacity: 0}}
         >
-          {selected && <Image data={selected?.image} sizes="100vw" />}
+          {selected && (
+            <Image
+              data={selected?.image}
+              alt={selected?.image?.altText || selected?.title}
+              sizes="100vw"
+            />
+          )}
           {fields?.collections?.references?.nodes.map((n) => (
             <Image
               data={n.image}
+              alt={n.image?.altText || n.title}
               key={n.id}
               sizes="100vw"
               styles={{position: 'absolute', inset: 0}}

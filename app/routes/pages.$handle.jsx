@@ -93,7 +93,7 @@ export default function Page() {
       {page.sections ? (
         <Sections sections={page.sections?.references?.nodes} />
       ) : (
-        <main dangerouslySetInnerHTML={{__html: page.body}} />
+        <div dangerouslySetInnerHTML={{__html: page.body}} />
       )}
     </div>
   );
@@ -145,10 +145,10 @@ export function Sections({sections}) {
   });
 
   return (
-    <main>
+    <div>
       <ScrollToHashEffect refsMap={refsMap} />
       {mapped}
-    </main>
+    </div>
   );
 }
 
@@ -326,6 +326,7 @@ function AnimatedImage({image, progress, isFirst, isSelected}) {
     >
       <Image
         data={image?.reference?.image}
+        alt=""
         sizes="(min-width: 45em) 40vw, 100vw"
       />
     </motion.div>
@@ -358,6 +359,7 @@ function ScrollingContent({data, index, onScrollProgressChange}) {
       <div className="animated-scroll-object-image-container">
         <Image
           data={image?.reference?.image}
+          alt=""
           sizes="(min-width: 45em) 40vw, 100vw"
         />
         <motion.div className="scroll-progress-bar" style={{width: x}} />
@@ -465,6 +467,7 @@ function StickyScroll({section}) {
         <div>
           <Image
             data={image?.reference?.image}
+            alt={image?.reference?.image?.altText || title?.value || ''}
             sizes="(min-width: 45em) 25vw, 100vw"
             className="sticky-scroll-image"
           />
@@ -485,7 +488,11 @@ function ServicesHeader({section}) {
             aspectRatio: `${image?.reference?.image?.width}/${image?.reference?.image?.height}`,
           }}
         >
-          <Image data={image?.reference?.image} sizes="25vw" />
+          <Image
+            data={image?.reference?.image}
+            alt={image?.reference?.image?.altText || header?.value || ''}
+            sizes="25vw"
+          />
         </div>
         <div className="services-header-text-container">
           <p>{label?.value?.toUpperCase()}</p>
@@ -595,13 +602,14 @@ function PageHero({section}) {
 
   return (
     <section className="hero-section">
-      <Image data={background?.reference?.image} sizes="100vw" />
+      <Image data={background?.reference?.image} alt="" sizes="100vw" />
       <div>
         <svg
           width="66"
           height="28"
           viewBox="0 0 66 28"
           fill="none"
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -665,6 +673,7 @@ function Marquee({section}) {
           <Image
             key={i.id}
             data={i.image}
+            alt=""
             sizes="(min-width: 767px) 30vw, 100vw"
           />
         ))}

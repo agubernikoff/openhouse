@@ -67,6 +67,9 @@ export function Footer({
               <div className="footer-legal-left">
                 <a href="/policies/privacy-policy">Privacy Policy</a>
                 <a href="/policies/terms-of-service">Terms & Conditions</a>
+                <a href="/pages/accessibility-statement">
+                  Accessibility Statement
+                </a>
               </div>
               <div className="footer-legal-right">
                 © {new Date().getFullYear()} Openhouse Inc. All rights reserved
@@ -147,6 +150,7 @@ function Testimonials({data}) {
               <div>
                 <button
                   className="carousel-btn left"
+                  aria-label="Previous testimonial"
                   onClick={prev}
                   disabled={index === 1}
                 >
@@ -155,6 +159,7 @@ function Testimonials({data}) {
                     height="15"
                     viewBox="0 0 32 15"
                     fill="none"
+                    aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
@@ -165,6 +170,7 @@ function Testimonials({data}) {
                 </button>
                 <button
                   className="carousel-btn right"
+                  aria-label="Next testimonial"
                   onClick={next}
                   disabled={
                     index * -1 ===
@@ -176,6 +182,7 @@ function Testimonials({data}) {
                     height="15"
                     viewBox="0 0 32 15"
                     fill="none"
+                    aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
@@ -277,6 +284,7 @@ function FooterNewsletter() {
         {displayErr && (
           <motion.p
             key="error"
+            role="alert"
             initial={{opacity: 0}}
             animate={{opacity: 1}}
             exit={{opacity: 0}}
@@ -288,6 +296,7 @@ function FooterNewsletter() {
         {displaySucc && (
           <motion.p
             key="success"
+            role="status"
             initial={{opacity: 0}}
             animate={{opacity: 1}}
             exit={{opacity: 0}}
@@ -301,11 +310,14 @@ function FooterNewsletter() {
         <input
           id="email"
           name="email"
+          type="email"
+          aria-label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           className="footer-newsletter-input"
           autoComplete="off"
+          required
           disabled={isSubmitting}
         />
         <button

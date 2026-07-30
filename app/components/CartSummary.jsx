@@ -158,6 +158,7 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
             <textarea
               className="special-instructions-textarea"
               ref={textareaRef}
+              aria-label="Special instructions for your order"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder="Add any special instructions for your order."
@@ -172,8 +173,6 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
                 minHeight: '80px',
                 background: 'transparent',
                 maxHeight: '80px',
-                outline: 'none',
-                boxShadow: 'none',
               }}
             />
           </div>

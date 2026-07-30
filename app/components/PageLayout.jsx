@@ -1,14 +1,8 @@
-import {Await, Link, useFetcher} from 'react-router';
-import {Suspense, useId, useEffect, useState} from 'react';
+import {Await, useFetcher, useLocation} from 'react-router';
+import {Suspense, useEffect, useRef, useState} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
-import {Header, HeaderMenu} from '~/components/Header';
-import {CartMain} from '~/components/CartMain';
-import {
-  SEARCH_ENDPOINT,
-  SearchFormPredictive,
-} from '~/components/SearchFormPredictive';
-import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import {Header} from '~/components/Header';
 import {usePopUp} from '~/context/PopUpContext';
 import {motion, AnimatePresence} from 'motion/react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
@@ -29,12 +23,30 @@ export function PageLayout({
   pop_up,
 }) {
   const {shouldShowPopup} = usePopUp();
+  const {pathname} = useLocation();
+  const mainRef = useRef(null);
+  const isInitialMount = useRef(true);
+
+  // Client-side route changes don't reset focus like a full page load
+  // would. Since the header/footer are part of the persistent layout (not
+  // remounted on navigation), a keyboard user who navigates via a footer or
+  // header link stays focused right there — Tab then just continues through
+  // the footer/header instead of the new page. Move focus to the main
+  // content region after every navigation (but not on initial load, where
+  // the browser's own default focus behavior is correct).
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    mainRef.current?.focus();
+  }, [pathname]);
+
   return (
     <Aside.Provider>
       <AnimatePresence>
         {shouldShowPopup() && <WelcomePopup data={pop_up} />}
       </AnimatePresence>
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
           header={header}
@@ -44,7 +56,9 @@ export function PageLayout({
           about_image={about_image}
         />
       )}
-      <main>{children}</main>
+      <main id="main-content" tabIndex={-1} ref={mainRef}>
+        {children}
+      </main>
       <Footer
         footer={footer}
         header={header}
@@ -110,7 +124,15 @@ function WelcomePopup({data}) {
                     </button>
                     {imageData && (
                       <div>
-                        <Image data={imageData} sizes="500px" />
+                        <Image
+                          data={imageData}
+                          alt={
+                            imageData?.altText ||
+                            fields.heading?.value ||
+                            'Promotional offer'
+                          }
+                          sizes="500px"
+                        />
                       </div>
                     )}
                     {hasContent && (
@@ -197,11 +219,14 @@ export function NewsletterForm({handleClose}) {
         <input
           id="email"
           name="email"
+          type="email"
+          aria-label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           className="footer-newsletter-input"
           autoComplete="off"
+          required
           disabled={isSubmitting}
         />
         <button type="submit" aria-label="Subscribe" disabled={isSubmitting}>
@@ -210,6 +235,7 @@ export function NewsletterForm({handleClose}) {
             height="18"
             viewBox="0 0 18 18"
             fill="none"
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
           >
             <g transform="translate(0, -1)">
@@ -234,6 +260,7 @@ export function NewsletterForm({handleClose}) {
         {displayErr && (
           <motion.p
             key="error"
+            role="alert"
             initial={{opacity: 0}}
             animate={{opacity: 1}}
             exit={{opacity: 0}}
@@ -245,6 +272,7 @@ export function NewsletterForm({handleClose}) {
         {displaySucc && (
           <motion.p
             key="success"
+            role="status"
             initial={{opacity: 0}}
             animate={{opacity: 1}}
             exit={{opacity: 0}}
@@ -255,127 +283,6 @@ export function NewsletterForm({handleClose}) {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-/**
- * @param {{cart: PageLayoutProps['cart']}}
- */
-function CartAside({cart}) {
-  return (
-    <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cart}>
-          {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
-          }}
-        </Await>
-      </Suspense>
-    </Aside>
-  );
-}
-
-function SearchAside() {
-  const queriesDatalistId = useId();
-  return (
-    <Aside type="search" heading="SEARCH">
-      <div className="predictive-search">
-        <br />
-        <SearchFormPredictive>
-          {({fetchResults, goToSearch, inputRef}) => (
-            <>
-              <input
-                name="q"
-                onChange={fetchResults}
-                onFocus={fetchResults}
-                placeholder="Search"
-                ref={inputRef}
-                type="search"
-                list={queriesDatalistId}
-              />
-              &nbsp;
-              <button onClick={goToSearch}>Search</button>
-            </>
-          )}
-        </SearchFormPredictive>
-
-        <SearchResultsPredictive>
-          {({items, total, term, state, closeSearch}) => {
-            const {articles, collections, pages, products, queries} = items;
-
-            if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
-            }
-
-            if (!total) {
-              return <SearchResultsPredictive.Empty term={term} />;
-            }
-
-            return (
-              <>
-                <SearchResultsPredictive.Queries
-                  queries={queries}
-                  queriesDatalistId={queriesDatalistId}
-                />
-                <SearchResultsPredictive.Products
-                  products={products}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Collections
-                  collections={collections}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Pages
-                  pages={pages}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Articles
-                  articles={articles}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                {term.current && total ? (
-                  <Link
-                    onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
-                  >
-                    <p>
-                      View all results for <q>{term.current}</q>
-                      &nbsp; →
-                    </p>
-                  </Link>
-                ) : null}
-              </>
-            );
-          }}
-        </SearchResultsPredictive>
-      </div>
-    </Aside>
-  );
-}
-
-/**
- * @param {{
- *   header: PageLayoutProps['header'];
- *   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
- * }}
- */
-function MobileMenuAside({header, publicStoreDomain}) {
-  return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
-        <HeaderMenu
-          menu={header.menu}
-          viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-      </Aside>
-    )
   );
 }
 

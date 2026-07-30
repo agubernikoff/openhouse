@@ -107,13 +107,13 @@ export default function Contact() {
           <Image data={heroImage} alt="Contact hero" sizes="100vw" />
         ) : null}
       </div>
-      <h3 className="contact-hero-text">
+      <h1 className="contact-hero-text">
         {heroText ||
           "We'd love to hear from you. Whether you have a question about an order, a product, or would like to partner with us, please use the form below to get in touch."}
-      </h3>
+      </h1>
       <div className="contact-details-container">
         <div>
-          <h3>Contact</h3>
+          <h2>Contact</h2>
           <p>
             General Inquiries{' '}
             <span>
@@ -147,16 +147,17 @@ export default function Contact() {
         </div>
       </div>
       <form className="contact-form" onSubmit={handleSubmit}>
-        <h3>Email</h3>
+        <h2>Email</h2>
+        <p className="contact-required-legend">* Required</p>
 
         {submitStatus === 'success' && (
-          <div className="contact-success-message">
+          <div className="contact-success-message" role="status">
             Thank you! Your message has been sent successfully.
           </div>
         )}
 
         {submitStatus === 'error' && (
-          <div className="contact-error-message">
+          <div className="contact-error-message" role="alert">
             Sorry, there was an error sending your message. Please try again or
             email us directly.
           </div>
@@ -201,6 +202,7 @@ export default function Contact() {
         <div className="contact-form-field">
           <label htmlFor="howHeard" className="contact-label">
             How did you hear about us?
+            <span aria-hidden="true"> *</span>
           </label>
           <select
             id="howHeard"
@@ -220,7 +222,10 @@ export default function Contact() {
           </select>
         </div>
         <div className="contact-form-field">
-          <label htmlFor="message">{'Order / Special Instructions'}</label>
+          <label htmlFor="message">
+            {'Order / Special Instructions'}
+            <span aria-hidden="true"> *</span>
+          </label>
           <textarea
             id="message"
             className="contact-textarea"
@@ -247,6 +252,7 @@ function Input({id, label, value, setter, type = 'text', required = false}) {
     <div className="contact-form-field">
       <label htmlFor={id} className="contact-label">
         {label}
+        {required && <span aria-hidden="true"> *</span>}
       </label>
       <input
         id={id}

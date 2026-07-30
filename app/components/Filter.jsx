@@ -73,7 +73,11 @@ export default function Filter({isSearch, length, filters}) {
         {/* implementation from hosh for total products */}
         <p>{`${length} Product${length !== 1 ? 's' : ''}`}</p>
       </div>
-      <div style={{zIndex: open ? 0 : -1}} className="filter-body">
+      <div
+        style={{zIndex: open ? 0 : -1}}
+        className="filter-body"
+        {...(!open ? {inert: ''} : {})}
+      >
         <FilterColumns filters={filters} />
         <SortColumn
           addSort={addSort}

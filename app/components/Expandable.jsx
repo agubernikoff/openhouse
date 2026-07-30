@@ -1,3 +1,4 @@
+import {useId} from 'react';
 import {motion} from 'motion/react';
 
 export default function Expandable({
@@ -7,6 +8,9 @@ export default function Expandable({
   details,
   isFirstRender,
 }) {
+  const contentId = useId();
+  const isOpen = openSection === title;
+
   return (
     <motion.div
       key={title}
@@ -14,22 +18,26 @@ export default function Expandable({
       layout={!isFirstRender ? 'position' : false}
       initial={{height: '40px'}}
       animate={{
-        height: openSection === title ? 'auto' : '40px',
+        height: isOpen ? 'auto' : '40px',
       }}
       style={{overflow: 'hidden'}}
     >
-      <motion.p
+      <motion.button
+        type="button"
         layout={!isFirstRender ? 'position' : false}
-        className={`dropdown-header ${openSection === title ? 'open' : ''}`}
+        className={`dropdown-header ${isOpen ? 'open' : ''}`}
         onClick={() => toggleSection(title)}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
       >
         <span className="dropdown-title">{title}</span>
-      </motion.p>
+      </motion.button>
       <div style={{overflow: 'hidden'}}>
         <motion.div
+          id={contentId}
           className="dropdown-content"
           initial={{opacity: 0}}
-          animate={{opacity: openSection === title ? 1 : 0}}
+          animate={{opacity: isOpen ? 1 : 0}}
           key={title}
           transition={{ease: 'easeOut'}}
         >

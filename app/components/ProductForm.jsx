@@ -215,7 +215,7 @@ export function ProductForm({
             key={option.name}
           >
             <div className="product-options-header">
-              <h5>
+              <p className="option-caption">
                 <span className="option-bullet">●</span>
                 <span className="option-number">{displayNumber}.</span>{' '}
                 {option.name.toUpperCase()}:{' '}
@@ -229,7 +229,7 @@ export function ProductForm({
                     {selectedName.toUpperCase()}
                   </motion.span>
                 </AnimatePresence>
-              </h5>
+              </p>
               <span className="option-required">REQUIRED</span>
             </div>
 
@@ -256,15 +256,17 @@ export function ProductForm({
         <div className="product-quantity-info">
           <div className="quantity-selector">
             <div className="quantity-controls">
-              <span>QTY</span>
+              <label htmlFor="quantity">QTY</label>
               <button
                 type="button"
+                aria-label="Decrease quantity"
                 onClick={decreaseQuantity}
                 disabled={quantity <= 1}
               >
                 -
               </button>
               <input
+                id="quantity"
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
@@ -272,6 +274,7 @@ export function ProductForm({
               />
               <button
                 type="button"
+                aria-label="Increase quantity"
                 onClick={increaseQuantity}
                 disabled={
                   selectedVariantQty !== null && quantity >= selectedVariantQty
@@ -338,7 +341,7 @@ export function ProductForm({
 function AdditionalCTA({text, link, linkText, header}) {
   return (
     <div className="custom-cta">
-      <h5>{header}</h5>
+      <p className="cta-caption">{header}</p>
       <div className="additional-cta">
         <p>{text}</p>
         <NavLink to={link} className="sample-button">
@@ -353,7 +356,7 @@ function ColorOptionGrid({inStock, madeToOrder, renderValue}) {
   return (
     <AnimatePresence mode="sync">
       {inStock.length > 0 && (
-        <motion.h5
+        <motion.p
           key="in-stock-label"
           className="color-group-label"
           initial={{height: 0, marginBottom: 0}}
@@ -362,11 +365,11 @@ function ColorOptionGrid({inStock, madeToOrder, renderValue}) {
           style={{overflow: 'hidden'}}
         >
           IN STOCK
-        </motion.h5>
+        </motion.p>
       )}
       <div className="product-options-grid">{inStock.map(renderValue)}</div>
       {madeToOrder.length > 0 && (
-        <motion.h5
+        <motion.p
           key="made-to-order-label"
           className="color-group-label"
           initial={{height: 0, marginTop: 0, marginBottom: 0}}
@@ -375,7 +378,7 @@ function ColorOptionGrid({inStock, madeToOrder, renderValue}) {
           style={{overflow: 'hidden'}}
         >
           MADE TO ORDER
-        </motion.h5>
+        </motion.p>
       )}
       {madeToOrder.length > 0 && (
         <motion.div

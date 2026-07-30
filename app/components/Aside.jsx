@@ -1,4 +1,11 @@
-import {createContext, useContext, useEffect, useState} from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 /**
  * A side bar component with Overlay
@@ -74,16 +81,37 @@ export function Aside({children, heading, type}) {
 const AsideContext = createContext(null);
 
 Aside.Provider = function AsideProvider({children}) {
-  const [type, setType] = useState('closed');
+  const [state, setState] = useState({type: 'closed', method: null});
+
+  // Stable references are load-bearing here, not just an optimization: a
+  // couple of effects elsewhere (Header.jsx) list `close` in their dependency
+  // array. If open/close were recreated on every render (as they were
+  // before), any unrelated re-render of an ancestor would give those effects
+  // a "new" close function, making them tear down and re-run — which
+  // re-focuses the panel's first element, which (for Search) re-triggers its
+  // predictive-search fetch, which causes another re-render, forever.
+  const open = useCallback(
+    (type, method = 'click') => setState({type, method}),
+    [],
+  );
+  const close = useCallback(() => setState({type: 'closed', method: null}), []);
+
+  const value = useMemo(
+    () => ({
+      type: state.type,
+      // 'hover' = passive reveal (mouse hover or Tab landing on the
+      // trigger) — never steals focus or traps Tab.
+      // 'click' = deliberate activation (mouse click, or Enter/Space on a
+      // focused trigger) — gets full modal treatment where applicable.
+      method: state.method,
+      open,
+      close,
+    }),
+    [state.type, state.method, open, close],
+  );
 
   return (
-    <AsideContext.Provider
-      value={{
-        type,
-        open: setType,
-        close: () => setType('closed'),
-      }}
-    >
+    <AsideContext.Provider value={value}>
       {children}
     </AsideContext.Provider>
   );
@@ -98,10 +126,12 @@ export function useAside() {
 }
 
 /** @typedef {'search' | 'cart' | 'mobile' | 'shop' | 'about' | 'closed'} AsideType */
+/** @typedef {'hover' | 'click'} AsideOpenMethod */
 /**
  * @typedef {{
  *   type: AsideType;
- *   open: (mode: AsideType) => void;
+ *   method: AsideOpenMethod | null;
+ *   open: (mode: AsideType, method?: AsideOpenMethod) => void;
  *   close: () => void;
  * }} AsideContextValue
  */

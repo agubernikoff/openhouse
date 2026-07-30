@@ -133,7 +133,14 @@ export default function Article() {
           <div className="line" />
           <time dateTime={article.publishedAt}>{publishedDate}</time>{' '}
         </div>
-        {image && <Image data={image} sizes="90vw" loading="eager" />}
+        {image && (
+          <Image
+            data={image}
+            alt={image?.altText || title}
+            sizes="90vw"
+            loading="eager"
+          />
+        )}
       </div>
       <div
         dangerouslySetInnerHTML={{__html: contentHtml}}

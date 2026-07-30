@@ -1,6 +1,6 @@
 import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData} from 'react-router';
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef, useId} from 'react';
 import {motion} from 'motion/react';
 import emailjs from '@emailjs/browser';
 import {HEAR_ABOUT_US_OPTIONS} from '~/lib/constants';
@@ -56,6 +56,7 @@ export default function Wholesale() {
     const input = addressContainerRef.current.querySelector('input');
     input?.setAttribute('autocomplete', 'off-geoapify-addr');
     input?.setAttribute('id', 'businessAddress');
+    if (input) input.required = true;
   }, [geoapify]);
 
   const [buyerType, setBuyerType] = useState('');
@@ -176,11 +177,13 @@ export default function Wholesale() {
     <div className="wholesale">
       <div className="wholesale-card">
         <h1 className="wholesale-title">Wholesale & Distributor Application</h1>
+        <p className="wholesale-required-legend">* Required</p>
 
         <form className="wholesale-form" onSubmit={handleSubmit}>
           <div className="contact-form-field">
             <label htmlFor="buyerType" className="contact-label">
               Buyer type
+              <span aria-hidden="true"> *</span>
             </label>
             <select
               id="buyerType"
@@ -201,7 +204,7 @@ export default function Wholesale() {
           </div>
 
           <div className="wholesale-section">
-            <h3 className="wholesale-section-title">Qualifying questions</h3>
+            <h2 className="wholesale-section-title">Qualifying questions</h2>
             <ToggleQuestion
               name="meetsMinimumOrder"
               label="Can you meet our minimum order of 50 units?"
@@ -269,6 +272,7 @@ export default function Wholesale() {
             <div className="contact-form-field">
               <label htmlFor="businessAddress" className="contact-label">
                 Business address
+                <span aria-hidden="true"> *</span>
               </label>
               {geoapify ? (
                 <div ref={addressContainerRef}>
@@ -316,6 +320,7 @@ export default function Wholesale() {
           <div className="contact-form-field">
             <label htmlFor="howHeard" className="contact-label">
               How did you hear about us?
+              <span aria-hidden="true"> *</span>
             </label>
             <select
               id="howHeard"
@@ -356,13 +361,13 @@ export default function Wholesale() {
             {isSubmitting ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
           </button>
           {submitStatus === 'success' && (
-            <div className="contact-success-message">
+            <div className="contact-success-message" role="status">
               Thank you! Your application has been submitted for review.
             </div>
           )}
 
           {submitStatus === 'error' && (
-            <div className="contact-error-message">
+            <div className="contact-error-message" role="alert">
               {errorMessage ||
                 'Sorry, there was an error submitting your application. Please try again.'}
             </div>
@@ -374,10 +379,13 @@ export default function Wholesale() {
 }
 
 function ToggleQuestion({name, label, value, onChange}) {
+  const labelId = useId();
   return (
     <div className="wholesale-toggle-row">
-      <span className="wholesale-toggle-label">{label}</span>
-      <div className="wholesale-toggle">
+      <span className="wholesale-toggle-label" id={labelId}>
+        {label}
+      </span>
+      <div className="wholesale-toggle" role="group" aria-labelledby={labelId}>
         {['yes', 'no'].map((option) => {
           const isSelected = value === option;
           return (
@@ -385,6 +393,7 @@ function ToggleQuestion({name, label, value, onChange}) {
               type="button"
               key={option}
               className={`wholesale-toggle-option${isSelected ? ' selected' : ''}`}
+              aria-pressed={isSelected}
               onClick={() => onChange(option)}
             >
               {isSelected && (
@@ -418,6 +427,7 @@ function Input({
     <div className="contact-form-field">
       <label htmlFor={id} className="contact-label">
         {label}
+        {required && <span aria-hidden="true"> *</span>}
       </label>
       <input
         id={id}

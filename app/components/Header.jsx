@@ -43,15 +43,28 @@ export function Header({
   const isMobileOpen = type === 'mobile';
   const isDropdownOpen = isShopOpen || isAboutOpen;
 
-  const handleHeaderMouseLeave = () => {
-    if (type === 'shop' || type === 'about') {
+  // Closing whenever the mouse leaves the whole header, or whenever it
+  // hovers a header item with no panel of its own (Logo, Contact, etc.).
+  // close() is a no-op when nothing's open, so this is always safe to call.
+  const closePanel = () => close();
+
+  // Closing whenever keyboard focus leaves the header/dropdown region
+  // entirely — covers tabbing past the last item, shift-tabbing past the
+  // first, and clicking away. Without this, a panel opened via keyboard
+  // stayed open (and visible) even once focus had moved into the main page.
+  const handleHeaderBlur = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
       close();
     }
   };
 
   return (
     <>
-      <div className="header-hover-zone" onMouseLeave={handleHeaderMouseLeave}>
+      <div
+        className="header-hover-zone"
+        onMouseLeave={closePanel}
+        onBlur={handleHeaderBlur}
+      >
         <motion.header
           className="header"
           initial={{borderRadius: '0px 0px 0px 0px'}}
@@ -72,17 +85,14 @@ export function Header({
             to="/"
             style={activeLinkStyle}
             end
-            className="header-logo-desktop"
-            onMouseEnter={handleHeaderMouseLeave}
+            className="header-logo-desktop header-tab-target"
+            onMouseEnter={closePanel}
+            onFocus={closePanel}
             onClick={close}
           >
             <Logo />
           </NavLink>
-          <HeaderCtas
-            isLoggedIn={isLoggedIn}
-            cart={cart}
-            handleHeaderMouseLeave={handleHeaderMouseLeave}
-          />
+          <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} closePanel={closePanel} />
         </motion.header>
         <AnimatePresence>
           {isDropdownOpen && (
@@ -321,6 +331,7 @@ function MobileMenu({
             <div className="mobile-search-form">
               <input
                 name="q"
+                aria-label="Search for products"
                 onChange={fetchResults}
                 onFocus={fetchResults}
                 placeholder="Search for products..."
@@ -423,21 +434,9 @@ function MobileMenu({
 }
 
 function Search() {
-  const {type} = useAside();
   const queriesDatalistId = useId();
   const inputContainerRef = useRef(null);
   const [hovered, setHovered] = useState(false);
-
-  useEffect(() => {
-    if (type !== 'search') return;
-    const input = inputContainerRef.current?.querySelector(
-      'input[type="search"]',
-    );
-    const t = setTimeout(() => {
-      input?.focus();
-    }, 180);
-    return () => clearTimeout(t);
-  }, [type]);
 
   return (
     <HeaderAside>
@@ -447,6 +446,7 @@ function Search() {
             <>
               <input
                 name="q"
+                aria-label="Search for products"
                 onChange={fetchResults}
                 onFocus={fetchResults}
                 placeholder="Search for products..."
@@ -513,6 +513,20 @@ function Cart({cart}) {
   );
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// The full, ordered list of top-level header items a keyboard user can Tab
+// across (Shop, About, plain menu links, Search, Contact, Cart) — used to
+// find "the next header item" when Tab exits a dropdown at its last item.
+// Filtered to visible elements only, since the mobile/desktop layout each
+// keep a hidden (display:none) duplicate of Search/Cart in the DOM.
+function getHeaderTabTargets() {
+  return Array.from(
+    document.querySelectorAll('.header-hover-zone .header-tab-target'),
+  ).filter((el) => el.offsetParent !== null);
+}
+
 class AwaitErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -537,11 +551,13 @@ class AwaitErrorBoundary extends Component {
 }
 
 function HeaderAside({children, isMobileMenu}) {
-  const {close, type} = useAside();
+  const {close, type, method} = useAside();
   const {pathname} = useLocation();
   const isInitialMount = useRef(pathname);
 
   const measuredRef = useRef(null);
+  const panelRef = useRef(null);
+  const previousFocusRef = useRef(null);
   const [measuredHeight, setMeasuredHeight] = useState(0);
 
   useEffect(() => {
@@ -572,23 +588,12 @@ function HeaderAside({children, isMobileMenu}) {
 
   useEffect(() => {
     function onKey(e) {
-      if (e.key !== 'Escape') return;
-      if (type === 'search') {
-        try {
-          const input = measuredRef.current?.querySelector(
-            'input[name="q"], input[type="search"][name="q"]',
-          );
-          if (input && String(input.value).trim().length > 0) {
-            return;
-          }
-        } catch (err) {}
-      }
-      close();
+      if (e.key === 'Escape') close();
     }
 
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [close, type]);
+  }, [close]);
 
   useEffect(() => {
     // Skip on initial mount
@@ -598,6 +603,118 @@ function HeaderAside({children, isMobileMenu}) {
     }
     isInitialMount.current = pathname;
   }, [pathname, close]);
+
+  // Capture whatever had focus right before this panel opened, so it can be
+  // restored (or handed off to the next header item) when it closes.
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement;
+  }, []);
+
+  // True modal trap — mobile full-screen menu only. It covers the whole
+  // screen, so background content genuinely needs to be inert and Tab
+  // genuinely needs to stay cycling inside it until Escape/the toggle
+  // button closes it.
+  useEffect(() => {
+    if (type !== 'mobile') return;
+
+    const main = document.querySelector('main');
+    const footer = document.querySelector('footer.footer');
+    main?.setAttribute('aria-hidden', 'true');
+    footer?.setAttribute('aria-hidden', 'true');
+
+    const getFocusable = () =>
+      panelRef.current
+        ? Array.from(panelRef.current.querySelectorAll(FOCUSABLE_SELECTOR))
+        : [];
+
+    function trapFocus(e) {
+      if (e.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', trapFocus);
+
+    return () => {
+      document.removeEventListener('keydown', trapFocus);
+      main?.removeAttribute('aria-hidden');
+      footer?.removeAttribute('aria-hidden');
+      previousFocusRef.current?.focus?.();
+    };
+  }, [type]);
+
+  // Shop/About/Search/Cart disclosure behavior. Only applied when the panel
+  // was opened deliberately (Space or a click) — never for a passive mouse
+  // hover, which shouldn't yank focus away from wherever the user actually
+  // is. Space on the trigger moves focus straight into the panel; Tab then
+  // moves through it like any other content. At the boundaries:
+  //  - Shift+Tab from the first item closes the panel and returns focus to
+  //    the trigger that opened it — the next Tab from there moves to
+  //    whatever's next in the header, not back into the panel (you'd need
+  //    to press Space again to re-enter).
+  //  - Tab from the last item closes the panel and moves focus to the next
+  //    header item after the trigger — except Cart, whose last item is the
+  //    true end of the header, so Tab there is left alone to move focus out
+  //    of the header entirely, as normal.
+  useEffect(() => {
+    const isDisclosure =
+      type === 'shop' || type === 'about' || type === 'search' || type === 'cart';
+    if (!isDisclosure || method !== 'click') return;
+
+    let handledExit = false;
+
+    const getFocusable = () =>
+      panelRef.current
+        ? Array.from(panelRef.current.querySelectorAll(FOCUSABLE_SELECTOR))
+        : [];
+
+    const raf = requestAnimationFrame(() => {
+      const focusable = getFocusable();
+      (focusable[0] || panelRef.current)?.focus();
+    });
+
+    function onKeyDown(e) {
+      if (e.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        handledExit = true;
+        close();
+        previousFocusRef.current?.focus?.();
+      } else if (!e.shiftKey && document.activeElement === last && type !== 'cart') {
+        e.preventDefault();
+        handledExit = true;
+        close();
+        const targets = getHeaderTabTargets();
+        const idx = targets.indexOf(previousFocusRef.current);
+        const next = idx >= 0 ? targets[idx + 1] : null;
+        (next || previousFocusRef.current)?.focus?.();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKeyDown);
+      if (!handledExit) {
+        previousFocusRef.current?.focus?.();
+      }
+    };
+  }, [type, method, close]);
 
   return (
     <div
@@ -613,6 +730,7 @@ function HeaderAside({children, isMobileMenu}) {
         <motion.div
           key="header-dropdown-content"
           className="header-dropdown-content"
+          ref={panelRef}
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -644,10 +762,10 @@ export function HeaderMenu({
   publicStoreDomain,
 }) {
   const className = `header-menu-${viewport}`;
-  const {close, open, type} = useAside();
+  const {close, open} = useAside();
 
   return (
-    <nav className={className} role="navigation">
+    <nav className={className} aria-label="Primary">
       {viewport === 'mobile' && (
         <NavLink
           end
@@ -672,21 +790,39 @@ export function HeaderMenu({
 
         const isShop = item.title.toLowerCase() === 'shop';
         const isAbout = item.title.toLowerCase() === 'about';
-
+        const hasDropdown = viewport === 'desktop' && (isShop || isAbout);
         const dropdownType = isShop ? 'shop' : 'about';
 
         return (
           <NavLink
-            className="header-menu-item"
+            className={`header-menu-item ${viewport === 'desktop' ? 'header-tab-target' : ''}`}
             end
             key={item.id}
             onClick={close}
             onMouseEnter={() => {
-              if (viewport === 'desktop' && (isShop || isAbout)) {
-                open(dropdownType);
+              if (hasDropdown) {
+                open(dropdownType, 'hover');
               } else if (viewport === 'desktop') {
                 close();
               }
+            }}
+            onFocus={() => {
+              // Tab landing here reveals the dropdown passively, same as
+              // hover — it doesn't steal focus or engage the boundary-escape
+              // behavior below. Only Space (see onKeyDown) does that.
+              if (hasDropdown) {
+                open(dropdownType, 'hover');
+              } else if (viewport === 'desktop') {
+                close();
+              }
+            }}
+            onKeyDown={(e) => {
+              // Space is the deliberate "enter this dropdown" gesture — it
+              // opens the panel and moves focus straight into it.
+              if (!hasDropdown) return;
+              if (e.key !== ' ' && e.key !== 'Spacebar') return;
+              e.preventDefault();
+              open(dropdownType, 'click');
             }}
             prefetch="intent"
             style={activeLinkStyle}
@@ -700,7 +836,7 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
+function HeaderCtas({isLoggedIn, cart, closePanel}) {
   const {close} = useAside();
   return (
     <>
@@ -719,22 +855,24 @@ function HeaderCtas({isLoggedIn, cart, handleHeaderMouseLeave}) {
         </div>
       </div>
 
-      <nav className="header-ctas header-desktop-layout" role="navigation">
+      <nav
+        className="header-ctas header-desktop-layout"
+        aria-label="Header actions"
+      >
         <HeaderMenuMobileToggle />
-        <SearchToggle handleHeaderMouseLeave={handleHeaderMouseLeave} />
+        <SearchToggle />
         <NavLink
+          className="header-tab-target"
           prefetch="intent"
           to="/contact"
           style={activeLinkStyle}
-          onMouseEnter={handleHeaderMouseLeave}
+          onMouseEnter={closePanel}
+          onFocus={closePanel}
           onClick={close}
         >
           Contact
         </NavLink>
-        <CartToggle
-          cart={cart}
-          handleHeaderMouseLeave={handleHeaderMouseLeave}
-        />
+        <CartToggle cart={cart} />
       </nav>
     </>
   );
@@ -747,6 +885,8 @@ function HeaderMenuMobileToggle() {
   return (
     <button
       className="header-menu-mobile-toggle reset"
+      aria-label={isMobileOpen ? 'Close menu' : 'Open menu'}
+      aria-expanded={isMobileOpen}
       onClick={() => {
         if (type === 'mobile') close();
         else open('mobile');
@@ -757,6 +897,7 @@ function HeaderMenuMobileToggle() {
         height="9"
         viewBox="0 0 20 9"
         fill="none"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <line
@@ -795,12 +936,26 @@ function HeaderMenuMobileToggle() {
   );
 }
 
-function SearchToggle({handleHeaderMouseLeave}) {
-  const {open, close, type} = useAside();
+function SearchToggle() {
+  const {open, close, type, method} = useAside();
   const searchText = useRef(null);
+
+  // The "Search" label text is hidden below the mobile breakpoint (this same
+  // button is repurposed there to open the mobile menu instead — see
+  // onClick). Only treat hover/focus as "open search" when that label is
+  // actually visible, i.e. we're really in the desktop layout.
+  const isDesktopSearch = () =>
+    !searchText.current ||
+    window.getComputedStyle(searchText.current).display !== 'none';
+
+  const openOnHover = () => {
+    if (type !== 'search' && isDesktopSearch()) open('search', 'hover');
+  };
+
   return (
     <button
-      className="reset"
+      className="reset header-tab-target"
+      aria-label="Search"
       onClick={() => {
         if (searchText.current) {
           const display = window.getComputedStyle(searchText.current).display;
@@ -813,13 +968,18 @@ function SearchToggle({handleHeaderMouseLeave}) {
               return;
             }
         }
-        if (type === 'search') {
+        // Only treat this as "close" when it was already deliberately open
+        // (a click, or Space) — if it's merely showing from a passive
+        // Tab-landing/hover reveal, this click/Space should still count as
+        // the deliberate "enter it" gesture, not a toggle-close.
+        if (type === 'search' && method === 'click') {
           close();
         } else {
-          open('search');
+          open('search', 'click');
         }
       }}
-      onMouseEnter={handleHeaderMouseLeave}
+      onMouseEnter={openOnHover}
+      onFocus={openOnHover}
     >
       <span className="search-text" ref={searchText}>
         Search
@@ -829,6 +989,7 @@ function SearchToggle({handleHeaderMouseLeave}) {
         height="14"
         viewBox="0 0 13 14"
         fill="none"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <g clipPath="url(#clip0_2048_210)">
@@ -848,60 +1009,74 @@ function SearchToggle({handleHeaderMouseLeave}) {
   );
 }
 
-function CartBadge({count, handleHeaderMouseLeave}) {
-  const {open, close, type} = useAside();
+function CartBadge({count}) {
+  const {open, close, type, method} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
   const isCartOpen = type === 'cart';
+
+  const openCart = () => {
+    open('cart', 'click');
+    publish('cart_viewed', {
+      cart,
+      prevCart,
+      shop,
+      url: window.location.href || '',
+    });
+  };
 
   return (
     <a
       href="/cart"
+      className="cart-link header-tab-target"
       onClick={(e) => {
         if (window.location.pathname === '/cart') {
           e.preventDefault();
           return;
         }
         e.preventDefault();
-        if (isCartOpen) {
+        // Only treat this as "close" when it was already deliberately open
+        // (a click, or Space) — a mouse click while it's merely showing from
+        // a passive hover reveal should still count as "enter it."
+        if (isCartOpen && method === 'click') {
           close();
         } else {
-          open('cart');
-          publish('cart_viewed', {
-            cart,
-            prevCart,
-            shop,
-            url: window.location.href || '',
-          });
+          openCart();
         }
       }}
-      onMouseEnter={handleHeaderMouseLeave}
-      className="cart-link"
+      onKeyDown={(e) => {
+        // Links don't natively respond to Space (only Enter) — Space is the
+        // deliberate "enter this dropdown" gesture, matching Shop/About.
+        if (e.key !== ' ' && e.key !== 'Spacebar') return;
+        e.preventDefault();
+        openCart();
+      }}
+      onMouseEnter={() => {
+        if (!isCartOpen) open('cart', 'hover');
+      }}
+      onFocus={() => {
+        if (!isCartOpen) open('cart', 'hover');
+      }}
     >
       Cart <span>{count === null ? 0 : count}</span>
     </a>
   );
 }
 
-function CartToggle({cart, handleHeaderMouseLeave}) {
+function CartToggle({cart}) {
   return (
     <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
-        <CartBanner handleHeaderMouseLeave={handleHeaderMouseLeave} />
+        <CartBanner />
       </Await>
     </Suspense>
   );
 }
 
-function CartBanner({handleHeaderMouseLeave}) {
+function CartBanner() {
   const originalCart = useAsyncValue();
   const cart = useOptimisticCart(originalCart);
   const itemCount = cart?.lines?.nodes?.length ?? cart?.lines?.length ?? 0;
-  return (
-    <CartBadge
-      count={itemCount}
-      handleHeaderMouseLeave={handleHeaderMouseLeave}
-    />
-  );
+  return <CartBadge count={itemCount} />;
 }
 
 const FALLBACK_HEADER_MENU = {
@@ -960,6 +1135,8 @@ function Logo() {
       height="16"
       viewBox="0 0 132 16"
       fill="none"
+      role="img"
+      aria-label="Openhouse"
       xmlns="http://www.w3.org/2000/svg"
     >
       <g clipPath="url(#clip0_2048_184)">

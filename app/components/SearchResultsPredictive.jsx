@@ -74,7 +74,7 @@ function SearchResultsPredictiveArticles({term, articles, closeSearch}) {
               <Link onClick={closeSearch} to={articleUrl}>
                 {article.image?.url && (
                   <Image
-                    alt={article.image.altText ?? ''}
+                    alt={article.image.altText ?? article.title}
                     src={article.image.url}
                     width={50}
                     height={50}
@@ -114,7 +114,7 @@ function SearchResultsPredictiveCollections({term, collections, closeSearch}) {
               <Link onClick={closeSearch} to={collectionUrl}>
                 {collection.image?.url && (
                   <Image
-                    alt={collection.image.altText ?? ''}
+                    alt={collection.image.altText ?? collection.title}
                     src={collection.image.url}
                     width={50}
                     height={50}
@@ -206,7 +206,7 @@ function SearchResultsPredictiveProducts({
                 <div>
                   {image && (
                     <Image
-                      alt={image.altText ?? ''}
+                      alt={image.altText ?? product.title}
                       src={image.url}
                       height={63}
                       width={63}
@@ -225,6 +225,7 @@ function SearchResultsPredictiveProducts({
                     height="16"
                     viewBox="0 0 20 16"
                     fill="none"
+                    aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <g clipPath="url(#clip0_2322_1637)">

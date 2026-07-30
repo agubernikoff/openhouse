@@ -111,11 +111,11 @@ export function ArtworkUpload({selectedVariant, optionNumber, onChange}) {
   return (
     <div className="product-options product-options-upload">
       <div className="product-options-header">
-        <h5>
+        <p className="option-caption">
           <span className="option-bullet">●</span>
           <span className="option-number">{optionNumber}.</span> UPLOAD ARTWORK:{' '}
           {uploadedFile ? uploadedFile.name.toUpperCase() : 'NO FILE'}
-        </h5>
+        </p>
         <span className="option-optional">OPTIONAL</span>
       </div>
 

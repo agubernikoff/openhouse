@@ -4,6 +4,8 @@ export function Logo({className}) {
       className={className}
       viewBox="0 0 1400 167"
       fill="none"
+      role="img"
+      aria-label="Openhouse"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path

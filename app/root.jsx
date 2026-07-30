@@ -227,6 +227,9 @@ export function Layout({children}) {
         ></script>
       </head>
       <body>
+        <a href="#main-content" className="skip-to-content-link">
+          Skip to content
+        </a>
         <PopUpProvider>
           <NavigationProvider>{children}</NavigationProvider>
         </PopUpProvider>

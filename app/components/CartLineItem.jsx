@@ -220,6 +220,7 @@ export function CartLineGroup({color, lines, layout}) {
                     >
                       <button
                         type="submit"
+                        aria-label={`Decrease quantity for size ${size}`}
                         disabled={line.quantity <= 1 || !!line.isOptimistic}
                       >
                         -
@@ -250,7 +251,11 @@ export function CartLineGroup({color, lines, layout}) {
                     <CartLineUpdateButton
                       lines={[{id: line.id, quantity: line.quantity + 1}]}
                     >
-                      <button type="submit" disabled={!!line.isOptimistic}>
+                      <button
+                        type="submit"
+                        aria-label={`Increase quantity for size ${size}`}
+                        disabled={!!line.isOptimistic}
+                      >
                         +
                       </button>
                     </CartLineUpdateButton>
@@ -304,6 +309,7 @@ function CartLineQuantity({line, isEditing}) {
           <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
             <button
               type="submit"
+              aria-label="Decrease quantity"
               disabled={quantity <= 1 || !!isOptimistic || !isEditing}
             >
               -
@@ -317,7 +323,11 @@ function CartLineQuantity({line, isEditing}) {
           style={{overflow: 'hidden', width: 0}}
         >
           <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
-            <button type="submit" disabled={!!isOptimistic || !isEditing}>
+            <button
+              type="submit"
+              aria-label="Increase quantity"
+              disabled={!!isOptimistic || !isEditing}
+            >
               +
             </button>
           </CartLineUpdateButton>

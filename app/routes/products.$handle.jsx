@@ -323,7 +323,7 @@ export default function Product() {
                       : formatCollectionTitle(to.split('/collections/')[1])}
               </Link>
             </nav>
-            <p className="product-title">{title}</p>
+            <h1 className="product-title">{title}</h1>
             <ProductPrice
               price={selectedVariant?.price}
               compareAtPrice={selectedVariant?.compareAtPrice}
@@ -523,6 +523,7 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
         return (
           <Image
             data={size_chart?.reference?.image}
+            alt={size_chart?.reference?.image?.altText || 'Size chart'}
             sizes="(min-width: 45em) 45vw, 100vw"
           />
         );
@@ -595,6 +596,7 @@ function AdditionalInfo({product, global_pdp_data, selectedVariant}) {
             >
               <Image
                 data={size_chart?.reference?.image}
+                alt={size_chart?.reference?.image?.altText || 'Size chart'}
                 sizes="(min-width: 45em) 45vw, 100vw"
               />
               {content()}

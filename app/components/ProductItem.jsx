@@ -99,6 +99,8 @@ export function ProductItem({product, loading}) {
                     ? `url(${swatch.image.previewImage.url})`
                     : 'none',
                 }}
+                role="img"
+                aria-label={optionValue.name}
                 title={optionValue.name}
               />
             );

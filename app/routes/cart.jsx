@@ -167,7 +167,7 @@ export default function Cart() {
     <>
       <section className="home-featured-collection">
         <div>
-          <p className="red-dot">CART</p>
+          <h1 className="red-dot">CART</h1>
         </div>
         <div className="subgrid home-featured-products-grid">
           <CartMain layout="page" cart={cart} />

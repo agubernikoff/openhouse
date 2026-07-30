@@ -16,6 +16,32 @@
   --unit-testi-transform: calc(5px + 25vw);
 }
 
+.skip-to-content-link {
+  position: absolute;
+  top: -80px;
+  left: 8px;
+  z-index: 10000;
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+  padding: 12px 20px;
+  border-radius: 5px;
+  font-family: 'mono';
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 150ms ease-in-out;
+}
+
+.skip-to-content-link:focus-visible {
+  top: 8px;
+}
+
+/* Focused programmatically on route change to reset keyboard/AT position
+   after a client-side navigation — not a real interactive element, so no
+   visible focus ring. */
+#main-content:focus {
+  outline: none;
+}
+
 img {
   border-radius: 4px;
   -webkit-user-drag: none;
@@ -237,6 +263,7 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .header-dropdown-content {
+  position: relative;
   width: 100%;
   max-width: 690px;
   max-height: 80vh;
@@ -441,10 +468,6 @@ button:has(.search-text) {
   top: -12px;
 }
 
-.mobile-menu-aside {
-  display: none;
-}
-
 .mobile-menu-overlay {
   top: 50px;
   height: calc(100dvh - 50px);
@@ -491,7 +514,8 @@ button:has(.search-text) {
 }
 
 .mobile-search-form input:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-oh-black);
+  outline-offset: 2px;
 }
 
 .mobile-search-form button {
@@ -838,8 +862,9 @@ div:has(> .testimonials-container) {
   font-size: 14px;
 }
 
-.footer-newsletter-input:focus {
-  outline: none;
+.footer-newsletter-input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .footer-newsletter-button {
@@ -1331,6 +1356,7 @@ input[type='search']::-webkit-search-cancel-button {
   object-fit: cover;
   border-radius: 20px;
 }
+.hero-section h1,
 .hero-section h2 {
   position: absolute;
   left: 1rem;
@@ -1341,6 +1367,7 @@ input[type='search']::-webkit-search-cancel-button {
   line-height: 57px;
   font-family: 'bedford';
 }
+.hero-section h1 span,
 .hero-section h2 span {
   font-family: 'apfel';
 }
@@ -1441,7 +1468,8 @@ input[type='search']::-webkit-search-cancel-button {
 .footer .home-featured-collection h3,
 .collection h1,
 .pagination-link,
-.contact h3,
+.contact h1,
+.contact h2,
 .page .home-featured-collection h3,
 .page .home-featured-collection h3 p,
 .page .hero-section h4,
@@ -2116,14 +2144,14 @@ div:has(.products-grid) {
   align-items: flex-start;
   margin-bottom: 16px;
 }
-.product-options-header > h5 > span:nth-of-type(n + 3) {
+.product-options-header > .option-caption > span:nth-of-type(n + 3) {
   text-wrap: nowrap;
 }
 
-.product-options h5,
+.product-options .option-caption,
 .color-group-label,
 .moq-label,
-.custom-cta h5 {
+.custom-cta .cta-caption {
   font-family: 'mono';
   font-size: 14px;
   text-transform: uppercase;
@@ -2149,7 +2177,9 @@ div:has(.products-grid) {
 .option-optional {
   font-family: 'mono';
   font-size: 14px;
-  color: #bfc0c1;
+  /* #bfc0c1 (--color-oh-gray) fails AA contrast (1.6:1) on this cream
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
   text-transform: uppercase;
   line-height: 24px;
 }
@@ -2258,10 +2288,10 @@ div.product-options-item > input:focus-visible {
 div.product-options-item > input::-webkit-inner-spin-button {
   flex: 1;
 }
-/* div.product-options-item:has(input:focus-visible) {
+div.product-options-item:has(input:focus-visible) {
   outline: 1px solid var(--swatch-color, var(--color-oh-black));
   border-color: var(--swatch-color, var(--color-oh-black));
-} */
+}
 div.product-options-item > p.color-group-label {
   color: var(--color-oh-gray);
   text-align: right;
@@ -2436,7 +2466,7 @@ div.product-options-item > p.color-group-label {
   flex-direction: column;
   gap: 8px;
 }
-.custom-cta h5 {
+.custom-cta .cta-caption {
   margin-bottom: 0.5rem;
 }
 .custom-cta p {
@@ -2464,9 +2494,16 @@ div.product-options-item > p.color-group-label {
   line-height: 18px;
 }
 .dropdown-header {
-  font-weight: bold;
-  padding-bottom: 1rem;
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
   border-bottom: 1px solid var(--color-oh-gray);
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  margin: 0;
+  padding: 0 0 1rem;
   cursor: pointer;
 }
 div:has(> .dropdown-content) {
@@ -2920,7 +2957,7 @@ div:has(> .pdp-additional-info-image) {
   text-decoration: none;
   cursor: pointer;
 }
-.contact-details-container h3 {
+.contact-details-container h2 {
   margin-bottom: 1rem;
 }
 .contact-details-container > div > p {
@@ -2933,7 +2970,9 @@ div:has(> .pdp-additional-info-image) {
   border-bottom: 1px solid var(--color-oh-gray-contact);
 }
 .contact-details-container > div > p > span {
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (2.9:1) on this page's dark
+     background; lightened to the minimum shade that passes 4.5:1. */
+  color: #949494;
 }
 
 .contact form {
@@ -2943,8 +2982,12 @@ div:has(> .pdp-additional-info-image) {
   max-width: none;
   row-gap: 12px;
 }
-.contact-form h3 {
+.contact-form h2 {
   margin-bottom: 18px;
+}
+.contact-required-legend {
+  font-size: 12px;
+  margin: -10px 0 8px;
 }
 .contact-form-row,
 .contact-form-field {
@@ -2977,7 +3020,9 @@ div:has(> .pdp-additional-info-image) {
 }
 .contact input::placeholder,
 .contact textarea::placeholder {
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (2.9:1) on this page's dark
+     background; lightened to the minimum shade that passes 4.5:1. */
+  color: #949494;
 }
 .contact input:focus-visible,
 .contact textarea:focus-visible,
@@ -3412,14 +3457,17 @@ div:has(> .sticky-scroll-image) {
   .hero-section video {
     border-radius: 0;
   }
+  .hero-section h1,
   .hero-section h2 {
     font-size: clamp(31px, 9.69vw, 36px);
     line-height: clamp(31px, 9.69vw, 36px);
     padding-left: 6px;
   }
+  .hero-section h1 > span > span,
   .hero-section h2 > span > span {
     height: clamp(31px, 9.69vw, 36px) !important;
   }
+  .hero-section h1 > span > span > span,
   .hero-section h2 > span > span > span {
     line-height: clamp(31px, 9.69vw, 36px) !important;
   }
@@ -3826,13 +3874,13 @@ div:has(> .sticky-scroll-image) {
     margin-bottom: 20px;
   }
 
-  .contact-details-container div h3,
-  .contact-form h3 {
+  .contact-details-container div h2,
+  .contact-form h2 {
     font-size: 28px !important;
     line-height: 28px !important;
   }
 
-  .contact-details-container h3 {
+  .contact-details-container h2 {
     margin-bottom: 30px;
   }
 
@@ -4276,7 +4324,14 @@ div:has(> .sticky-scroll-image) {
     margin-top: 0px;
   }
 }
+
+.special-instructions-textarea:focus-visible {
+  outline: 2px solid var(--color-oh-black);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1218px) {
+  .hero-section h1 em,
   .hero-section h2 em {
     display: inline-block;
     width: calc(100vw - 2rem);
@@ -4426,13 +4481,16 @@ div:has(> .sticky-scroll-image) {
   padding: 0;
 }
 .popup-content .footer-newsletter-input::placeholder {
-  color: var(--color-oh-gray);
+  /* --color-oh-gray fails AA contrast (1.6:1) on this cream background. */
+  color: #6e6e6e;
 }
 .popup-content form > button {
   display: flex;
   border: none;
   background: transparent;
-  color: var(--color-oh-gray);
+  /* --color-oh-gray fails contrast (1.6:1) on this cream background,
+     even against the lower 3:1 bar for non-text UI components. */
+  color: #6e6e6e;
   cursor: pointer;
   scale: 2;
   padding: 0;
@@ -4601,6 +4659,11 @@ div:has(> .sticky-scroll-image) {
   line-height: 36px;
 }
 
+.wholesale-required-legend {
+  font-size: 12px;
+  margin: -12px 0 20px;
+}
+
 .wholesale-form {
   display: grid;
   row-gap: 20px;
@@ -4617,7 +4680,9 @@ div:has(> .sticky-scroll-image) {
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (4.2:1) on this cream
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
   margin: 0;
   margin-bottom: 8px;
   font-weight: normal;
@@ -4700,7 +4765,9 @@ div:has(> .sticky-scroll-image) {
 .wholesale-disclaimer {
   font-family: 'mono';
   font-size: 11px;
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (4.2:1) on this cream
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
   text-align: center;
   margin: 0;
 }
@@ -4720,7 +4787,9 @@ div:has(> .sticky-scroll-image) {
 
 .wholesale input::placeholder,
 .wholesale textarea::placeholder {
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (4.2:1) on this white
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
 }
 
 .wholesale input:focus-visible,
@@ -4746,7 +4815,20 @@ div:has(> .sticky-scroll-image) {
 
 .contact-error-message {
   background: rgba(216, 36, 12, 0.08);
-  color: var(--color-oh-red);
+  /* --color-oh-red is 4.48:1 on a cream background — below the 4.5:1 AA
+     threshold; darkened slightly for a safe margin. */
+  color: #d2230c;
+}
+
+/* On the dark contact page, the light-theme success/error colors above drop
+   to 2.25:1 and 2.75:1 against the page's near-black background — lightened
+   variants here restore AA contrast for that context. */
+body:has(.contact) .contact-success-message {
+  color: #729e80;
+}
+
+body:has(.contact) .contact-error-message {
+  color: #e67161;
 }
 
 .contact-form-field select {
@@ -4782,7 +4864,9 @@ div:has(> .sticky-scroll-image) {
 }
 
 .wholesale .geoapify-autocomplete-input::placeholder {
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (4.2:1) on this white
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
 }
 
 .wholesale .geoapify-autocomplete-input:focus-visible {
@@ -4806,7 +4890,9 @@ div:has(> .sticky-scroll-image) {
 }
 
 .wholesale .geoapify-close-button {
-  color: var(--color-oh-gray-contact);
+  /* --color-oh-gray-contact fails AA contrast (4.2:1) on this white
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
   position: absolute;
   right: 6px;
   top: 0px;
