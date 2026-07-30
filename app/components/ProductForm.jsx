@@ -88,7 +88,11 @@ export function ProductForm({
     setAdded(true);
     setTimeout(() => {
       setAdded(false);
-      open('cart');
+      // 'click' (not the default's implicit value) — this is a deliberate
+      // open, so it should get the same forced-focus-into-the-panel
+      // treatment as clicking the cart icon directly, not the passive hover
+      // reveal.
+      open('cart', 'click');
     }, 500);
   };
 

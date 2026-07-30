@@ -516,6 +516,19 @@ function Cart({cart}) {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// querySelectorAll matches hidden elements too (e.g. CartEmpty's own
+// "CONTINUE SHOPPING" link shares a className with CartSummary's real
+// checkout link, and is always in the DOM behind a `hidden` attribute rather
+// than being conditionally rendered) — filter to what's actually visible and
+// focusable, or .focus() silently no-ops on a display:none element.
+function getVisibleFocusable(container) {
+  return container
+    ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+        (el) => el.offsetParent !== null,
+      )
+    : [];
+}
+
 // The full, ordered list of top-level header items a keyboard user can Tab
 // across (Shop, About, plain menu links, Search, Contact, Cart) — used to
 // find "the next header item" when Tab exits a dropdown at its last item.
@@ -622,10 +635,7 @@ function HeaderAside({children, isMobileMenu}) {
     main?.setAttribute('aria-hidden', 'true');
     footer?.setAttribute('aria-hidden', 'true');
 
-    const getFocusable = () =>
-      panelRef.current
-        ? Array.from(panelRef.current.querySelectorAll(FOCUSABLE_SELECTOR))
-        : [];
+    const getFocusable = () => getVisibleFocusable(panelRef.current);
 
     function trapFocus(e) {
       if (e.key !== 'Tab') return;
@@ -672,10 +682,7 @@ function HeaderAside({children, isMobileMenu}) {
 
     let handledExit = false;
 
-    const getFocusable = () =>
-      panelRef.current
-        ? Array.from(panelRef.current.querySelectorAll(FOCUSABLE_SELECTOR))
-        : [];
+    const getFocusable = () => getVisibleFocusable(panelRef.current);
 
     const raf = requestAnimationFrame(() => {
       const focusable = getFocusable();
