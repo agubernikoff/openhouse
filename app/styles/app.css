@@ -16,6 +16,21 @@
   --unit-testi-transform: calc(5px + 25vw);
 }
 
+/* Preserves the original browser-default <h3>/<h5> visual size and spacing
+   (reset.css only overrides h1/h2/h4) on elements promoted to a semantically
+   correct heading level, so fixing the document outline doesn't change
+   how the text looks. */
+.heading-h3-style {
+  font-size: 1.17em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.heading-h5-style {
+  font-size: 0.83em;
+  margin-top: 0.5rem;
+}
+
 .skip-to-content-link {
   position: absolute;
   top: -80px;
@@ -2293,7 +2308,9 @@ div.product-options-item:has(input:focus-visible) {
   border-color: var(--swatch-color, var(--color-oh-black));
 }
 div.product-options-item > p.color-group-label {
-  color: var(--color-oh-gray);
+  /* #bfc0c1 (--color-oh-gray) fails AA contrast (1.6:1) on this cream
+     background; darkened to the minimum shade that passes 4.5:1. */
+  color: #6e6e6e;
   text-align: right;
   font-size: 10px;
   line-height: 10px;
@@ -2804,7 +2821,7 @@ div:has(> .pdp-additional-info-image) {
 .article-content > *:not(.line):empty {
   display: none;
 }
-.article-content h1 {
+.article-content h2 {
   text-transform: uppercase;
   margin: 0;
   grid-column: 1/4;
@@ -2815,7 +2832,7 @@ div:has(> .pdp-additional-info-image) {
   transform: translateY(0);
   display: flex;
 }
-.article-content h1::before {
+.article-content h2::before {
   display: inline-block;
   margin-right: 0.5rem;
   content: '';
@@ -3040,7 +3057,9 @@ div:has(> .pdp-additional-info-image) {
   background: transparent;
   border: 1px solid var(--color-oh-gray);
   border-radius: 5px;
-  color: var(--color-oh-gray);
+  /* #bfc0c1 (--color-oh-gray) fails AA contrast on this page's dark
+     background; lightened to the minimum shade that passes 4.5:1. */
+  color: #949494;
   padding: 12px 24px;
   transition: all 300ms ease-in-out;
   cursor: pointer;
@@ -4309,7 +4328,7 @@ div:has(> .sticky-scroll-image) {
   .article-header img {
     border-radius: 0;
   }
-  .article-content h1 {
+  .article-content h2 {
     margin-bottom: 1rem;
   }
   .article-header > div {

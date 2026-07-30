@@ -1,13 +1,23 @@
 import React from 'react';
 
-export default function mapRichText(richTextObject, index = 0) {
+export default function mapRichText(
+  richTextObject,
+  index = 0,
+  headingLevel = 4,
+  headingClassName,
+) {
   // console.log(index, richTextObject);
   switch (richTextObject.type) {
     case 'root':
       return (
         <div key={index} className="rich-text-div">
           {richTextObject.children.map((child, childIndex) =>
-            mapRichText(child, `${index}-${childIndex}`),
+            mapRichText(
+              child,
+              `${index}-${childIndex}`,
+              headingLevel,
+              headingClassName,
+            ),
           )}
         </div>
       );
@@ -15,18 +25,34 @@ export default function mapRichText(richTextObject, index = 0) {
       return (
         <p key={index} style={{whiteSpace: 'pre-line'}}>
           {richTextObject.children.map((child, childIndex) =>
-            mapRichText(child, `${index}-${childIndex}`),
+            mapRichText(
+              child,
+              `${index}-${childIndex}`,
+              headingLevel,
+              headingClassName,
+            ),
           )}
         </p>
       );
-    case 'heading':
+    case 'heading': {
+      const HeadingTag = `h${headingLevel}`;
       return (
-        <h4 key={index} style={{whiteSpace: 'pre-line'}}>
+        <HeadingTag
+          key={index}
+          className={headingClassName}
+          style={{whiteSpace: 'pre-line'}}
+        >
           {richTextObject.children.map((child, childIndex) =>
-            mapRichText(child, `${index}-${childIndex}`),
+            mapRichText(
+              child,
+              `${index}-${childIndex}`,
+              headingLevel,
+              headingClassName,
+            ),
           )}
-        </h4>
+        </HeadingTag>
       );
+    }
     case 'text':
       if (richTextObject.italic)
         return <em key={index}>{richTextObject.value}</em>;
@@ -40,7 +66,12 @@ export default function mapRichText(richTextObject, index = 0) {
             key={`${richTextObject.type}-${richTextObject.listType}-${index}`}
           >
             {richTextObject.children.map((child, childIndex) =>
-              mapRichText(child, `${index}-${childIndex}`),
+              mapRichText(
+                child,
+                `${index}-${childIndex}`,
+                headingLevel,
+                headingClassName,
+              ),
             )}
           </ol>
         );
@@ -50,7 +81,12 @@ export default function mapRichText(richTextObject, index = 0) {
             key={`${richTextObject.type}-${richTextObject.listType}-${index}`}
           >
             {richTextObject.children.map((child, childIndex) =>
-              mapRichText(child, `${index}-${childIndex}`),
+              mapRichText(
+                child,
+                `${index}-${childIndex}`,
+                headingLevel,
+                headingClassName,
+              ),
             )}
           </ul>
         );
@@ -58,7 +94,12 @@ export default function mapRichText(richTextObject, index = 0) {
       return (
         <li key={index} style={{whiteSpace: 'pre-line'}}>
           {richTextObject.children.map((child, childIndex) =>
-            mapRichText(child, `${index}-${childIndex}`),
+            mapRichText(
+              child,
+              `${index}-${childIndex}`,
+              headingLevel,
+              headingClassName,
+            ),
           )}
         </li>
       );
@@ -66,7 +107,12 @@ export default function mapRichText(richTextObject, index = 0) {
       return (
         <a href={richTextObject.url} key={index}>
           {richTextObject.children.map((child, childIndex) =>
-            mapRichText(child, `${index}-${childIndex}`),
+            mapRichText(
+              child,
+              `${index}-${childIndex}`,
+              headingLevel,
+              headingClassName,
+            ),
           )}
         </a>
       );

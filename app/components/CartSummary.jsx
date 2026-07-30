@@ -10,7 +10,7 @@ export function CartSummary({cart, layout}) {
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
   return (
-    <div aria-labelledby="cart-summary" className={className}>
+    <div aria-label="Order summary" className={className}>
       <dl className="cart-subtotal">
         <dt>Subtotal:</dt>
         <dd style={{display: 'flex', gap: '3.5px'}}>

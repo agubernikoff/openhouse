@@ -294,7 +294,9 @@ export function ProductForm({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '3px',
-                color: isMadeToOrder ? 'var(--color-oh-yellow)' : undefined,
+                // #c39b3c (--color-oh-yellow) fails AA contrast (~2.6:1) on
+                // this cream background; darkened to pass 4.5:1.
+                color: isMadeToOrder ? '#836420' : undefined,
               }}
             >
               Estimated lead time: {displayLeadTime}

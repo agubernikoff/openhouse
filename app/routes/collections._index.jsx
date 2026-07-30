@@ -93,7 +93,7 @@ function CollectionItem({collection, index}) {
           sizes="(min-width: 45em) 400px, 100vw"
         />
       )}
-      <h5>{collection.title}</h5>
+      <h2 className="heading-h5-style">{collection.title}</h2>
     </Link>
   );
 }

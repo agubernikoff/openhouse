@@ -7,6 +7,7 @@ import {usePopUp} from '~/context/PopUpContext';
 import {motion, AnimatePresence} from 'motion/react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import {Image} from '@shopify/hydrogen';
+import {getVisibleFocusable} from '~/lib/focus';
 
 /**
  * @param {PageLayoutProps}
@@ -71,12 +72,68 @@ export function PageLayout({
 
 function WelcomePopup({data}) {
   const {markPopupAsShown, shouldShowPopup} = usePopUp();
+  const containerRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   const handleClose = (timeout = 300) => {
     setTimeout(() => {
       markPopupAsShown();
     }, timeout);
   };
+
+  // This modal appears unprompted, so it needs the full treatment: trap
+  // focus inside it, hide the rest of the page from assistive tech, close
+  // on Escape, and restore focus to wherever it was before the popup
+  // appeared. Mirrors the mobile menu's modal trap in Header.jsx.
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement;
+
+    const headerEl = document.querySelector('header.header');
+    const mainEl = document.querySelector('main');
+    const footerEl = document.querySelector('footer.footer');
+    headerEl?.setAttribute('aria-hidden', 'true');
+    mainEl?.setAttribute('aria-hidden', 'true');
+    footerEl?.setAttribute('aria-hidden', 'true');
+
+    // Content (image/heading/CTA) loads async via Suspense/Await and the
+    // panel itself fades in over ~1s — give both a moment before trying to
+    // move focus to the first real focusable element inside it.
+    const focusTimer = setTimeout(() => {
+      const focusable = getVisibleFocusable(containerRef.current);
+      (focusable[0] || containerRef.current)?.focus();
+    }, 1000);
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusable = getVisibleFocusable(containerRef.current);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      clearTimeout(focusTimer);
+      document.removeEventListener('keydown', onKeyDown);
+      headerEl?.removeAttribute('aria-hidden');
+      mainEl?.removeAttribute('aria-hidden');
+      footerEl?.removeAttribute('aria-hidden');
+      previousFocusRef.current?.focus?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -91,6 +148,11 @@ function WelcomePopup({data}) {
         transition={{delay: shouldShowPopup() ? 1 : 0}}
       />
       <motion.div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Promotional offer"
+        tabIndex={-1}
         className="popup-container"
         initial={{opacity: 0}}
         animate={{opacity: 1, delay: 1}}

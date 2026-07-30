@@ -25,7 +25,7 @@ export function CartMain({layout, cart: originalCart}) {
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
-        <div aria-labelledby="cart-lines">
+        <div aria-label="Cart items">
           <ul>
             {(() => {
               const lines = (cart?.lines?.nodes ?? []).filter(
@@ -92,7 +92,7 @@ function CartEmpty({hidden = false}) {
       <br />
       <br />
       <br />
-      <div aria-labelledby="cart-summary" className="cart-summary-aside">
+      <div aria-label="Order summary" className="cart-summary-aside">
         <dl className="cart-subtotal">
           <dt>Subtotal:</dt>
           <dd style={{display: 'flex', gap: '3.5px'}}>

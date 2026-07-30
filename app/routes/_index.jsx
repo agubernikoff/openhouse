@@ -483,7 +483,7 @@ function FeaturedCollectionContent({response}) {
         <p className="red-dot">FEATURED</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>{response?.collection?.description}</h3>
+        <h2 className="heading-h3-style">{response?.collection?.description}</h2>
         <div className="carousel-wrapper">
           <div className="carousel-viewport">
             <div

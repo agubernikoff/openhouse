@@ -57,7 +57,12 @@ export default function Filter({isSearch, length, filters}) {
         style={{justifyContent: length > 0 ? 'space-between' : 'flex-end'}}
       >
         {length > 0 && (
-          <button onClick={toggleOpen}>
+          <button
+            onClick={toggleOpen}
+            aria-expanded={open}
+            aria-controls="filter-panel"
+            aria-label={open ? 'Hide filters' : 'Show filters'}
+          >
             <span style={{opacity: open ? 0 : 1}}>+</span>
             <span
               style={{
@@ -74,6 +79,7 @@ export default function Filter({isSearch, length, filters}) {
         <p>{`${length} Product${length !== 1 ? 's' : ''}`}</p>
       </div>
       <div
+        id="filter-panel"
         style={{zIndex: open ? 0 : -1}}
         className="filter-body"
         {...(!open ? {inert: ''} : {})}
@@ -402,6 +408,7 @@ export function FilterInput({
           else removeFilter(value);
         }}
         disabled={count === 0 ? true : null}
+        aria-pressed={isChecked(value)}
         style={{
           textDecoration: count === 0 ? 'underline' : 'none',
           textUnderlineOffset: '-38%',

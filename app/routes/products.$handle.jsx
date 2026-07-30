@@ -268,10 +268,12 @@ export default function Product() {
               className="product-image-previews-container"
               ref={scrollContainerRef}
             >
-              {productImages?.map((img) => (
+              {productImages?.map((img, index) => (
                 <button
                   key={img.id}
                   onClick={() => setSelectedImage(img)}
+                  aria-label={`View image ${index + 1} of ${productImages.length}`}
+                  aria-current={selectedImage?.id === img.id}
                   style={{
                     border:
                       selectedImage?.id === img.id
@@ -289,7 +291,7 @@ export default function Product() {
         <div className="product-main">
           <div className="product-main-details">
             <nav className="breadcrumbs" aria-label="Breadcrumb">
-              <Link style={{color: '#BFC0C1'}} to="/collections/frontpage">
+              <Link style={{color: '#6e6e6e'}} to="/collections/frontpage">
                 Categories
               </Link>
               <svg

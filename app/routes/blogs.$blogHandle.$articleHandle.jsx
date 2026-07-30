@@ -111,16 +111,25 @@ export default function Article() {
       }
     });
 
-    // Add a div with class "line" before any h1 elements
+    // Downgrade CMS-authored h1s in the article body to h2 — only the
+    // article title above should be a page-level h1 (WCAG 1.3.1) — then
+    // add a div with class "line" before each one.
     const h1Elements = content.current.querySelectorAll('.article-content h1');
 
     h1Elements.forEach((h1) => {
-      // Skip if line div already exists before this h1
-      if (h1.previousElementSibling?.classList.contains('line')) return;
+      const h2 = document.createElement('h2');
+      h2.innerHTML = h1.innerHTML;
+      Array.from(h1.attributes).forEach((attr) =>
+        h2.setAttribute(attr.name, attr.value),
+      );
+      h1.replaceWith(h2);
+
+      // Skip if line div already exists before this h2
+      if (h2.previousElementSibling?.classList.contains('line')) return;
 
       const lineDiv = document.createElement('div');
       lineDiv.className = 'line';
-      h1.parentNode.insertBefore(lineDiv, h1);
+      h2.parentNode.insertBefore(lineDiv, h2);
     });
   }, [contentHtml]); // Re-run if content changes
 

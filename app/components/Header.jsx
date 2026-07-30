@@ -18,6 +18,7 @@ import {
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
+import {getVisibleFocusable} from '~/lib/focus';
 
 export function Header({
   header,
@@ -348,34 +349,32 @@ function MobileMenu({
           {({items, total, term, state, closeSearch}) => {
             const {products} = items;
 
-            if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
-            }
-
-            if (!total) {
-              return null;
-            }
-
             return (
-              <>
-                <SearchResultsPredictive.Products
-                  products={products}
-                  closeSearch={closeSearch}
-                  term={term}
-                  hovered={hovered}
-                  setHovered={setHovered}
-                />
-                {term.current && total ? (
-                  <Link
-                    onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
-                  >
-                    <p className="header-search-results-footer-text">
-                      PRESS ENTER TO SEE ALL RESULTS
-                    </p>
-                  </Link>
+              <div role="status">
+                {state === 'loading' && term.current ? (
+                  <div>Loading...</div>
+                ) : total ? (
+                  <>
+                    <SearchResultsPredictive.Products
+                      products={products}
+                      closeSearch={closeSearch}
+                      term={term}
+                      hovered={hovered}
+                      setHovered={setHovered}
+                    />
+                    {term.current && total ? (
+                      <Link
+                        onClick={closeSearch}
+                        to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                      >
+                        <p className="header-search-results-footer-text">
+                          PRESS ENTER TO SEE ALL RESULTS
+                        </p>
+                      </Link>
+                    ) : null}
+                  </>
                 ) : null}
-              </>
+              </div>
             );
           }}
         </SearchResultsPredictive>
@@ -463,34 +462,34 @@ function Search() {
           {({items, total, term, state, closeSearch}) => {
             const {articles, collections, pages, products, queries} = items;
 
-            if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
-            }
-
-            if (!total) {
-              return <SearchResultsPredictive.Empty term={term} />;
-            }
-
             return (
-              <>
-                <SearchResultsPredictive.Products
-                  products={products}
-                  closeSearch={closeSearch}
-                  term={term}
-                  hovered={hovered}
-                  setHovered={setHovered}
-                />
-                {term.current && total ? (
-                  <Link
-                    onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
-                  >
-                    <p className="header-search-results-footer-text">
-                      PRESS ENTER TO SEE ALL RESULTS
-                    </p>
-                  </Link>
-                ) : null}
-              </>
+              <div role="status">
+                {state === 'loading' && term.current ? (
+                  <div>Loading...</div>
+                ) : !total ? (
+                  <SearchResultsPredictive.Empty term={term} />
+                ) : (
+                  <>
+                    <SearchResultsPredictive.Products
+                      products={products}
+                      closeSearch={closeSearch}
+                      term={term}
+                      hovered={hovered}
+                      setHovered={setHovered}
+                    />
+                    {term.current && total ? (
+                      <Link
+                        onClick={closeSearch}
+                        to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                      >
+                        <p className="header-search-results-footer-text">
+                          PRESS ENTER TO SEE ALL RESULTS
+                        </p>
+                      </Link>
+                    ) : null}
+                  </>
+                )}
+              </div>
             );
           }}
         </SearchResultsPredictive>
@@ -511,22 +510,6 @@ function Cart({cart}) {
       </Suspense>
     </HeaderAside>
   );
-}
-
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-// querySelectorAll matches hidden elements too (e.g. CartEmpty's own
-// "CONTINUE SHOPPING" link shares a className with CartSummary's real
-// checkout link, and is always in the DOM behind a `hidden` attribute rather
-// than being conditionally rendered) — filter to what's actually visible and
-// focusable, or .focus() silently no-ops on a display:none element.
-function getVisibleFocusable(container) {
-  return container
-    ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-        (el) => el.offsetParent !== null,
-      )
-    : [];
 }
 
 // The full, ordered list of top-level header items a keyboard user can Tab

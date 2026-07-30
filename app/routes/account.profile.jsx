@@ -118,7 +118,7 @@ export default function AccountProfile() {
           />
         </fieldset>
         {action?.error ? (
-          <p>
+          <p role="alert">
             <mark>
               <small>{action.error}</small>
             </mark>

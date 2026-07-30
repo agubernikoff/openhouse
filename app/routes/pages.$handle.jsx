@@ -178,7 +178,8 @@ function AnimatedScroll({section}) {
         <p className="red-dot">{title?.value?.toUpperCase()}</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h3>{blurb?.value && mapRichText(JSON.parse(blurb.value))}</h3>
+        {blurb?.value &&
+          mapRichText(JSON.parse(blurb.value), 0, 2, 'heading-h3-style')}
       </div>
       <div className="animated-scroll-content-container-outer">
         <StickyScrollContent
