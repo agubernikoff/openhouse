@@ -2522,6 +2522,7 @@ div.product-options-item > p.color-group-label {
   margin: 0;
   padding: 0 0 1rem;
   cursor: pointer;
+  color: var(--color-oh-black);
 }
 div:has(> .dropdown-content) {
   margin-top: 1rem;

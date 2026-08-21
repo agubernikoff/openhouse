@@ -1,4 +1,4 @@
-import {useId} from 'react';
+import {useEffect, useId, useRef, useState} from 'react';
 import {motion} from 'motion/react';
 
 export default function Expandable({
@@ -10,15 +10,23 @@ export default function Expandable({
 }) {
   const contentId = useId();
   const isOpen = openSection === title;
+  const headerBtnRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(40);
+
+  useEffect(() => {
+    if (headerBtnRef.current) {
+      setHeaderHeight(headerBtnRef.current.offsetHeight);
+    }
+  }, [headerBtnRef?.current?.offsetHeight]);
 
   return (
     <motion.div
       key={title}
       className="dropdown"
       layout={!isFirstRender ? 'position' : false}
-      initial={{height: '40px'}}
+      initial={{height: `${headerHeight}px`}}
       animate={{
-        height: isOpen ? 'auto' : '40px',
+        height: isOpen ? 'auto' : `${headerHeight}px`,
       }}
       style={{overflow: 'hidden'}}
     >
@@ -29,6 +37,7 @@ export default function Expandable({
         onClick={() => toggleSection(title)}
         aria-expanded={isOpen}
         aria-controls={contentId}
+        ref={headerBtnRef}
       >
         <span className="dropdown-title">{title}</span>
       </motion.button>
