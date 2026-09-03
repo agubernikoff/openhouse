@@ -382,6 +382,7 @@ button.reset:hover:not(:has(> *)) {
   border-radius: 10px;
   overflow: hidden;
   background: var(--color-oh-gray);
+  max-height: 212px;
 }
 
 .shop-dropdown-image img,

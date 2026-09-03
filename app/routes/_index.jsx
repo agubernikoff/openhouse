@@ -483,7 +483,9 @@ function FeaturedCollectionContent({response}) {
         <p className="red-dot">FEATURED</p>
       </div>
       <div className="subgrid home-featured-products-grid">
-        <h2 className="heading-h3-style">{response?.collection?.description}</h2>
+        <h2 className="heading-h3-style">
+          {response?.collection?.description}
+        </h2>
         <div className="carousel-wrapper">
           <div className="carousel-viewport">
             <div
@@ -564,6 +566,9 @@ function FeaturedCollectionContent({response}) {
  * }}
  */
 function CollectionGrid({collections}) {
+  const {publicStoreDomain, header} = useRouteLoaderData('root');
+  const {primaryDomain} = header.shop;
+
   return (
     <section className="home-featured-collection">
       <div>
@@ -575,17 +580,47 @@ function CollectionGrid({collections}) {
           <Await resolve={collections}>
             {(r) => {
               const fields = normalizeMetaobject(r.metaobject);
+              const customObjects =
+                fields?.custom_objects?.references?.nodes || [];
+
+              const items = customObjects.length
+                ? customObjects.map((n) => {
+                    const nodeFields = normalizeMetaobject(n);
+                    const link = JSON.parse(nodeFields?.link?.value || '{}');
+                    const url =
+                      link?.url?.includes('myshopify.com') ||
+                      link?.url?.includes(publicStoreDomain) ||
+                      link?.url?.includes(primaryDomain.url) ||
+                      link?.url?.includes('byopenhouse.com')
+                        ? new URL(link.url).pathname +
+                          new URL(link.url).search +
+                          new URL(link.url).hash
+                        : link?.url;
+                    return {
+                      id: n.id,
+                      url,
+                      title: link?.text,
+                      image: nodeFields?.image?.reference?.image,
+                    };
+                  })
+                : fields?.collections?.references?.nodes?.map((coll) => ({
+                    id: coll.id,
+                    url: `/collections/${coll.handle}`,
+                    title: coll.title,
+                    image: coll.image,
+                  })) || [];
+
               return (
                 <div className="home-collections-grid">
-                  {fields?.collections?.references?.nodes?.map((coll) => (
-                    <div className="collection-grid-item" key={coll.id}>
-                      <Link to={`/collections/${coll.handle}`}>
+                  {items.map((item) => (
+                    <div className="collection-grid-item" key={item.id}>
+                      <Link to={item.url}>
                         <Image
-                          data={coll.image}
-                          alt={coll.image?.altText || coll.title}
+                          data={item.image}
+                          alt={item.image?.altText || item.title}
                           sizes="(min-width: 500px) 30vw, 100vw"
                         />
-                        <p>{coll.title}</p>
+                        <p>{item.title}</p>
                       </Link>
                     </div>
                   ))}
@@ -752,6 +787,26 @@ query GetLocationVideos($handle: String!, $first: Int) {
               width
               height
               url
+            }
+          }
+          ... on Metaobject{
+            id
+            handle
+            type
+            fields{
+              key
+              value
+              reference{
+                ... on MediaImage {
+                  image {
+                    id
+                    altText
+                    url
+                    height
+                    width
+                  }
+                }
+              }
             }
           }
         }

@@ -111,9 +111,7 @@ Aside.Provider = function AsideProvider({children}) {
   );
 
   return (
-    <AsideContext.Provider value={value}>
-      {children}
-    </AsideContext.Provider>
+    <AsideContext.Provider value={value}>{children}</AsideContext.Provider>
   );
 };
 
