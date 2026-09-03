@@ -106,6 +106,7 @@ export default function Collection() {
   const {shop, menu} = header;
   const {primaryDomain} = shop;
   const {collection} = useLoaderData();
+  console.log(collection?.products?.filters);
   const [total, setTotal] = useState(0);
   const [dotPosition, setDotPosition] = useState(0);
   const [dotVisible, setDotVisible] = useState(false);

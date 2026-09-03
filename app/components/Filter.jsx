@@ -96,6 +96,15 @@ export default function Filter({isSearch, length, filters}) {
   );
 }
 
+function filterValuesEqual(a, b) {
+  if (a === b) return true;
+  try {
+    return JSON.stringify(JSON.parse(a)) === JSON.stringify(JSON.parse(b));
+  } catch {
+    return false;
+  }
+}
+
 export function FilterColumns({filters, isSideMenu}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -132,7 +141,7 @@ export function FilterColumns({filters, isSideMenu}) {
 
         // Re-add only the filters that are NOT being removed
         filters
-          .filter((f) => f !== input)
+          .filter((f) => !filterValuesEqual(f, input))
           .forEach((f) => newParams.append('filter', f));
 
         return newParams;
@@ -142,7 +151,9 @@ export function FilterColumns({filters, isSideMenu}) {
   }
 
   function isChecked(input) {
-    return searchParams.getAll('filter').includes(input);
+    return searchParams
+      .getAll('filter')
+      .some((f) => filterValuesEqual(f, input));
   }
   return (
     <>
