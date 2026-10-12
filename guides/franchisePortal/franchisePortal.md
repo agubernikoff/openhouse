@@ -68,6 +68,8 @@ erDiagram
         string collectionHandle
         string slackWebhookEnvVar "SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL"
         object branding "logo, colors, copy"
+        array onboardingFields "extra sign-up fields (empty at launch)"
+        string verification "manual (launch) | allowlist | ..."
     }
     CUSTOMER {
         string id PK
@@ -156,9 +158,21 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 ### 4.3 Roles, onboarding and verification
 - `requirePortalRole(context, roles)` helper: gets the customer ID from the CAA session, reads tags via the Admin API, caches the role in the session with a short TTL (about 5 minutes) so revocation takes effect quickly, and redirects to `/onboarding` or the pending screen as needed.
 - **The role is always derived server-side from the session.** Never trust a role, customer ID or portal handle sent from the client.
-- Onboarding form fields: name, phone, one or more franchise locations (address autocomplete via Geoapify, same as `/wholesale`). Fields can be extended per portal in config.
+- Onboarding form fields: name, phone, one or more franchise locations (address autocomplete via Geoapify, same as `/wholesale`). Portal config can add more fields (`onboardingFields`, §4.3.1).
 - On submit: Admin API `tagsAdd portal:{handle}:pending`, append a summary to the customer note, create the addresses, then post a Slack message to the portal's webhook via `context.waitUntil`. This generalizes `notifySlack` in [`api.wholesale.jsx`](../../app/routes/api.wholesale.jsx) into a shared helper. **Slack is only for new sign-ups.** Orders go through Openhouse's normal fulfillment flow.
-- Future automated verification (e.g. checking against a franchise list the client provides) plugs in at this submit step by tagging `:member` directly. No other changes needed.
+#### 4.3.1 Verification extension point
+
+The client has no verification data today, so launch uses manual verification only. The flow is built so that adding verification data later is mostly configuration:
+
+- **Configurable sign-up fields.** `onboardingFields` in portal config (`[{name, label, type, required}]`) renders extra inputs on the onboarding form. It's empty at launch. Adding e.g. `{name: 'storeNumber', label: 'Store number', required: true}` is a config change. Submitted values go into the customer note and the Slack message, so manual reviewers see them right away.
+- **Pluggable verification strategy.** Onboarding submit calls `verifySignup({portal, customer, submission, context})`, which returns `'member'` or `'pending'`. The `portal.verification` key picks the strategy:
+  - `manual` (launch): always `'pending'`.
+  - `allowlist` (likely next step): look up the submitted identifier, and optionally the email, in a client-supplied list. A match tags `:member` immediately. No match falls back to `'pending'`.
+  - Anything else (e.g. a client API) is a new strategy function with the same signature.
+- **Never auto-reject.** A failed or errored check always falls back to `pending` and manual review, so a bad list or an outage never locks out a legitimate franchisee.
+- **Where an allowlist would live:** a per-portal Shopify metaobject (e.g. `portal_franchise`: identifier, store name, email) with **Storefront API access disabled**, read only via the Admin API. Openhouse can import or update it in Shopify admin (CSV), with no deploy. It can also pre-fill the franchisee's location address.
+- **Slack message states the outcome:** "auto-verified (matched store #014)" or "needs review", so Openhouse keeps visibility either way.
+- **Existing pending members:** when a strategy is turned on, a one-off script can run it against current `:pending` customers.
 
 ### 4.4 Catalog visibility
 - The portal catalog is the portal's collection, queried with the Storefront API, with category chips from product type.
@@ -254,13 +268,14 @@ No code changes beyond a config entry. Follow the §5 checklist. Deliverables fo
 
 ## 8. Open Questions
 
-- **Onboarding fields:** does the client have a franchise identifier (store number, franchise agreement ID) franchisees can enter at sign-up? It makes manual verification faster and is what future automated verification would match against. Default fields: name, phone, locations.
+- None currently.
 
 ### Resolved
 - **MOQ:** keep the existing wholesale structure: per color, variant override, then product fallback (§4.5).
 - **Inventory:** ordering beyond stock is allowed; Openhouse configures products to continue selling (§4.5).
 - **Pricing:** one regular price per product. No suggested retail price.
 - **Spend budget / dashboard stats:** dropped.
+- **Verification data:** none available at launch. Manual verification ships, with configurable sign-up fields and a pluggable verification strategy so an allowlist or similar can be added quickly (§4.3.1).
 - **Post-checkout return:** one-time cross-subdomain hint cookie redirects back to the portal (§4.9).
 
 ---
