@@ -27,7 +27,8 @@ What a portal does:
 - ~~Invoice download / payment terms~~: franchisees pay at standard checkout like any other customer.
 - ~~Corporate read-only role~~: the corporate admin can also approve and revoke franchisees.
 - New: a **sign-up and manual verification** flow with Slack notification. Automated verification can be added later (§4.3).
-- ~~Spend record / budget bar / dashboard stats~~: not in core scope. Possible add-on (§8).
+- ~~Spend record / budget bar / dashboard stats~~: dropped.
+- ~~Suggested retail price~~: dropped. Each product has exactly one price, set up like a regular product.
 - ~~`OH-YYYY-NNNN` order numbers~~: Shopify order name formatting applies to the whole store, so portal orders use the store's normal numbering.
 
 ---
@@ -177,9 +178,9 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
   - Selection state stays inside the form, except what the image gallery needs. The old gallery read parent-owned `selectedColors`.
   - Selection becomes `{[variantId]: qty}`, replacing the old `{name, sizes}` shape.
   - Products with no options, color only or size only use the same component. Most of Magnolia's nine have no options and render as a single quantity stepper with the MOQ minimum.
-- **MOQ semantics (default; confirm with Openhouse):** the product-level MOQ applies to the **product total across all variants**, so a franchisee can split it across colors and sizes. The variant metafield `variant_minimum_quantity_priority`, if set, enforces a per-variant minimum. (The old form enforced MOQ per color.)
+- **MOQ semantics (decided): keep the existing wholesale structure.** MOQ is enforced **per color**: the sum of all sizes in that color must meet the MOQ. A color's MOQ is the `variant_minimum_quantity_priority` metafield on its variant if set, otherwise the product's `minimum_quantity` (the old `colorMOQMap`). Products without a Color option apply the product MOQ to the product total.
 - Lead time is static copy from portal config ("Ships in under 4 weeks"), not the per-variant lead-time or made-to-order logic.
-- Inventory: the main site caps at stock. The portal default is to allow any quantity, since Openhouse fulfills within 4 weeks. Confirm.
+- **Inventory (decided):** franchisees can order beyond on-hand stock. No quantity caps in the portal form. Openhouse sets up portal products to continue selling when out of stock.
 - Cart line attributes: no `Order Type` / `_order_type` line attributes. Portal identity lives in a single cart-level attribute `_portal` (§4.6).
 
 ### 4.6 Cart and checkout
@@ -194,6 +195,13 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 - Status maps from Shopify fulfillment status (Submitted / Shipped / Delivered), with a tracking link from the fulfillment.
 - Re-order rebuilds the cart from the order's variant IDs and quantities, at **current** prices. It skips and reports variants that are no longer available or no longer in the portal, then re-validates MOQ.
 - Order emails use Shopify's standard notifications. Optionally, branch the Liquid templates on the `_portal` attribute for light per-portal copy.
+
+### 4.9 Return to portal after checkout
+- Shopify's thank-you and order status pages link back to the store's primary domain (byopenhouse.com), not the portal, and the main site's session doesn't know about the portal session.
+- When a portal user starts checkout, set a one-time hint cookie `oh_portal_return={handle}` with `Domain=.byopenhouse.com` and a short max-age (about 1 day). Both hosts can read it.
+- In the main site's root loader, if the cookie is present: clear it and redirect to that portal's `/account/orders`. Clearing it on first use means a franchisee who is also a regular Openhouse customer isn't repeatedly bounced off the main site.
+- The cookie only carries the portal handle, never identity or role. The portal still authenticates as usual.
+- Alternative, if a visible button is preferred: a Checkout UI extension on the thank-you / order status page (available on non-Plus plans) showing "Back to {portal}" when the order has a `_portal` attribute. More setup, so not in core scope.
 
 ### 4.8 Portal admin (corporate)
 - `/admin` on the portal host, which requires `portal:{handle}:admin`.
@@ -229,7 +237,7 @@ Hours and billing are tracked in the development hours sheet. This section is sc
 | 1. Multi-tenant infrastructure | Portal config + resolution, route allowlist/guards, main-site product hiding, themed portal layout, public landing page |
 | 2. Accounts and verification | Role helper + gating, onboarding form, tagging, shared Slack helper, pending screen |
 | 3. Catalog and cart | Catalog + chips, `PortalProductForm` (wholesale port), cart guards, MOQ (UI + server), `_portal` attribute |
-| 4. Member account | Portal order history (Admin API), status/tracking, re-order, "My Locations" address UX |
+| 4. Member account | Portal order history (Admin API), status/tracking, re-order, "My Locations" address UX, return-to-portal redirect |
 | 5. Portal admin | All-orders view, member approve/revoke |
 | 6. QA, launch and handoff | Role / portal / main-site isolation testing, mobile and browser QA, UAT, launch, runbooks (§7) |
 | Per portal | §5 checklist (Magnolia first) |
@@ -246,12 +254,14 @@ No code changes beyond a config entry. Follow the §5 checklist. Deliverables fo
 
 ## 8. Open Questions
 
-- **MOQ semantics:** product total across variants (current default) or per color, as in the old wholesale form?
-- **Inventory:** allow ordering beyond on-hand stock (4-week fulfillment), or cap at stock?
-- **Suggested retail price:** defined in the original plan but not in the approved renderings. Show it or drop it?
-- **Spend budget / budget bar / dashboard stats** (lifetime spend, units delivered): out of core scope. Quote as an add-on if wanted.
-- **Onboarding fields:** anything Magnolia needs beyond name, phone and locations (e.g. franchise agreement number)?
-- **Post-checkout return:** Shopify's order status page "continue shopping" link points to the store's primary domain, not the portal. Acceptable, or should we customize the checkout/thank-you page?
+- **Onboarding fields:** does the client have a franchise identifier (store number, franchise agreement ID) franchisees can enter at sign-up? It makes manual verification faster and is what future automated verification would match against. Default fields: name, phone, locations.
+
+### Resolved
+- **MOQ:** keep the existing wholesale structure: per color, variant override, then product fallback (§4.5).
+- **Inventory:** ordering beyond stock is allowed; Openhouse configures products to continue selling (§4.5).
+- **Pricing:** one regular price per product. No suggested retail price.
+- **Spend budget / dashboard stats:** dropped.
+- **Post-checkout return:** one-time cross-subdomain hint cookie redirects back to the portal (§4.9).
 
 ---
 
