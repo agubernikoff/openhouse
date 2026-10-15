@@ -1,9 +1,9 @@
 import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, data} from 'react-router';
-import {CartForm} from '@shopify/hydrogen';
+import {CartForm, useAnalytics} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {ProductItem} from '~/components/ProductItem';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 
 /**
  * @type {Route.MetaFunction}
@@ -162,6 +162,7 @@ export async function loader({context}) {
 export default function Cart() {
   /** @type {LoaderReturnData} */
   const {cart, recommendations} = useLoaderData();
+  useCartPageViewed(cart);
 
   return (
     <>
@@ -176,6 +177,24 @@ export default function Cart() {
       <YouMayAlsoLike recommendations={recommendations} />
     </>
   );
+}
+
+/**
+ * Publishes cart_viewed once per visit to the cart page. Uses the loader's
+ * cart rather than <Analytics.CartView>, whose payload carries the analytics
+ * context's cart — still null on a fresh page load when the event fires.
+ */
+function useCartPageViewed(cart) {
+  const {publish, shop, canTrack} = useAnalytics();
+  const sent = useRef(false);
+
+  useEffect(() => {
+    // Wait for consent too — publish is a no-op until tracking is allowed,
+    // and an event dropped then would never be resent
+    if (sent.current || !cart || !shop || !canTrack()) return;
+    sent.current = true;
+    publish('cart_viewed', {cart, shop, url: window.location.href});
+  }, [cart, shop, publish, canTrack]);
 }
 
 function YouMayAlsoLike({recommendations}) {
