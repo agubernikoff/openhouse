@@ -35,6 +35,12 @@ export default async function handleRequest(
       'https://px.ads.linkedin.com',
       'https://px4.ads.linkedin.com',
       'https://www.linkedin.com',
+      // GA4 + Google Ads
+      'https://*.google-analytics.com',
+      'https://*.googletagmanager.com',
+      'https://googleads.g.doubleclick.net',
+      'https://pagead2.googlesyndication.com',
+      'https://www.googleadservices.com',
     ],
     connectSrc: [
       "'self'",
@@ -57,6 +63,13 @@ export default async function handleRequest(
       'https://tcvsapi.contentsquare.com',
       'https://c.ba.contentsquare.net',
       'https://k.ba.contentsquare.net',
+      // GA4 sends to regional endpoints, e.g. region1.google-analytics.com
+      'https://*.google-analytics.com',
+      'https://*.analytics.google.com',
+      'https://*.googletagmanager.com',
+      'https://googleads.g.doubleclick.net',
+      'https://pagead2.googlesyndication.com',
+      'https://www.googleadservices.com',
     ],
     scriptSrc: [
       "'self'",
@@ -67,6 +80,7 @@ export default async function handleRequest(
       'https://snap.licdn.com',
       'https://t.contentsquare.net',
       'https://b-code.liadm.com',
+      'https://googleads.g.doubleclick.net',
     ],
     mediaSrc: [
       'https://openhouse.store/',
@@ -74,7 +88,10 @@ export default async function handleRequest(
       'https://w8kbyy-ez.myshopify.com/',
       'https://checkout.byopenhouse.com/',
     ],
-    frameSrc: ['https://www.googletagmanager.com/'],
+    frameSrc: [
+      'https://www.googletagmanager.com/',
+      'https://td.doubleclick.net',
+    ],
   });
 
   const body = await renderToReadableStream(

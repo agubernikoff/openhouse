@@ -1,6 +1,7 @@
 import {CartForm, Money} from '@shopify/hydrogen';
 import {useEffect, useRef, useState} from 'react';
-import {useFetcher} from 'react-router';
+import {Link, useFetcher} from 'react-router';
+import {useAside} from '~/components/Aside';
 
 /**
  * @param {CartSummaryProps}
@@ -43,6 +44,7 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
   const textareaRef = useRef(null);
   const fetcher = useFetcher();
   const hasSubmittedRef = useRef(false);
+  const {close} = useAside();
   const isCartPage = layout === 'page';
 
   // *** FIXED: Move all hooks BEFORE the early return ***
@@ -140,9 +142,13 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
             )}
           </>
         ) : (
-          <a href="/cart" className="cart-special-instructions">
+          <Link
+            to="/cart"
+            className="cart-special-instructions"
+            onClick={close}
+          >
             VIEW CART
-          </a>
+          </Link>
         )}
 
         {isCartPage && (

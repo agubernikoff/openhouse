@@ -21,9 +21,15 @@ import {
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
+import {GoogleAnalytics} from './components/GoogleAnalytics';
 import {NavigationProvider} from './context/NavigationContext';
 import {PopUpProvider} from './context/PopUpContext';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
+
+// Shopify's consent cookie can't be set on localhost, so tracking is never
+// allowed in dev — bypass it to exercise analytics locally. Must be a stable
+// reference: Analytics.Provider stores it in state on every render.
+const devCanTrack = import.meta.env.DEV ? () => true : undefined;
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -103,7 +109,7 @@ export async function loader(args) {
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: false,
+      withPrivacyBanner: true,
       // localize the privacy banner
       country: args.context.storefront.i18n.country,
       language: args.context.storefront.i18n.language,
@@ -276,10 +282,12 @@ export default function App() {
       cart={data.cart}
       shop={data.shop}
       consent={data.consent}
+      canTrack={devCanTrack}
     >
       <PageLayout {...data}>
         <Outlet />
       </PageLayout>
+      <GoogleAnalytics />
     </Analytics.Provider>
   );
 }
