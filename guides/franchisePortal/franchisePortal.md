@@ -292,4 +292,10 @@ What the existing repository already provides, and what this plan builds on:
 - **Wholesale variant UI:** removed from the main PDP in `7b1371d`, documented in [`guides/productForm/productForm.md`](../productForm/productForm.md). It's the starting point for `PortalProductForm`.
 - **Cart attributes:** the main site's `ProductForm` tags lines `Order Type: Sample`. Portal lines don't use line-level order-type attributes (§4.5).
 - **Routing:** flat file routes ([`app/routes.js`](../../app/routes.js)). No collision for `/onboarding` or `/admin`.
-- **Still to confirm:** Oxygen multi-domain behavior on preview deployments, and how to test a second host locally (the `--customer-account-push` tunnel only covers one host). Both are part of the Phase 0 spike.
+- **Spike results (2026-10-16), `magnoliabakery.byopenhouse.com`:**
+  - GoDaddy CNAME `magnoliabakery` → `shops.myshopify.com`. In Shopify Domains, the target is Openhouse (Production) and the type is **Alias domain**. TLS is provisioned.
+  - The subdomain serves the Hydrogen app directly (200, no redirect to `www`) on a non-Plus plan, so the one-storefront, many-domains approach works.
+  - Portal guard verified in production: `/` renders the portal, non-portal paths 302 to `/`, robots.txt blocks all crawlers, and `X-Robots-Tag: noindex` is sent. `www` is unchanged.
+  - Customer Account API callback, origin and logout URIs are registered for the subdomain. `/account/login` builds `redirect_uri=https://magnoliabakery.byopenhouse.com/account/authorize`.
+  - Still to verify in a browser: the full login round trip, session isolation from `www`, logout, and the checkout "continue shopping" return.
+- **Local development:** Customer Account API login needs a tunnel (`--customer-account-push`), and the tunnel's hostname isn't a portal hostname. Use `PORTAL_DEV_HANDLE` in `.env` to force portal mode locally.
