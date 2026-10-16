@@ -7,10 +7,25 @@
  * register its Customer Account API callback/origin/logout URLs (plan §5).
  *
  * @typedef {{
+ *   name: string;
+ *   label: string;
+ *   required?: boolean;
+ * }} OnboardingField
+ *
+ * @typedef {{
  *   handle: string;
  *   hostname: string;
  *   name: string;
+ *   slackWebhookEnvVar: string;
+ *   verification: 'manual';
+ *   onboardingFields: OnboardingField[];
  * }} Portal
+ *
+ * - `slackWebhookEnvVar`: name of the env var holding the portal's Slack
+ *   incoming webhook for new sign-ups (the URL itself is a secret).
+ * - `verification`: sign-up verification strategy (portal/verification.server.js).
+ * - `onboardingFields`: extra text fields on the sign-up form, e.g.
+ *   `{name: 'storeNumber', label: 'Store number', required: true}`.
  */
 
 /** @type {Portal[]} */
@@ -19,12 +34,15 @@ export const PORTALS = [
     handle: 'magnolia-bakery',
     hostname: 'magnoliabakery.byopenhouse.com',
     name: 'Magnolia Bakery',
+    slackWebhookEnvVar: 'SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL',
+    verification: 'manual',
+    onboardingFields: [],
   },
 ];
 
 // Paths a portal host serves. Everything else on a portal host redirects to
 // `/`, so the main site's pages are never reachable through a portal.
-const PORTAL_PATHS = ['/', '/robots.txt'];
+const PORTAL_PATHS = ['/', '/onboarding', '/robots.txt'];
 const PORTAL_PATH_PREFIXES = ['/account'];
 
 /**
@@ -65,6 +83,6 @@ export function isPortalPath(pathname) {
  */
 export function toPublicPortal(portal) {
   if (!portal) return null;
-  const {handle, name} = portal;
-  return {handle, name};
+  const {handle, name, onboardingFields} = portal;
+  return {handle, name, onboardingFields};
 }

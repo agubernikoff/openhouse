@@ -32,6 +32,7 @@ import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 // allowed in dev — bypass it to exercise analytics locally. Must be a stable
 // reference: Analytics.Provider stores it in state on every render.
 const devCanTrack = import.meta.env.DEV ? () => true : undefined;
+const portalCanTrack = () => false;
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -116,8 +117,12 @@ function loadPortalData({request, context}) {
   const url = new URL(request.url);
   if (!isPortalPath(url.pathname)) throw redirect('/');
 
+  const analyticsData = getAnalyticsData(context);
+
   return {
-    ...getAnalyticsData(context),
+    ...analyticsData,
+    // No tracking on portals (see Layout), so no consent banner either
+    consent: {...analyticsData.consent, withPrivacyBanner: false},
     portal: toPublicPortal(context.portal),
     cart: context.cart.get(),
     isLoggedIn: context.customerAccount.isLoggedIn(),
@@ -238,9 +243,12 @@ function loadDeferredData({context}) {
  */
 export function Layout({children}) {
   const nonce = useNonce();
+  // Franchise portals send no tracking: no third-party scripts here, no
+  // gtag (entry.client.jsx reads data-portal), no Shopify analytics (App).
+  const portal = useRouteLoaderData('root')?.portal;
 
   return (
-    <html lang="en">
+    <html lang="en" data-portal={portal?.handle}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -248,17 +256,7 @@ export function Layout({children}) {
         <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
-        <script
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://b2bjsstore.s3.us-west-2.amazonaws.com/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QO92DH7PQDN7");`,
-          }}
-        />
-        <script
-          nonce={nonce}
-          src="https://t.contentsquare.net/uxa/769fcf27b170e.js"
-          defer
-        ></script>
+        {!portal && <TrackingHeadScripts nonce={nonce} />}
       </head>
       <body>
         <a href="#main-content" className="skip-to-content-link">
@@ -269,23 +267,55 @@ export function Layout({children}) {
         </PopUpProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <script
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `var _linkedin_partner_id = "8628890"; window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || []; window._linkedin_data_partner_ids.push(_linkedin_partner_id); (function(l) { if (!l) { window.lintrk = function(a,b) { window.lintrk.q.push([a,b]) }; window.lintrk.q = [] } var s = document.getElementsByTagName("script")[0]; var b = document.createElement("script"); b.type = "text/javascript"; b.async = true; b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js"; s.parentNode.insertBefore(b, s); })(window.lintrk);`,
-          }}
-        />
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{display: 'none'}}
-            alt=""
-            src="https://px.ads.linkedin.com/collect/?pid=8628890&fmt=gif"
-          />
-        </noscript>
+        {!portal && <TrackingBodyScripts nonce={nonce} />}
       </body>
     </html>
+  );
+}
+
+/**
+ * @param {{nonce?: string}}
+ */
+function TrackingHeadScripts({nonce}) {
+  return (
+    <>
+      <script
+        nonce={nonce}
+        dangerouslySetInnerHTML={{
+          __html: `!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://b2bjsstore.s3.us-west-2.amazonaws.com/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QO92DH7PQDN7");`,
+        }}
+      />
+      <script
+        nonce={nonce}
+        src="https://t.contentsquare.net/uxa/769fcf27b170e.js"
+        defer
+      ></script>
+    </>
+  );
+}
+
+/**
+ * @param {{nonce?: string}}
+ */
+function TrackingBodyScripts({nonce}) {
+  return (
+    <>
+      <script
+        nonce={nonce}
+        dangerouslySetInnerHTML={{
+          __html: `var _linkedin_partner_id = "8628890"; window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || []; window._linkedin_data_partner_ids.push(_linkedin_partner_id); (function(l) { if (!l) { window.lintrk = function(a,b) { window.lintrk.q.push([a,b]) }; window.lintrk.q = [] } var s = document.getElementsByTagName("script")[0]; var b = document.createElement("script"); b.type = "text/javascript"; b.async = true; b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js"; s.parentNode.insertBefore(b, s); })(window.lintrk);`,
+        }}
+      />
+      <noscript>
+        <img
+          height="1"
+          width="1"
+          style={{display: 'none'}}
+          alt=""
+          src="https://px.ads.linkedin.com/collect/?pid=8628890&fmt=gif"
+        />
+      </noscript>
+    </>
   );
 }
 
@@ -303,7 +333,7 @@ export default function App() {
         cart={data.cart}
         shop={data.shop}
         consent={data.consent}
-        canTrack={devCanTrack}
+        canTrack={portalCanTrack}
       >
         <PortalLayout portal={data.portal} isLoggedIn={data.isLoggedIn}>
           <Outlet />

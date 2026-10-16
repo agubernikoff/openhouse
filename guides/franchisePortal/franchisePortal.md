@@ -151,14 +151,16 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 
 ### 4.2 Auth
 - Uses the existing Customer Account API integration ([`account_.login.jsx`](../../app/routes/account_.login.jsx)). Each portal host's callback, JavaScript-origin and logout URLs must be registered in the Hydrogen channel's Customer Account API settings.
-- The session cookie ([`app/lib/session.js`](../../app/lib/session.js)) sets no `domain`, so it's already host-only. Portal and main-site sessions are isolated with no changes. A franchisee logged into the portal is not logged into byopenhouse.com, which is intended.
+- The **app session** cookie ([`app/lib/session.js`](../../app/lib/session.js)) sets no `domain`, so it's host-only. Each host keeps its own session and cart.
+- The **Shopify login is shared (single sign-on)**: every host signs in through the same Shopify customer-account login, so after signing in on the portal, `www` signs the customer in without a prompt. Signing out on one host ends the Shopify login for all of them. Verified in the 2026-10-16 spike. This is intended. Portal access never depends on "is logged in", only on the customer's `portal:{handle}:*` tag, checked server-side (§4.3).
 - The cart ID lives in that same session, so portal and main-site carts are separate too.
 - Shopify's hosted login page and checkout use store-wide (Openhouse) branding. They can't be branded per portal.
 
 ### 4.3 Roles, onboarding and verification
 - `requirePortalRole(context, roles)` helper: gets the customer ID from the CAA session, reads tags via the Admin API, caches the role in the session with a short TTL (about 5 minutes) so revocation takes effect quickly, and redirects to `/onboarding` or the pending screen as needed.
 - **The role is always derived server-side from the session.** Never trust a role, customer ID or portal handle sent from the client.
-- Onboarding form fields: name, phone, one or more franchise locations (address autocomplete via Geoapify, same as `/wholesale`). Portal config can add more fields (`onboardingFields`, §4.3.1).
+- Onboarding form fields: name, phone, **one** franchise location (store name plus a US address, saved as the customer's default address), and a free-text "other locations you operate" box that goes into the note and Slack. Owners add more locations later in My Locations (§4.7 / 12m). Portal config can add more fields (`onboardingFields`, §4.3.1). Plain address inputs for now; Geoapify autocomplete as on `/wholesale` is an optional upgrade.
+- Implemented in [`app/routes/onboarding.jsx`](../../app/routes/onboarding.jsx), [`app/portal/access.server.js`](../../app/portal/access.server.js) (role lookup, session cache, `requirePortalRole`) and [`app/portal/verification.server.js`](../../app/portal/verification.server.js). The role cache is cleared on login (logout destroys the session). Pending customers bypass the cache so approval shows up immediately.
 - On submit: Admin API `tagsAdd portal:{handle}:pending`, append a summary to the customer note, create the addresses, then post a Slack message to the portal's webhook via `context.waitUntil`. This generalizes `notifySlack` in [`api.wholesale.jsx`](../../app/routes/api.wholesale.jsx) into a shared helper. **Slack is only for new sign-ups.** Orders go through Openhouse's normal fulfillment flow.
 #### 4.3.1 Verification extension point
 
@@ -292,4 +294,12 @@ What the existing repository already provides, and what this plan builds on:
 - **Wholesale variant UI:** removed from the main PDP in `7b1371d`, documented in [`guides/productForm/productForm.md`](../productForm/productForm.md). It's the starting point for `PortalProductForm`.
 - **Cart attributes:** the main site's `ProductForm` tags lines `Order Type: Sample`. Portal lines don't use line-level order-type attributes (§4.5).
 - **Routing:** flat file routes ([`app/routes.js`](../../app/routes.js)). No collision for `/onboarding` or `/admin`.
-- **Still to confirm:** Oxygen multi-domain behavior on preview deployments, and how to test a second host locally (the `--customer-account-push` tunnel only covers one host). Both are part of the Phase 0 spike.
+- **Spike results (2026-10-16), `magnoliabakery.byopenhouse.com`:**
+  - GoDaddy CNAME `magnoliabakery` → `shops.myshopify.com`. In Shopify Domains, the target is Openhouse (Production) and the type is **Alias domain**. TLS is provisioned.
+  - The subdomain serves the Hydrogen app directly (200, no redirect to `www`) on a non-Plus plan, so the one-storefront, many-domains approach works.
+  - Portal guard verified in production: `/` renders the portal, non-portal paths 302 to `/`, robots.txt blocks all crawlers, and `X-Robots-Tag: noindex` is sent. `www` is unchanged.
+  - Customer Account API callback, origin and logout URIs are registered for the subdomain. `/account/login` builds `redirect_uri=https://magnoliabakery.byopenhouse.com/account/authorize`.
+  - Browser-verified: sign in → back on the portal; sign out → back on the portal.
+  - Login is shared with `www` through Shopify's single sign-on, in both directions, including logout. App sessions and carts stay per host (§4.2).
+  - Still to verify: the checkout "continue shopping" return (§4.9).
+- **Local development:** Customer Account API login needs a tunnel (`--customer-account-push`), and the tunnel's hostname isn't a portal hostname. Use `PORTAL_DEV_HANDLE` in `.env` to force portal mode locally.

@@ -70,3 +70,14 @@ export async function shopifyAdminFetch(env, {query, variables}) {
 
   return json.data;
 }
+
+/**
+ * Link to a customer in the Shopify admin, e.g. for Slack notifications.
+ * @param {Env} env
+ * @param {string} customerId - Customer GID
+ */
+export function adminCustomerUrl(env, customerId) {
+  const numericCustomerId = customerId.split('/').pop();
+  const storeHandle = env.PUBLIC_STORE_DOMAIN.replace(/\.myshopify\.com$/, '');
+  return `https://admin.shopify.com/store/${storeHandle}/customers/${numericCustomerId}`;
+}
