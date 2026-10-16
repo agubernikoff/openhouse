@@ -4941,3 +4941,70 @@ body:has(.contact) .contact-error-message {
     margin-bottom: 0;
   }
 }
+
+/* Franchise portal (placeholder styles; per-portal theming comes with plan §4.1) */
+.portal {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.portal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  height: var(--header-height);
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--color-oh-gray);
+}
+.portal-header-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: 'apfel';
+  font-size: 18px;
+  color: var(--color-oh-black);
+  text-decoration: none;
+}
+.portal-header-byline {
+  font-size: 12px;
+  color: var(--color-oh-gray-contact);
+}
+.portal-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.portal-header-nav button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.portal-main {
+  flex: 1;
+  padding: 2rem 1rem;
+}
+.portal-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding-top: 4rem;
+}
+.portal-home h1 {
+  font-family: 'apfel';
+  font-weight: normal;
+  font-size: 36px;
+  line-height: 36px;
+  margin: 0;
+}
+.portal-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+  text-decoration: none;
+}

@@ -14,10 +14,14 @@ import {COLLECTION_QUERY} from './collections.$handle';
 import {motion, AnimatePresence} from 'motion/react';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import socialSharing from '~/assets/socialsharing.png';
+import {PortalHome} from '~/portal/PortalHome';
+import {toPublicPortal} from '~/lib/portals';
 /**
  * @type {Route.MetaFunction}
  */
-export const meta = () => {
+export const meta = ({data}) => {
+  if (data?.portal) return [{title: `${data.portal.name} | Openhouse`}];
+
   const title = 'Openhouse';
   const description =
     'Custom Products for the best in Hospitality, Media, PR, Wellness, Fitness, & more.';
@@ -73,6 +77,14 @@ export async function action({request, context}) {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
+  const {portal, customerAccount} = args.context;
+  if (portal) {
+    return {
+      portal: toPublicPortal(portal),
+      isLoggedIn: await customerAccount.isLoggedIn(),
+    };
+  }
+
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -158,7 +170,18 @@ function loadDeferredData({context}) {
   };
 }
 
-export default function Homepage() {
+export default function Index() {
+  /** @type {LoaderReturnData} */
+  const data = useLoaderData();
+
+  if (data.portal) {
+    return <PortalHome portal={data.portal} isLoggedIn={data.isLoggedIn} />;
+  }
+
+  return <Homepage />;
+}
+
+function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
   const actionData = useActionData();

@@ -34,6 +34,12 @@ export default {
 
       const response = await handleRequest(request);
 
+      // Franchise portals are private, logged-in stores; keep them out of
+      // search indexes entirely.
+      if (hydrogenContext.portal) {
+        response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      }
+
       if (hydrogenContext.session.isPending) {
         response.headers.set(
           'Set-Cookie',
