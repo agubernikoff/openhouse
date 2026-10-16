@@ -8,6 +8,51 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ---
 
+## Status & Next Steps
+
+_Last updated 2026-10-16. Row numbers refer to request #12 in the development roadmap sheet._
+
+### Done
+| Row | Item | Notes |
+|---|---|---|
+| 12a | Discovery, architecture & plan | This document |
+| 12b | Subdomain spike | `magnoliabakery.byopenhouse.com` live on Oxygen as an alias domain, TLS, login round trip, shared Shopify login documented (§9). Only the checkout "continue shopping" return is left; it needs a portal cart. |
+| 12c | Portal foundation | Hostname → portal config, route allowlist, noindex/robots, placeholder layout, all tracking disabled on portal hosts |
+| 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
+| 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
+| 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
+
+### Partly done
+- **12e** branded layout and landing page: structure and placeholder styling are done. Magnolia branding (logo, colors, copy) is waiting on assets.
+- **12p** Magnolia portal setup: domain, DNS, login URLs, Slack channel, portal config and Admin API scopes are done. Branding assets, corporate admin account and the new-portal playbook are still to do.
+
+### Setup completed outside the code
+- GoDaddy CNAME `magnoliabakery` → `shops.myshopify.com`. Shopify Domains: target Openhouse (Production), type Alias.
+- Customer Account API callback, origin and logout URIs for the subdomain.
+- Admin API app **Wholesale Form Integration-v2** (Dev Dashboard, same organization as the store): scopes `read_customers, write_customers, read_orders, read_all_orders`.
+- Slack app with an incoming webhook to the sign-up channel.
+
+### Open checks
+- [ ] Browser Network tab on the portal: no `googletagmanager` / `google-analytics` requests
+- [ ] Wholesale form on `www` still tags the customer and posts to Slack (shared helpers were refactored)
+- [ ] Oxygen production `SHOPIFY_ADMIN_CLIENT_ID` / `_SECRET` match the v2 app
+
+### Next
+1. **Blocked on Openhouse:** set up Magnolia products: tag `portal:magnolia-bakery`, collection `magnolia-bakery`, `custom.minimum_quantity`, one price, continue selling when out of stock. Placeholders are enough to start.
+2. **12d** hide portal products from the main site → **12i** catalog → **12j** product form → **12k** cart & checkout protection
+3. **12l** order history & re-order → **12m** My Locations + return to portal (then finish the 12b checkout check)
+4. **12e** Magnolia branding once assets arrive
+5. **12n / 12o** corporate admin views (optional, pending client approval)
+6. **12p** finish: corporate admin account, new-portal playbook, verification runbook
+
+### Needed from the client
+- Magnolia products in Shopify (see Next #1)
+- Magnolia brand assets: logo, colors, any welcome copy
+- Corporate admin's email, to tag `portal:magnolia-bakery:admin`
+- Decision on the optional corporate admin rows (12n/12o)
+
+---
+
 ## 1. Project Summary
 
 Openhouse is the sole merchandise supplier to a corporate client's franchise network. Magnolia Bakery is the first, growing from about 10 to about 150 locations. Each corporate client gets a **portal**: a gated store on its own `byopenhouse.com` subdomain. In the portal, verified franchisees order from a fixed, client-specific catalog at one price per product, with minimum order quantities enforced. Openhouse fulfills orders within four weeks through its normal fulfillment flow.
