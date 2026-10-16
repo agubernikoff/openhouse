@@ -151,7 +151,8 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 
 ### 4.2 Auth
 - Uses the existing Customer Account API integration ([`account_.login.jsx`](../../app/routes/account_.login.jsx)). Each portal host's callback, JavaScript-origin and logout URLs must be registered in the Hydrogen channel's Customer Account API settings.
-- The session cookie ([`app/lib/session.js`](../../app/lib/session.js)) sets no `domain`, so it's already host-only. Portal and main-site sessions are isolated with no changes. A franchisee logged into the portal is not logged into byopenhouse.com, which is intended.
+- The **app session** cookie ([`app/lib/session.js`](../../app/lib/session.js)) sets no `domain`, so it's host-only. Each host keeps its own session and cart.
+- The **Shopify login is shared (single sign-on)**: every host signs in through the same Shopify customer-account login, so after signing in on the portal, `www` signs the customer in without a prompt. Signing out on one host ends the Shopify login for all of them. Verified in the 2026-10-16 spike. This is intended. Portal access never depends on "is logged in", only on the customer's `portal:{handle}:*` tag, checked server-side (§4.3).
 - The cart ID lives in that same session, so portal and main-site carts are separate too.
 - Shopify's hosted login page and checkout use store-wide (Openhouse) branding. They can't be branded per portal.
 
@@ -297,5 +298,7 @@ What the existing repository already provides, and what this plan builds on:
   - The subdomain serves the Hydrogen app directly (200, no redirect to `www`) on a non-Plus plan, so the one-storefront, many-domains approach works.
   - Portal guard verified in production: `/` renders the portal, non-portal paths 302 to `/`, robots.txt blocks all crawlers, and `X-Robots-Tag: noindex` is sent. `www` is unchanged.
   - Customer Account API callback, origin and logout URIs are registered for the subdomain. `/account/login` builds `redirect_uri=https://magnoliabakery.byopenhouse.com/account/authorize`.
-  - Still to verify in a browser: the full login round trip, session isolation from `www`, logout, and the checkout "continue shopping" return.
+  - Browser-verified: sign in → back on the portal; sign out → back on the portal.
+  - Login is shared with `www` through Shopify's single sign-on, in both directions, including logout. App sessions and carts stay per host (§4.2).
+  - Still to verify: the checkout "continue shopping" return (§4.9).
 - **Local development:** Customer Account API login needs a tunnel (`--customer-account-push`), and the tunnel's hostname isn't a portal hostname. Use `PORTAL_DEV_HANDLE` in `.env` to force portal mode locally.
