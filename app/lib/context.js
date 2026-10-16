@@ -1,6 +1,7 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+import {resolvePortal} from '~/lib/portals';
 
 // Define the additional context object
 const additionalContext = {
@@ -49,7 +50,11 @@ export async function createHydrogenRouterContext(
         queryFragment: CART_QUERY_FRAGMENT,
       },
     },
-    additionalContext,
+    {
+      ...additionalContext,
+      // Franchise portal for this request's host, or null on the main site.
+      portal: resolvePortal(request, env),
+    },
   );
 
   return hydrogenContext;

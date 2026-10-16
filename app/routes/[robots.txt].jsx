@@ -6,6 +6,16 @@ import {parseGid} from '@shopify/hydrogen';
 export async function loader({request, context}) {
   const url = new URL(request.url);
 
+  if (context.portal) {
+    return new Response('User-agent: *\nDisallow: /', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'Cache-Control': `max-age=${60 * 60 * 24}`,
+      },
+    });
+  }
+
   const {shop} = await context.storefront.query(ROBOTS_QUERY);
 
   const shopId = parseGid(shop.id).id;

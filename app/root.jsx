@@ -22,6 +22,8 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 import {GoogleAnalytics} from './components/GoogleAnalytics';
+import {PortalLayout} from './portal/PortalLayout';
+import {isPortalPath, toPublicPortal} from '~/lib/portals';
 import {NavigationProvider} from './context/NavigationContext';
 import {PopUpProvider} from './context/PopUpContext';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
@@ -81,6 +83,8 @@ export async function loader(args) {
   const {request, context} = args;
   const url = new URL(request.url);
 
+  if (context.portal) return loadPortalData(args);
+
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
 
@@ -95,12 +99,36 @@ export async function loader(args) {
     throw redirect('/');
   }
 
-  const {storefront, env} = args.context;
-
   return {
     ...deferredData,
     ...criticalData,
+    ...getAnalyticsData(context),
     maintenanceBypassed,
+  };
+}
+
+/**
+ * Franchise portal hosts skip the main site's header/footer/marketing queries
+ * and only serve portal routes; anything else redirects to the portal home.
+ * @param {Route.LoaderArgs}
+ */
+function loadPortalData({request, context}) {
+  const url = new URL(request.url);
+  if (!isPortalPath(url.pathname)) throw redirect('/');
+
+  return {
+    ...getAnalyticsData(context),
+    portal: toPublicPortal(context.portal),
+    cart: context.cart.get(),
+    isLoggedIn: context.customerAccount.isLoggedIn(),
+  };
+}
+
+/**
+ * @param {Route.LoaderArgs['context']} context
+ */
+function getAnalyticsData({storefront, env}) {
+  return {
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop: getShopAnalytics({
       storefront,
@@ -111,8 +139,8 @@ export async function loader(args) {
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: true,
       // localize the privacy banner
-      country: args.context.storefront.i18n.country,
-      language: args.context.storefront.i18n.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   };
 }
@@ -267,6 +295,21 @@ export default function App() {
 
   if (!data) {
     return <Outlet />;
+  }
+
+  if (data.portal) {
+    return (
+      <Analytics.Provider
+        cart={data.cart}
+        shop={data.shop}
+        consent={data.consent}
+        canTrack={devCanTrack}
+      >
+        <PortalLayout portal={data.portal} isLoggedIn={data.isLoggedIn}>
+          <Outlet />
+        </PortalLayout>
+      </Analytics.Provider>
+    );
   }
 
   const inMaintenance =
