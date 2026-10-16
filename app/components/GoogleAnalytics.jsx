@@ -43,7 +43,7 @@ export function GoogleAnalytics() {
 
     subscribe('product_viewed', ({products, shop}) => {
       const items = products.map((product) => ({
-        item_id: shopifyId(product.id),
+        item_id: itemId(product.id, product.variantId),
         item_name: product.title,
         item_brand: product.vendor,
         item_variant: product.variantTitle,
@@ -121,6 +121,15 @@ function shopifyId(gid = '') {
   return gid.split('/').pop();
 }
 
+/**
+ * Matches the item_id format Shopify's Google & YouTube app sends from
+ * checkout (e.g. shopify_ZZ_8908229443823_46301938712815), so storefront
+ * views/add-to-carts and checkout purchases land on the same item in GA4.
+ */
+function itemId(productGid, variantGid) {
+  return `shopify_ZZ_${shopifyId(productGid)}_${shopifyId(variantGid)}`;
+}
+
 function cartLines(cart) {
   return cart.lines ? flattenConnection(cart.lines) : [];
 }
@@ -128,7 +137,7 @@ function cartLines(cart) {
 function lineToItem(line, quantity = line.quantity) {
   const {merchandise} = line;
   return {
-    item_id: shopifyId(merchandise.product.id),
+    item_id: itemId(merchandise.product.id, merchandise.id),
     item_name: merchandise.product.title,
     item_brand: merchandise.product.vendor,
     item_variant: merchandise.title,
