@@ -828,6 +828,7 @@ export function HeaderMenu({
 
 function HeaderCtas({isLoggedIn, cart, closePanel}) {
   const {close} = useAside();
+  useCartViewedAnalytics();
   return (
     <>
       <div className="header-mobile-layout">
@@ -999,19 +1000,37 @@ function SearchToggle() {
   );
 }
 
+/**
+ * Publishes cart_viewed on any deliberate cart open (click, Space, or
+ * ProductForm's post-add-to-cart open) — passive hover reveals don't count.
+ * Lives here rather than in CartBadge, which is mounted twice (mobile and
+ * desktop layouts).
+ */
+function useCartViewedAnalytics() {
+  const {type, method} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
+  const isCartDeliberatelyOpen = type === 'cart' && method === 'click';
+  const wasCartDeliberatelyOpen = useRef(false);
+
+  useEffect(() => {
+    if (isCartDeliberatelyOpen && !wasCartDeliberatelyOpen.current) {
+      publish('cart_viewed', {
+        cart,
+        prevCart,
+        shop,
+        url: window.location.href || '',
+      });
+    }
+    wasCartDeliberatelyOpen.current = isCartDeliberatelyOpen;
+  }, [isCartDeliberatelyOpen, publish, cart, prevCart, shop]);
+}
+
 function CartBadge({count}) {
   const {open, close, type, method} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
   const isCartOpen = type === 'cart';
 
   const openCart = () => {
     open('cart', 'click');
-    publish('cart_viewed', {
-      cart,
-      prevCart,
-      shop,
-      url: window.location.href || '',
-    });
   };
 
   return (
