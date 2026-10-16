@@ -16,6 +16,7 @@ import normalizeMetaobject from '~/helpers/normalizeMetaobject';
 import socialSharing from '~/assets/socialsharing.png';
 import {PortalHome} from '~/portal/PortalHome';
 import {toPublicPortal} from '~/lib/portals';
+import {getPortalAccess} from '~/portal/access.server';
 /**
  * @type {Route.MetaFunction}
  */
@@ -77,12 +78,12 @@ export async function action({request, context}) {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  const {portal, customerAccount} = args.context;
+  const {portal} = args.context;
   if (portal) {
-    return {
-      portal: toPublicPortal(portal),
-      isLoggedIn: await customerAccount.isLoggedIn(),
-    };
+    const access = await getPortalAccess(args.context);
+    // Logged in but never signed up for this portal
+    if (access?.role === 'none') throw redirect('/onboarding');
+    return {portal: toPublicPortal(portal), role: access?.role ?? null};
   }
 
   // Start fetching non-critical data without blocking time to first byte
@@ -175,7 +176,7 @@ export default function Index() {
   const data = useLoaderData();
 
   if (data.portal) {
-    return <PortalHome portal={data.portal} isLoggedIn={data.isLoggedIn} />;
+    return <PortalHome portal={data.portal} role={data.role} />;
   }
 
   return <Homepage />;
