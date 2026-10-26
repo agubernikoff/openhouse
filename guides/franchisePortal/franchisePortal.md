@@ -255,6 +255,8 @@ The client has no verification data today, so launch uses manual verification on
 
 ### 4.7 Order history and re-order
 - A Shopify Flow rule ("Order created" + custom attribute `_portal` → add tag `portal:{handle}`) tags portal orders.
+  - **Set up 2026-10-25** ("Tag franchise portal orders"). Tag Liquid: `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`.
+  - **Runbook note (draft or manual orders):** orders Openhouse creates for a franchisee in Shopify admin (draft orders) have no `_portal` attribute, so Flow won't tag them. Add the tag `portal:{handle}` to the order by hand, and it then appears in the franchisee's portal history and the corporate admin view. If this becomes frequent, a second Flow rule could tag any order whose customer has a `portal:{handle}:member` tag.
 - History is loaded server-side via the Admin API with `customer_id:{sessionCustomerId} AND tag:'portal:{handle}'`. The customer ID always comes from the session. The Customer Account API can't filter orders by attribute or tag, and a franchisee's regular Openhouse orders must stay out of the portal.
 - Status maps from Shopify fulfillment status (Submitted / Shipped / Delivered), with a tracking link from the fulfillment.
 - Re-order rebuilds the cart from the order's variant IDs and quantities, at **current** prices. It skips and reports variants that are no longer available or no longer in the portal, then re-validates MOQ.
