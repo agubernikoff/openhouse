@@ -34,6 +34,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
         }
         requiresShipping
         title
+        # Franchise portal MOQ (app/lib/portalMoq.js)
+        minimumQuantity: metafield(
+          namespace: "custom"
+          key: "variant_minimum_quantity_priority"
+        ) {
+          value
+        }
         image {
           id
           url
@@ -47,6 +54,9 @@ export const CART_QUERY_FRAGMENT = `#graphql
           title
           id
           vendor
+          minimumQuantity: metafield(namespace: "custom", key: "minimum_quantity") {
+            value
+          }
         }
         selectedOptions {
           name

@@ -57,3 +57,18 @@ const CART_MERCHANDISE_QUERY = `#graphql
     }
   }
 `;
+
+/**
+ * Portal cart data sent to the browser omits `checkoutUrl`, so checkout can
+ * only start from /cart/checkout (which enforces MOQ). Not airtight without
+ * Shopify Plus — see plan §4.6 — but keeps the portal UI honest.
+ * @template T
+ * @param {T} cart
+ * @return {T}
+ */
+export function withoutCheckoutUrl(cart) {
+  if (!cart) return cart;
+  const rest = {...cart};
+  delete rest.checkoutUrl;
+  return rest;
+}

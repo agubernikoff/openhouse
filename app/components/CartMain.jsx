@@ -1,5 +1,6 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
-import {Link} from 'react-router';
+import {Link, useRouteLoaderData} from 'react-router';
+import {cartMoqGroupKey, cartMoqViolations} from '~/lib/portalMoq';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, CartLineGroup} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
@@ -13,6 +14,9 @@ export function CartMain({layout, cart: originalCart}) {
   // The useOptimisticCart hook applies pending actions to the cart
   // so the user immediately sees feedback when they modify the cart.
   const cart = useOptimisticCart(originalCart);
+  // Franchise portals enforce minimum order quantities in the cart
+  const isPortal = !!useRouteLoaderData('root')?.portal;
+  const moqViolations = isPortal ? cartMoqViolations(cart) : new Map();
 
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
   const withDiscount =
@@ -55,23 +59,40 @@ export function CartMain({layout, cart: originalCart}) {
 
               return (
                 <>
-                  {Object.values(wholesaleGroups).map(({color, lines: groupLines}) => (
-                    <CartLineGroup
-                      key={`${groupLines[0].merchandise.product.id}-${color}`}
-                      color={color}
-                      lines={groupLines}
-                      layout={layout}
-                    />
-                  ))}
+                  {Object.values(wholesaleGroups).map(
+                    ({color, lines: groupLines}) => (
+                      <CartLineGroup
+                        key={`${groupLines[0].merchandise.product.id}-${color}`}
+                        color={color}
+                        lines={groupLines}
+                        layout={layout}
+                        moqViolation={moqViolations.get(
+                          cartMoqGroupKey(groupLines[0]),
+                        )}
+                      />
+                    ),
+                  )}
                   {otherLines.map((line) => (
-                    <CartLineItem key={line.id} line={line} layout={layout} />
+                    <CartLineItem
+                      key={line.id}
+                      line={line}
+                      layout={layout}
+                      moqViolation={moqViolations.get(cartMoqGroupKey(line))}
+                    />
                   ))}
                 </>
               );
             })()}
           </ul>
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} />}
+        {cartHasItems && (
+          <CartSummary
+            cart={cart}
+            layout={layout}
+            isPortal={isPortal}
+            belowMoq={moqViolations.size > 0}
+          />
+        )}
       </div>
     </div>
   );

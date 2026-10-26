@@ -3,6 +3,7 @@ import {Link} from 'react-router';
 import {CartForm, Money} from '@shopify/hydrogen';
 import {AnimatePresence, motion} from 'motion/react';
 import {ProductOptionSwatch} from '~/components/ProductForm';
+import {parseMoq} from '~/lib/portalMoq';
 
 /**
  * Portal product form (plan §4.5): the wholesale mode of the pre-7b1371d
@@ -339,9 +340,4 @@ function sortVariants(variants, options) {
     }
     return 0;
   });
-}
-
-export function parseMoq(metafield) {
-  const value = parseInt(metafield?.value, 10);
-  return Number.isFinite(value) && value > 0 ? value : null;
 }

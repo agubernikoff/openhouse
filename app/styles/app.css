@@ -3930,7 +3930,8 @@ div:has(> .sticky-scroll-image) {
   }
 
   body > main,
-  body > main:has(> .product) .portal > main,
+  body > main:has(> .product),
+  .portal > main,
   .portal > main:has(> .product) {
     margin: 120px 1rem 1rem 1rem;
   }
@@ -5096,4 +5097,19 @@ body:has(.contact) .contact-error-message {
   font-family: 'apfel';
   font-weight: 400;
   white-space: nowrap;
+}
+.cart-moq-warning {
+  color: var(--color-oh-red);
+}
+.portal-checkout-blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.portal-checkout-blocked .moq-label {
+  color: var(--color-oh-red);
+}
+.portal-checkout-blocked .cart-checkout-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
