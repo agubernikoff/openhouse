@@ -66,6 +66,16 @@ export async function correctFacetsForPortals({
 }
 
 /**
+ * Whether portal products are in a result, judged from its raw tag facet
+ * (which lists every tag in the result, ignoring tag selections).
+ * @param {Filter[] | null | undefined} filters
+ */
+export function facetsIncludePortalProducts(filters) {
+  const tagFacet = filters?.find((f) => f.id === TAG_FACET_ID);
+  return !!tagFacet?.values.some(isPortalValue);
+}
+
+/**
  * On a portal's own catalog every product carries the portal tag, so counts
  * are right; just hide the `portal:*` value itself.
  * @param {Filter[] | null | undefined} filters
