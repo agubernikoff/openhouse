@@ -17,6 +17,7 @@ import Filter, {FilterColumns} from '~/components/Filter';
 import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
 import {
   excludePortalProductNodes,
+  isPortalCollection,
   onlyPortalProductNodes,
 } from '~/lib/portalProducts';
 import {
@@ -48,6 +49,10 @@ export async function loader(args) {
     }
   } else {
     await checkMaintenanceRedirect(args);
+    // Portal catalogs only exist on their portal (plan §4.4)
+    if (isPortalCollection(args.params.handle)) {
+      throw new Response('Not found', {status: 404});
+    }
   }
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);

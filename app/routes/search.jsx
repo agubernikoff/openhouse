@@ -8,6 +8,7 @@ import Filter, {FilterColumns} from '~/components/Filter';
 import {motion} from 'motion/react';
 import {PAJGination} from './collections.$handle';
 import {
+  excludePortalCollections,
   excludePortalProductNodes,
   excludePortalProducts,
 } from '~/lib/portalProducts';
@@ -464,6 +465,7 @@ async function predictiveSearch({request, context}) {
   }
 
   items.products = excludePortalProducts(items.products);
+  items.collections = excludePortalCollections(items.collections);
 
   const total = Object.values(items).reduce(
     (acc, item) => acc + item.length,

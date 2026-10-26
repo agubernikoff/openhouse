@@ -76,3 +76,21 @@ export function onlyPortalProductNodes(connection, portal) {
     nodes: connection.nodes.filter((p) => p.tags?.includes(tag)),
   };
 }
+
+/**
+ * A portal's catalog collection (`portal.collectionHandle`) is hidden on the
+ * main site too: no page, not in listings, search suggestions or sitemap.
+ * @param {string | null | undefined} handle
+ */
+export function isPortalCollection(handle) {
+  return PORTALS.some((portal) => portal.collectionHandle === handle);
+}
+
+/**
+ * @template {{handle: string}} T
+ * @param {T[] | null | undefined} collections
+ * @return {T[]}
+ */
+export function excludePortalCollections(collections) {
+  return (collections ?? []).filter((c) => !isPortalCollection(c.handle));
+}
