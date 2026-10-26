@@ -1,6 +1,7 @@
 // app/routes/api/collection-product-count.js
 import {
   excludePortalProducts,
+  isPortalCollection,
   onlyPortalProductNodes,
 } from '~/lib/portalProducts';
 
@@ -24,7 +25,11 @@ export const loader = async ({request, context, params}) => {
   const url = new URL(request.url);
   const handle = params.handle;
   if (!handle) {
-    return json({error: 'Missing handle'}, {status: 400});
+    return Response.json({error: 'Missing handle'}, {status: 400});
+  }
+  // Portal catalogs are only counted on their own portal
+  if (!context.portal && isPortalCollection(handle)) {
+    return Response.json({error: 'Collection not found'}, {status: 404});
   }
 
   let total = 0;

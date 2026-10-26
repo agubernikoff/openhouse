@@ -231,6 +231,7 @@ The client has no verification data today, so launch uses manual verification on
   - [`search.jsx`](../../app/routes/search.jsx), regular and predictive: post-filtered. *Tested 2026-10-25:* adding any tag clause to a `search` / `predictiveSearch` query makes Shopify drop the search term and return everything else, so exclusion in the query isn't possible there.
   - [`products.$handle.jsx`](../../app/routes/products.$handle.jsx): portal products 404, and related/complementary recommendations are post-filtered. Cart recommendations ([`cart.jsx`](../../app/routes/cart.jsx)) are post-filtered too.
   - Products sitemap: Hydrogen's `getSitemap` can't filter, so the route looks up portal product handles and strips their `<url>` entries.
+  - **Portal catalog collections** (`portal.collectionHandle`, e.g. `magnolia-bakery`) are hidden too: the collection page returns 404 on `www` (as does its product count API), and the collection is removed from the `/collections` index, predictive search suggestions and the collections sitemap.
   - The filter fails open: a product queried without `tags` can't be checked, and logs a warning in development. Any new product query on the main site must include `tags`.
 - **Product setup rules for Openhouse (keep the main site clean):**
   1. Add the condition *Product tag is not equal to `portal:{handle}`* to every **automated** main-site collection (`all`, `in-stock`, `new-arrivals`, `best-sellers`, `frontpage`, …). The code already filters these; the condition keeps page sizes and counts exact.

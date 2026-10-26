@@ -2,6 +2,7 @@ import {checkMaintenanceRedirect} from '~/lib/maintenance';
 import {useLoaderData, Link} from 'react-router';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {excludePortalCollections} from '~/lib/portalProducts';
 
 /**
  * @param {Route.LoaderArgs} args
@@ -34,7 +35,12 @@ async function loadCriticalData({context, request}) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  return {collections};
+  return {
+    collections: {
+      ...collections,
+      nodes: excludePortalCollections(collections.nodes),
+    },
+  };
 }
 
 /**
