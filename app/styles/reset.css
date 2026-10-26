@@ -80,7 +80,8 @@ body {
   min-height: 100vh;
 }
 
-body > main {
+body > main,
+.portal > main {
   margin: 12rem 1rem 1rem 1rem;
 }
 body > main:has(> .home),
@@ -88,7 +89,8 @@ body > main:has(> .page > main > section.hero-section),
 body > main:has(> .article) {
   margin: 1rem;
 }
-body > main:has(> .product) {
+body > main:has(> .product),
+.portal > main:has(> .product) {
   margin: 90px 1rem 1rem 1rem;
 }
 
