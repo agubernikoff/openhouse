@@ -14,6 +14,7 @@ import {
 } from '~/lib/portalProducts';
 import {
   correctFacetsForPortals,
+  facetsIncludePortalProducts,
   searchProductsFetcher,
 } from '~/lib/portalFacets';
 
@@ -196,6 +197,7 @@ export const SEARCH_QUERY = `#graphql
       unavailableProducts: HIDE,
       productFilters: $filters,
     ) {
+      totalCount
       productFilters{
         id
         label
@@ -257,8 +259,14 @@ async function regularSearch({request, context}) {
   }
 
   // Search can't exclude by tag in the query, so drop portal products here,
-  // and correct the facet counts they'd otherwise inflate
+  // and correct the facet counts and total they'd otherwise inflate
   const products = excludePortalProductNodes(data.products);
+  const fetchProducts = searchProductsFetcher(storefront, term);
+  // All matching products, not just this page's (only products are searched).
+  // With portal products present, count the rest directly (up to 250).
+  const total = facetsIncludePortalProducts(data.products?.productFilters)
+    ? excludePortalProducts(await fetchProducts(filters)).length
+    : (data.products?.totalCount ?? 0);
   const items = {
     ...data,
     products: products && {
@@ -266,15 +274,10 @@ async function regularSearch({request, context}) {
       productFilters: await correctFacetsForPortals({
         filters: products.productFilters,
         selected: filters,
-        fetchProducts: searchProductsFetcher(storefront, term),
+        fetchProducts,
       }),
     },
   };
-
-  const total = Object.values(items).reduce(
-    (acc, {nodes}) => acc + nodes.length,
-    0,
-  );
 
   const error = errors
     ? errors.map(({message}) => message).join(', ')
