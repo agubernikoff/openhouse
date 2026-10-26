@@ -76,6 +76,9 @@ export function PortalProductForm({
         merchandiseId: v.id,
         quantity: quantities[v.id],
         selectedVariant: v,
+        // CartMain groups `_color` lines into one CartLineGroup per product
+        // and color, the same cart display the old wholesale form used
+        ...(g.color && {attributes: [{key: '_color', value: g.color}]}),
       })),
   );
   const belowMoq = groups.some((g) => g.moq != null && g.total < g.moq);
