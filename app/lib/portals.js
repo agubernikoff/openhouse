@@ -16,11 +16,13 @@
  *   handle: string;
  *   hostname: string;
  *   name: string;
+ *   collectionHandle: string;
  *   slackWebhookEnvVar: string;
  *   verification: 'manual';
  *   onboardingFields: OnboardingField[];
  * }} Portal
  *
+ * - `collectionHandle`: the Shopify collection that is the portal's catalog.
  * - `slackWebhookEnvVar`: name of the env var holding the portal's Slack
  *   incoming webhook for new sign-ups (the URL itself is a secret).
  * - `verification`: sign-up verification strategy (portal/verification.server.js).
@@ -34,6 +36,7 @@ export const PORTALS = [
     handle: 'magnolia-bakery',
     hostname: 'magnoliabakery.byopenhouse.com',
     name: 'Magnolia Bakery',
+    collectionHandle: 'magnolia-bakery',
     slackWebhookEnvVar: 'SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL',
     verification: 'manual',
     onboardingFields: [],
@@ -41,9 +44,16 @@ export const PORTALS = [
 ];
 
 // Paths a portal host serves. Everything else on a portal host redirects to
-// `/`, so the main site's pages are never reachable through a portal.
-const PORTAL_PATHS = ['/', '/onboarding', '/robots.txt'];
+// `/` (or 404s for non-page requests), so the main site's pages, actions and
+// resource routes are never reachable through a portal. See server.js.
+const PORTAL_PATHS = ['/', '/onboarding', '/robots.txt', '/__manifest'];
 const PORTAL_PATH_PREFIXES = ['/account'];
+
+/** Paths that depend on the portal's own config, e.g. its catalog. */
+const portalPaths = (portal) => [
+  `/collections/${portal.collectionHandle}`,
+  `/api/collection-product-count/${portal.collectionHandle}`,
+];
 
 /**
  * Resolves the portal for a request from its hostname. Returns null for the
@@ -65,13 +75,19 @@ export function resolvePortal(request, env) {
 }
 
 /**
+ * Whether a portal host serves this path. Accepts React Router data request
+ * paths too (`/x.data`, `/_root.data`).
  * @param {string} pathname
+ * @param {{collectionHandle: string}} portal
  */
-export function isPortalPath(pathname) {
+export function isPortalPath(pathname, portal) {
+  const path =
+    pathname === '/_root.data' ? '/' : pathname.replace(/\.data$/, '');
   return (
-    PORTAL_PATHS.includes(pathname) ||
+    PORTAL_PATHS.includes(path) ||
+    portalPaths(portal).includes(path) ||
     PORTAL_PATH_PREFIXES.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+      (prefix) => path === prefix || path.startsWith(`${prefix}/`),
     )
   );
 }
@@ -83,6 +99,6 @@ export function isPortalPath(pathname) {
  */
 export function toPublicPortal(portal) {
   if (!portal) return null;
-  const {handle, name, onboardingFields} = portal;
-  return {handle, name, onboardingFields};
+  const {handle, name, collectionHandle, onboardingFields} = portal;
+  return {handle, name, collectionHandle, onboardingFields};
 }

@@ -84,6 +84,10 @@ export async function loader(args) {
     const access = await getPortalAccess(args.context);
     // Logged in but never signed up for this portal
     if (access?.role === 'none') throw redirect('/onboarding');
+    // Verified members go straight to the catalog
+    if (access?.role === 'member' || access?.role === 'admin') {
+      throw redirect(`/collections/${portal.collectionHandle}`);
+    }
     return {portal: toPublicPortal(portal), role: access?.role ?? null};
   }
 

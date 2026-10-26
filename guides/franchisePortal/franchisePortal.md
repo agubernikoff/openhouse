@@ -21,6 +21,7 @@ _Last updated 2026-10-16. Row numbers refer to request #12 in the development ro
 | 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
 | 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
 | 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
+| 12i | Portal catalog (in progress) | Reuses the collection page and filters at `/collections/magnolia-bakery` (§4.4). Needs the `magnolia-bakery` collection in Shopify. Product links work once 12j lands. |
 | 12d | Hide portal products from the main site | Server-side filtering in every main-site product loader plus the sitemap (§4.4). Verify after deploy with one test product. |
 
 ### Partly done
@@ -193,7 +194,7 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 - **Why code config, not a metaobject:** portal setup is manual per client anyway, the Slack webhook is a secret (metaobjects can be readable over the public Storefront API), and code config adds no request overhead and is versioned. Branding could move to a metaobject later if Openhouse wants to edit it without a deploy.
 - Portal pages live at the **same paths** as the main site (`/`, `/products/$handle`, `/cart`, `/account/*`), plus portal-only routes (`/onboarding`, `/admin/*`). Overlapping routes branch on `context.portal` and delegate to modules in `app/portal/`, so portal code stays separate. Portal-only routes return 404 on the main host.
   - *Why not a `/portal/*` route segment with a server rewrite:* SSR would render the rewritten path, and client hydration would see a different `window.location`. A visible `/portal/...` URL would undercut the subdomain. Validate this approach in the spike (Phase 0).
-- On a portal host, any route outside the allowlist redirects to `/`. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
+- On a portal host, any path outside the allowlist ([`isPortalPath`](../../app/lib/portals.js)) is blocked in [`server.js`](../../server.js) before routing: page loads redirect to `/`, and actions or other non-GET requests return 404. This covers main-site actions and resource routes like `/cart/:lines`. Client-side data requests pass through to read-only loaders; the root loader and `PortalLayout` redirect those. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
 
 ### 4.2 Auth
 - Uses the existing Customer Account API integration ([`account_.login.jsx`](../../app/routes/account_.login.jsx)). Each portal host's callback, JavaScript-origin and logout URLs must be registered in the Hydrogen channel's Customer Account API settings.
@@ -223,7 +224,7 @@ The client has no verification data today, so launch uses manual verification on
 - **Existing pending members:** when a strategy is turned on, a one-off script can run it against current `:pending` customers.
 
 ### 4.4 Catalog visibility
-- The portal catalog is the portal's collection, queried with the Storefront API, with category chips from product type.
+- **The portal catalog reuses the main site's collection page** ([`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx)), including `Filter` / `FilterColumns`, sort and pagination, served at `/collections/{portal.collectionHandle}` on the portal host. Members visiting `/` are redirected there. On a portal host the loader requires the `member` or `admin` role, 404s any other collection, keeps only products tagged `portal:{handle}` (fails closed), and hides the `portal:*` facet value. The main site's collection side list (built from the header menu) isn't shown. Category filters are the same tag facet as the main site.
 - **The main site hides every `portal:*` product (12d, implemented).** Helpers live in [`app/lib/portalProducts.js`](../../app/lib/portalProducts.js). Every main-site product fragment now includes `tags`, and loaders filter on the server before data reaches the browser:
   - [`collections.all.jsx`](../../app/routes/collections.all.jsx): excluded **in the query** (`-tag:'portal:{handle}'`, which the Storefront `products` query supports), so pagination is exact. It's post-filtered too.
   - [`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx), the homepage featured grid, and [`api.collection-product-count`](../../app/routes/api.collection-product-count.$handle.jsx): post-filtered.

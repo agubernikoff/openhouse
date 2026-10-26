@@ -59,3 +59,20 @@ export function excludePortalProductNodes(connection) {
 export const EXCLUDE_PORTAL_PRODUCTS_QUERY = PORTALS.map(
   ({handle}) => `-tag:'${portalProductTag(handle)}'`,
 ).join(' ');
+
+/**
+ * The inverse, for a portal's own catalog: keep only products tagged for
+ * this portal. Fails closed — a product without `tags` is dropped.
+ * @template {{nodes: any[]}} C
+ * @param {C | null | undefined} connection
+ * @param {{handle: string}} portal
+ * @return {C | null | undefined}
+ */
+export function onlyPortalProductNodes(connection, portal) {
+  if (!connection?.nodes) return connection;
+  const tag = portalProductTag(portal.handle);
+  return {
+    ...connection,
+    nodes: connection.nodes.filter((p) => p.tags?.includes(tag)),
+  };
+}

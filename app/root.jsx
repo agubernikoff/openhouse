@@ -115,7 +115,7 @@ export async function loader(args) {
  */
 function loadPortalData({request, context}) {
   const url = new URL(request.url);
-  if (!isPortalPath(url.pathname)) throw redirect('/');
+  if (!isPortalPath(url.pathname, context.portal)) throw redirect('/');
 
   const analyticsData = getAnalyticsData(context);
 
