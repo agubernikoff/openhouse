@@ -10,50 +10,41 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ## Status & Next Steps
 
-_Last updated 2026-10-16. Row numbers refer to request #12 in the development roadmap sheet._
+_Last updated 2026-10-25. Row numbers refer to request #12 in the development roadmap sheet._
 
-### Done
-| Row | Item | Notes |
+| Row | Item | Status |
 |---|---|---|
-| 12a | Discovery, architecture & plan | This document |
-| 12b | Subdomain spike | `magnoliabakery.byopenhouse.com` live on Oxygen as an alias domain, TLS, login round trip, shared Shopify login documented (§9). Only the checkout "continue shopping" return is left; it needs a portal cart. |
-| 12c | Portal foundation | Hostname → portal config, route allowlist, noindex/robots, placeholder layout, all tracking disabled on portal hosts |
-| 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
-| 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
-| 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
-| 12j | Portal product page (built, needs browser test) | Portal mode of `products.$handle.jsx` with [`PortalProductForm`](../../app/portal/PortalProductForm.jsx): multi-color, per-size/option quantities, per-color MOQ, static lead time, portal breadcrumb; FAQs and recommendations hidden. |
-| 12k | Cart & checkout protection (partly) | Portal `/cart` page and header link. Server-side cart guard ([`portalCart.server.js`](../../app/lib/portalCart.server.js)): main site rejects portal products (including `/cart/:lines`); portal requires member/admin and its own products. Portal carts get the `_portal` attribute, and lines carry `_color` so the cart groups them (`CartLineGroup`). **MOQ in the cart** ([`portalMoq.js`](../../app/lib/portalMoq.js)): per product/color warnings, Checkout disabled while anything is below MOQ, and checkout goes through [`/cart/checkout`](../../app/routes/cart_.checkout.jsx), which re-checks on the server (portal cart data omits `checkoutUrl`). **Still to do:** Shopify Flow order tag. |
-| 12i | Portal catalog (in progress) | Reuses the collection page and filters at `/collections/magnolia-bakery` (§4.4). Needs the `magnolia-bakery` collection in Shopify. Product links work once 12j lands. |
-| 12d | Hide portal products from the main site | Server-side filtering in every main-site product loader plus the sitemap (§4.4). Verify after deploy with one test product. |
+| 12a | Discovery, architecture & plan | Done (this document) |
+| 12b | Subdomain spike | Done. Checkout "continue shopping" return still to check (12m). |
+| 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
+| 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
+| 12e | Branded layout + landing | Structure done; Magnolia branding waiting on assets |
+| 12f | Sign-up, verification & gating | Done and live |
+| 12g | Slack sign-up notifications | Done and live |
+| 12h | Verification extension point | Done (manual at launch) |
+| 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
+| 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
+| 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. **Remaining:** Shopify Flow order-tag rule (admin setup, steps below). |
+| 12l | Order history & re-order | Next. Depends on the Flow order tag. |
+| 12m | My Locations + return to portal | Not started |
+| 12n / 12o | Corporate admin | Not started (optional) |
+| 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
-### Partly done
-- **12e** branded layout and landing page: structure and placeholder styling are done. Magnolia branding (logo, colors, copy) is waiting on assets.
-- **12p** Magnolia portal setup: domain, DNS, login URLs, Slack channel, portal config and Admin API scopes are done. Branding assets, corporate admin account and the new-portal playbook are still to do.
+**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params, and the search results count only showed the current page.
 
-### Setup completed outside the code
-- GoDaddy CNAME `magnoliabakery` → `shops.myshopify.com`. Shopify Domains: target Openhouse (Production), type Alias.
-- Customer Account API callback, origin and logout URIs for the subdomain.
-- Admin API app **Wholesale Form Integration-v2** (Dev Dashboard, same organization as the store): scopes `read_customers, write_customers, read_orders, read_all_orders`.
-- Slack app with an incoming webhook to the sign-up channel.
+### Open decisions
+- Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
+- Optional: reorder the product gallery by selected colors (the old wholesale form did).
 
-### Open checks
-- [ ] Browser Network tab on the portal: no `googletagmanager` / `google-analytics` requests
-- [ ] Wholesale form on `www` still tags the customer and posts to Slack (shared helpers were refactored)
-- [ ] Oxygen production `SHOPIFY_ADMIN_CLIENT_ID` / `_SECRET` match the v2 app
-
-### Next
-1. **Deploy 12d, then verify with one test product** tagged `portal:magnolia-bakery`: it must not appear anywhere on `www`. After that, Openhouse can safely set up the real Magnolia products: tag, collection `magnolia-bakery`, `custom.minimum_quantity`, one price, continue selling when out of stock, plus the two setup rules in §4.4.
-2. **12i** catalog → **12j** product form → **12k** cart & checkout protection (includes rejecting portal products in the **main-site cart**; until then a cart permalink could still add one)
-3. **12l** order history & re-order → **12m** My Locations + return to portal (then finish the 12b checkout check)
-4. **12e** Magnolia branding once assets arrive
-5. **12n / 12o** corporate admin views (optional, pending client approval)
-6. **12p** finish: corporate admin account, new-portal playbook, verification runbook
+### Shopify Flow order tag (12k, admin setup)
+Trigger *Order created* → condition *custom attributes key = `_portal`* → action *Add order tags*:
+`{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`
 
 ### Needed from the client
-- Magnolia products in Shopify (see Next #1)
-- Magnolia brand assets: logo, colors, any welcome copy
-- Corporate admin's email, to tag `portal:magnolia-bakery:admin`
-- Decision on the optional corporate admin rows (12n/12o)
+- Real Magnolia products (tag `portal:magnolia-bakery`; they appear in the `magnolia-bakery` collection automatically if it's an automated collection on that tag; publish only to the Openhouse Hydrogen storefront)
+- Magnolia brand assets
+- Corporate admin's email (`portal:magnolia-bakery:admin`)
+- Decision on 12n/12o
 
 ---
 

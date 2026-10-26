@@ -14,7 +14,7 @@ import {motion} from 'motion/react';
  *   line: CartLine;
  * }}
  */
-export function CartLineItem({layout, line, moqViolation}) {
+export function CartLineItem({layout, line}) {
   const {id, merchandise, attributes} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
@@ -87,7 +87,6 @@ export function CartLineItem({layout, line, moqViolation}) {
             })}
           </ul>
         </div>
-        <MoqWarning violation={moqViolation} />
       </div>
 
       <div className="cart-line-actions">
@@ -123,7 +122,7 @@ function sortBySize(lines) {
   });
 }
 
-export function CartLineGroup({color, lines, layout, moqViolation}) {
+export function CartLineGroup({color, lines, layout}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLayout, setEditLayout] = useState(false);
   const {close} = useAside();
@@ -270,7 +269,6 @@ export function CartLineGroup({color, lines, layout, moqViolation}) {
             <li>{`Quantity: ${lines.reduce((sum, line) => sum + line.quantity, 0)}`}</li>
           </ul>
         </div>
-        <MoqWarning violation={moqViolation} />
       </div>
       <div className="cart-line-actions">
         <CartLineRemoveButton
@@ -401,17 +399,3 @@ function getUpdateKey(lineIds) {
 /** @typedef {import('~/components/CartMain').CartLayout} CartLayout */
 /** @typedef {import('@shopify/hydrogen').OptimisticCartLine} OptimisticCartLine */
 /** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */
-
-/**
- * Franchise portal: a product/color below its minimum order quantity
- * (app/lib/portalMoq.js). Checkout stays disabled until it's resolved.
- * @param {{violation?: {total: number; moq: number}}}
- */
-function MoqWarning({violation}) {
-  if (!violation) return null;
-  return (
-    <p className="moq-label cart-moq-warning" role="status">
-      {`TOTAL(${violation.total}) IS BELOW MOQ(${violation.moq})`}
-    </p>
-  );
-}

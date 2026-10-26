@@ -10,7 +10,7 @@ export function CartSummary({
   cart,
   layout,
   isPortal = false,
-  belowMoq = false,
+  moqViolations = [],
 }) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
@@ -36,8 +36,9 @@ export function CartSummary({
         layout={layout}
         cart={cart}
         isPortal={isPortal}
-        belowMoq={belowMoq}
+        belowMoq={moqViolations.length > 0}
       />
+      {isPortal && <PortalMoqStatus violations={moqViolations} />}
     </div>
   );
 }
@@ -216,22 +217,49 @@ function CartCheckoutActions({checkoutUrl, layout, cart, isPortal, belowMoq}) {
  * @param {{belowMoq: boolean}}
  */
 function PortalCheckoutButton({belowMoq}) {
+  // Same slot and class either way, so the layout never shifts
   if (belowMoq) {
     return (
-      <div className="portal-checkout-blocked">
-        <button type="button" className="cart-checkout-button" disabled>
-          PROCEED TO CHECKOUT
-        </button>
-        <p className="moq-label" role="status">
-          Some items are below their minimum order quantity.
-        </p>
-      </div>
+      <button
+        type="button"
+        className="cart-checkout-button"
+        disabled
+        aria-describedby="portal-moq-status"
+      >
+        PROCEED TO CHECKOUT
+      </button>
     );
   }
   return (
     <a href="/cart/checkout" className="cart-checkout-button">
       PROCEED TO CHECKOUT
     </a>
+  );
+}
+
+/**
+ * Lists portal cart items below their MOQ. Rendered after the checkout
+ * actions so it never pushes cart content around, and always present so
+ * screen readers announce changes.
+ * @param {{violations: {title: string; color: string | null; total: number; moq: number}[]}}
+ */
+function PortalMoqStatus({violations}) {
+  return (
+    <div id="portal-moq-status" className="portal-moq-status" role="status">
+      {violations.length > 0 && (
+        <>
+          <p>Below minimum order quantity:</p>
+          <ul>
+            {violations.map((v) => (
+              <li key={`${v.title}-${v.color}`}>
+                {v.title}
+                {v.color ? `, ${v.color}` : ''}: {v.total} of {v.moq} minimum
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link, useRouteLoaderData} from 'react-router';
-import {cartMoqGroupKey, cartMoqViolations} from '~/lib/portalMoq';
+import {cartMoqViolations} from '~/lib/portalMoq';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, CartLineGroup} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
@@ -66,19 +66,11 @@ export function CartMain({layout, cart: originalCart}) {
                         color={color}
                         lines={groupLines}
                         layout={layout}
-                        moqViolation={moqViolations.get(
-                          cartMoqGroupKey(groupLines[0]),
-                        )}
                       />
                     ),
                   )}
                   {otherLines.map((line) => (
-                    <CartLineItem
-                      key={line.id}
-                      line={line}
-                      layout={layout}
-                      moqViolation={moqViolations.get(cartMoqGroupKey(line))}
-                    />
+                    <CartLineItem key={line.id} line={line} layout={layout} />
                   ))}
                 </>
               );
@@ -90,7 +82,7 @@ export function CartMain({layout, cart: originalCart}) {
             cart={cart}
             layout={layout}
             isPortal={isPortal}
-            belowMoq={moqViolations.size > 0}
+            moqViolations={[...moqViolations.values()]}
           />
         )}
       </div>

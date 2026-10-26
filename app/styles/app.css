@@ -5098,18 +5098,20 @@ body:has(.contact) .contact-error-message {
   font-weight: 400;
   white-space: nowrap;
 }
-.cart-moq-warning {
-  color: var(--color-oh-red);
-}
-.portal-checkout-blocked {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.portal-checkout-blocked .moq-label {
-  color: var(--color-oh-red);
-}
-.portal-checkout-blocked .cart-checkout-button:disabled {
+.cart-checkout-actions .cart-checkout-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+.portal-moq-status {
+  grid-column: 1 / -1;
+  font-family: 'mono';
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--color-oh-red);
+}
+.portal-moq-status p,
+.portal-moq-status ul {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
 }
