@@ -7,6 +7,10 @@ import {getEmptyPredictiveSearchResult} from '~/lib/search';
 import Filter, {FilterColumns} from '~/components/Filter';
 import {motion} from 'motion/react';
 import {PAJGination} from './collections.$handle';
+import {
+  excludePortalProductNodes,
+  excludePortalProducts,
+} from '~/lib/portalProducts';
 
 /**
  * @type {Route.MetaFunction}
@@ -84,6 +88,7 @@ const SEARCH_PRODUCT_FRAGMENT = `#graphql
   }
   fragment SearchProduct on Product {
     id
+    tags
     handle
     title
     featuredImage {
@@ -230,13 +235,16 @@ async function regularSearch({request, context}) {
   const term = String(url.searchParams.get('q') || '');
 
   // Search articles, pages, and products for the `q` term
-  const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
+  const {errors, ...data} = await storefront.query(SEARCH_QUERY, {
     variables: {...variables, term},
   });
 
-  if (!items) {
+  if (!data) {
     throw new Error('No search data returned from Shopify API');
   }
+
+  // Search can't exclude by tag in the query, so drop portal products here
+  const items = {...data, products: excludePortalProductNodes(data.products)};
 
   const total = Object.values(items).reduce(
     (acc, {nodes}) => acc + nodes.length,
@@ -303,6 +311,7 @@ const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
   fragment PredictiveProduct on Product {
     __typename
     id
+    tags
     title
     handle
     trackingParameters
@@ -414,6 +423,8 @@ async function predictiveSearch({request, context}) {
   if (!items) {
     throw new Error('No predictive search data returned from Shopify API');
   }
+
+  items.products = excludePortalProducts(items.products);
 
   const total = Object.values(items).reduce(
     (acc, item) => acc + item.length,

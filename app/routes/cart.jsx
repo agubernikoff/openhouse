@@ -4,6 +4,7 @@ import {CartForm, useAnalytics} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {ProductItem} from '~/components/ProductItem';
 import {useState, useEffect, useRef} from 'react';
+import {excludePortalProducts} from '~/lib/portalProducts';
 
 /**
  * @type {Route.MetaFunction}
@@ -151,7 +152,14 @@ export async function loader({context}) {
     }),
   );
 
-  const recommendations = await Promise.all(recommendationsPromises);
+  const recommendations = (await Promise.all(recommendationsPromises)).map(
+    (rec) => ({
+      ...rec,
+      productRecommendations: excludePortalProducts(
+        rec?.productRecommendations,
+      ),
+    }),
+  );
 
   return {
     cart: cartData,
@@ -244,6 +252,7 @@ function YouMayAlsoLike({recommendations}) {
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment ProductItem on Product {
     id
+    tags
     handle
     title
     featuredImage {

@@ -3,6 +3,10 @@ import {useLoaderData} from 'react-router';
 import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
+import {
+  EXCLUDE_PORTAL_PRODUCTS_QUERY,
+  excludePortalProductNodes,
+} from '~/lib/portalProducts';
 
 /**
  * @type {Route.MetaFunction}
@@ -38,11 +42,11 @@ async function loadCriticalData({context, request}) {
 
   const [{products}] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
-      variables: {...paginationVariables},
+      variables: {...paginationVariables, query: EXCLUDE_PORTAL_PRODUCTS_QUERY},
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
-  return {products};
+  return {products: excludePortalProductNodes(products)};
 }
 
 /**
@@ -85,6 +89,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
   }
   fragment CollectionItem on Product {
     id
+    tags
     handle
     title
     featuredImage {
@@ -114,8 +119,9 @@ const CATALOG_QUERY = `#graphql
     $last: Int
     $startCursor: String
     $endCursor: String
+    $query: String
   ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor, query: $query) {
       nodes {
         ...CollectionItem
       }
