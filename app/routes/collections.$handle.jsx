@@ -165,13 +165,25 @@ export default function Collection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = searchParams.getAll('filter');
 
+  // Total across all pages (the loader only has the current page). Keyed on
+  // the filter values, since `filter` is a new array every render.
+  const filterKey = filter.join('&');
   useEffect(() => {
-    if (filter.length > 0) setTotal(collection.products.nodes.length);
-    else
-      fetch(`/api/collection-product-count/${collection.handle}`)
-        .then((res) => res.json())
-        .then((data) => setTotal(data.total));
-  }, [collection?.handle, filter, collection?.products?.nodes?.length]);
+    let current = true;
+    const params = new URLSearchParams();
+    filter.forEach((f) => params.append('filter', f));
+    fetch(`/api/collection-product-count/${collection.handle}?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Ignore responses for filters the shopper has already changed
+        if (current && typeof data.total === 'number') setTotal(data.total);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collection?.handle, filterKey]);
 
   const {pathname} = useLocation();
 

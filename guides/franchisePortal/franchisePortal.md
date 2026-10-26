@@ -30,7 +30,7 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
-**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params, and the search results count only showed the current page.
+**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?

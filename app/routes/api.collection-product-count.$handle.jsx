@@ -1,4 +1,6 @@
-// app/routes/api/collection-product-count.js
+// Total products in a collection for the "N Products" label, honoring the
+// page's active `?filter=` params (the page itself only has one page of 12)
+import {parseFilterParams} from '~/lib/filterParams';
 import {
   excludePortalProducts,
   isPortalCollection,
@@ -6,9 +8,13 @@ import {
 } from '~/lib/portalProducts';
 
 const QUERY = `
-  query CollectionProducts($handle: String!, $cursor: String) {
+  query CollectionProducts(
+    $handle: String!
+    $cursor: String
+    $filters: [ProductFilter!]
+  ) {
     collection(handle: $handle) {
-      products(first: 250, after: $cursor) {
+      products(first: 250, after: $cursor, filters: $filters) {
         pageInfo {
           hasNextPage
           endCursor
@@ -32,13 +38,14 @@ export const loader = async ({request, context, params}) => {
     return Response.json({error: 'Collection not found'}, {status: 404});
   }
 
+  const filters = parseFilterParams(url.searchParams);
   let total = 0;
   let cursor = null;
   let hasNextPage = true;
 
   while (hasNextPage) {
     const res = await context.storefront.query(QUERY, {
-      variables: {handle, cursor},
+      variables: {handle, cursor, filters},
     });
 
     const products = res.collection?.products;
