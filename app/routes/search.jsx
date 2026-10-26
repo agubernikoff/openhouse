@@ -17,6 +17,7 @@ import {
   facetsIncludePortalProducts,
   searchProductsFetcher,
 } from '~/lib/portalFacets';
+import {parseFilterParams} from '~/lib/filterParams';
 
 /**
  * @type {Route.MetaFunction}
@@ -284,21 +285,6 @@ async function regularSearch({request, context}) {
     : undefined;
 
   return {type: 'regular', term, error, result: {total, items}};
-}
-
-/**
- * `?filter=` params hold ProductFilter inputs as JSON; skip malformed ones
- * rather than failing the whole search.
- * @param {URLSearchParams} searchParams
- */
-function parseFilterParams(searchParams) {
-  return searchParams.getAll('filter').flatMap((value) => {
-    try {
-      return [JSON.parse(value)];
-    } catch {
-      return [];
-    }
-  });
 }
 
 /**

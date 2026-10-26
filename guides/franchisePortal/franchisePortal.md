@@ -24,19 +24,19 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
 | 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
-| 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. **Remaining:** Shopify Flow order-tag rule (admin setup, steps below). |
-| 12l | Order history & re-order | Next. Depends on the Flow order tag. |
+| 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. **Remaining:** test the Shopify Flow order-tag rule (set up 2026-10-25, **untested**). |
+| 12l | Order history & re-order | Next. Depends on the Flow order tag, so **start by placing a test portal order** to verify the tag (also checks `/cart/checkout`, saved addresses, and the 12b "continue shopping" return). |
 | 12m | My Locations + return to portal | Not started |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
-**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params, and the search results count only showed the current page.
+**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
 - Optional: reorder the product gallery by selected colors (the old wholesale form did).
 
-### Shopify Flow order tag (12k, admin setup)
+### Shopify Flow order tag (12k, set up 2026-10-25, untested)
 Trigger *Order created* → condition *custom attributes key = `_portal`* → action *Add order tags*:
 `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`
 
@@ -255,6 +255,8 @@ The client has no verification data today, so launch uses manual verification on
 
 ### 4.7 Order history and re-order
 - A Shopify Flow rule ("Order created" + custom attribute `_portal` → add tag `portal:{handle}`) tags portal orders.
+  - **Set up 2026-10-25** ("Tag franchise portal orders"). **Not yet tested**: no portal order has been placed. Verify with the first test order before building 12l. Tag Liquid: `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`.
+  - **Runbook note (draft or manual orders):** orders Openhouse creates for a franchisee in Shopify admin (draft orders) have no `_portal` attribute, so Flow won't tag them. Add the tag `portal:{handle}` to the order by hand, and it then appears in the franchisee's portal history and the corporate admin view. If this becomes frequent, a second Flow rule could tag any order whose customer has a `portal:{handle}:member` tag.
 - History is loaded server-side via the Admin API with `customer_id:{sessionCustomerId} AND tag:'portal:{handle}'`. The customer ID always comes from the session. The Customer Account API can't filter orders by attribute or tag, and a franchisee's regular Openhouse orders must stay out of the portal.
 - Status maps from Shopify fulfillment status (Submitted / Shipped / Delivered), with a tracking link from the fulfillment.
 - Re-order rebuilds the cart from the order's variant IDs and quantities, at **current** prices. It skips and reports variants that are no longer available or no longer in the portal, then re-validates MOQ.
