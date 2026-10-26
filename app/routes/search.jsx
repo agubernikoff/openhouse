@@ -238,9 +238,17 @@ async function regularSearch({request, context}) {
   const variables = getPaginationVariables(request, {pageBy: 12});
   const term = String(url.searchParams.get('q') || '');
 
+  // Same `filter` / `sortKey` / `reverse` params the Filter component sets
+  // on collection pages. Search only supports PRICE and RELEVANCE sorts (the
+  // Filter component disables the others when `isSearch`).
+  const filters = parseFilterParams(url.searchParams);
+  const sortKey =
+    url.searchParams.get('sortKey') === 'PRICE' ? 'PRICE' : 'RELEVANCE';
+  const reverse = url.searchParams.get('reverse') === 'true';
+
   // Search articles, pages, and products for the `q` term
   const {errors, ...data} = await storefront.query(SEARCH_QUERY, {
-    variables: {...variables, term},
+    variables: {...variables, term, filters, sortKey, reverse},
   });
 
   if (!data) {
@@ -256,8 +264,7 @@ async function regularSearch({request, context}) {
       ...products,
       productFilters: await correctFacetsForPortals({
         filters: products.productFilters,
-        // SEARCH_QUERY above isn't passed the URL's filter params
-        selected: [],
+        selected: filters,
         fetchProducts: searchProductsFetcher(storefront, term),
       }),
     },
@@ -273,6 +280,21 @@ async function regularSearch({request, context}) {
     : undefined;
 
   return {type: 'regular', term, error, result: {total, items}};
+}
+
+/**
+ * `?filter=` params hold ProductFilter inputs as JSON; skip malformed ones
+ * rather than failing the whole search.
+ * @param {URLSearchParams} searchParams
+ */
+function parseFilterParams(searchParams) {
+  return searchParams.getAll('filter').flatMap((value) => {
+    try {
+      return [JSON.parse(value)];
+    } catch {
+      return [];
+    }
+  });
 }
 
 /**
