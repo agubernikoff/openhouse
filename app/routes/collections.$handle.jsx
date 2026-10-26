@@ -15,6 +15,7 @@ import {useEffect, useState, useRef, useCallback} from 'react';
 import {motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
 import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
+import {excludePortalProductNodes} from '~/lib/portalProducts';
 
 /**
  * @type {Route.MetaFunction}
@@ -86,7 +87,10 @@ async function loadCriticalData({context, params, request}) {
   redirectIfHandleIsLocalized(request, {handle, data: collection});
 
   return {
-    collection,
+    collection: {
+      ...collection,
+      products: excludePortalProductNodes(collection.products),
+    },
   };
 }
 
@@ -332,6 +336,7 @@ export const PRODUCT_ITEM_FRAGMENT = `#graphql
   }
   fragment ProductItem on Product {
     id
+    tags
     handle
     title
     featuredImage {

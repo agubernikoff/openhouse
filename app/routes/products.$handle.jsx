@@ -30,6 +30,7 @@ import {FilterInput} from '~/components/Filter';
 import {AnimatePresence, motion} from 'motion/react';
 import {useNavigationContext} from '~/context/NavigationContext';
 import {useCascadingSelection} from '~/hooks/useCascadingSelection';
+import {excludePortalProducts, isPortalProduct} from '~/lib/portalProducts';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -91,7 +92,8 @@ async function loadCriticalData({context, params, request}) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  if (!product?.id) {
+  // Portal products only exist on their portal (plan §4.4)
+  if (!product?.id || isPortalProduct(product)) {
     throw new Response(null, {status: 404});
   }
 
@@ -116,13 +118,20 @@ function loadDeferredData({context, params}) {
   // For example: product reviews, product recommendations, social feeds.
   const faqs = storefront.query(FAQ_QUERY);
   const global_pdp_data = storefront.query(GLOBAL_PDP_QUERY);
-  const recs = storefront.query(PRODUCT_RECOMENDATIONS_QUERY, {
-    variables: {handle},
-  });
-  const compliments = storefront.query(COMPLEMENTARY_QUERY, {
-    variables: {handle},
-  });
+  const recs = storefront
+    .query(PRODUCT_RECOMENDATIONS_QUERY, {variables: {handle}})
+    .then(withoutPortalRecommendations);
+  const compliments = storefront
+    .query(COMPLEMENTARY_QUERY, {variables: {handle}})
+    .then(withoutPortalRecommendations);
   return {faqs, global_pdp_data, recs, compliments};
+}
+
+function withoutPortalRecommendations(data) {
+  return {
+    ...data,
+    productRecommendations: excludePortalProducts(data?.productRecommendations),
+  };
 }
 
 export default function Product() {
@@ -759,6 +768,7 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
+    tags
     title
     vendor
     handle

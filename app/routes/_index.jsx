@@ -17,6 +17,7 @@ import socialSharing from '~/assets/socialsharing.png';
 import {PortalHome} from '~/portal/PortalHome';
 import {toPublicPortal} from '~/lib/portals';
 import {getPortalAccess} from '~/portal/access.server';
+import {excludePortalProductNodes} from '~/lib/portalProducts';
 /**
  * @type {Route.MetaFunction}
  */
@@ -140,6 +141,17 @@ function loadDeferredData({context}) {
         first: 12,
       },
     })
+    .then((data) =>
+      data?.collection
+        ? {
+            ...data,
+            collection: {
+              ...data.collection,
+              products: excludePortalProductNodes(data.collection.products),
+            },
+          }
+        : data,
+    )
     .catch((error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);

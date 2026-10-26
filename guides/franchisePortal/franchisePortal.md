@@ -21,6 +21,7 @@ _Last updated 2026-10-16. Row numbers refer to request #12 in the development ro
 | 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
 | 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
 | 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
+| 12d | Hide portal products from the main site | Server-side filtering in every main-site product loader plus the sitemap (§4.4). Verify after deploy with one test product. |
 
 ### Partly done
 - **12e** branded layout and landing page: structure and placeholder styling are done. Magnolia branding (logo, colors, copy) is waiting on assets.
@@ -38,8 +39,8 @@ _Last updated 2026-10-16. Row numbers refer to request #12 in the development ro
 - [ ] Oxygen production `SHOPIFY_ADMIN_CLIENT_ID` / `_SECRET` match the v2 app
 
 ### Next
-1. **Blocked on Openhouse:** set up Magnolia products: tag `portal:magnolia-bakery`, collection `magnolia-bakery`, `custom.minimum_quantity`, one price, continue selling when out of stock. Placeholders are enough to start.
-2. **12d** hide portal products from the main site → **12i** catalog → **12j** product form → **12k** cart & checkout protection
+1. **Deploy 12d, then verify with one test product** tagged `portal:magnolia-bakery`: it must not appear anywhere on `www`. After that, Openhouse can safely set up the real Magnolia products: tag, collection `magnolia-bakery`, `custom.minimum_quantity`, one price, continue selling when out of stock, plus the two setup rules in §4.4.
+2. **12i** catalog → **12j** product form → **12k** cart & checkout protection (includes rejecting portal products in the **main-site cart**; until then a cart permalink could still add one)
 3. **12l** order history & re-order → **12m** My Locations + return to portal (then finish the 12b checkout check)
 4. **12e** Magnolia branding once assets arrive
 5. **12n / 12o** corporate admin views (optional, pending client approval)
@@ -223,12 +224,17 @@ The client has no verification data today, so launch uses manual verification on
 
 ### 4.4 Catalog visibility
 - The portal catalog is the portal's collection, queried with the Storefront API, with category chips from product type.
-- **Main site must hide every `portal:*` product.** Each listing needs its own handling:
-  - Search ([`search.jsx`](../../app/routes/search.jsx), predictive search): add `-tag:portal*`-style exclusion to the query, or filter results.
-  - [`collections.all.jsx`](../../app/routes/collections.all.jsx): exclude by tag.
-  - Sitemap: exclude portal products.
-  - [`products.$handle.jsx`](../../app/routes/products.$handle.jsx): 404 for a portal-tagged product on the main host or another portal's host.
-  - Collections: operational rule that portal products are never added to main-site collections. Optionally also filter in [`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx).
+- **The main site hides every `portal:*` product (12d, implemented).** Helpers live in [`app/lib/portalProducts.js`](../../app/lib/portalProducts.js). Every main-site product fragment now includes `tags`, and loaders filter on the server before data reaches the browser:
+  - [`collections.all.jsx`](../../app/routes/collections.all.jsx): excluded **in the query** (`-tag:'portal:{handle}'`, which the Storefront `products` query supports), so pagination is exact. It's post-filtered too.
+  - [`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx), the homepage featured grid, and [`api.collection-product-count`](../../app/routes/api.collection-product-count.$handle.jsx): post-filtered.
+  - [`search.jsx`](../../app/routes/search.jsx), regular and predictive: post-filtered. *Tested 2026-10-25:* adding any tag clause to a `search` / `predictiveSearch` query makes Shopify drop the search term and return everything else, so exclusion in the query isn't possible there.
+  - [`products.$handle.jsx`](../../app/routes/products.$handle.jsx): portal products 404, and related/complementary recommendations are post-filtered. Cart recommendations ([`cart.jsx`](../../app/routes/cart.jsx)) are post-filtered too.
+  - Products sitemap: Hydrogen's `getSitemap` can't filter, so the route looks up portal product handles and strips their `<url>` entries.
+  - The filter fails open: a product queried without `tags` can't be checked, and logs a warning in development. Any new product query on the main site must include `tags`.
+- **Product setup rules for Openhouse (keep the main site clean):**
+  1. Add the condition *Product tag is not equal to `portal:{handle}`* to every **automated** main-site collection (`all`, `in-stock`, `new-arrivals`, `best-sellers`, `frontpage`, …). The code already filters these; the condition keeps page sizes and counts exact.
+  2. Don't give portal products the main site's category tags (`drinkware`, `carry`, …). Those feed the search "Categories" facet, whose counts can't be filtered. Use the product type for portal category chips instead.
+- Known minor gap: predictive search *query suggestions* (not products) could echo words from a portal product title. Low risk; revisit if it ever shows up.
 - **Limitation (accepted):** the Storefront API is public, so portal product data can't be made fully secret without B2B. We hide it everywhere in the UI and block it at the cart (§4.6). The risk is low given what's being sold.
 
 ### 4.5 Portal product form (wholesale-style variant mix)
