@@ -15,12 +15,23 @@ import {useEffect, useState, useRef, useCallback} from 'react';
 import {motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
 import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
-import {excludePortalProductNodes} from '~/lib/portalProducts';
+import {
+  excludePortalProductNodes,
+  onlyPortalProductNodes,
+} from '~/lib/portalProducts';
+import {
+  collectionProductsFetcher,
+  correctFacetsForPortals,
+  withoutPortalFacetValues,
+} from '~/lib/portalFacets';
+import {requirePortalRole} from '~/portal/access.server';
 
 /**
  * @type {Route.MetaFunction}
  */
-export const meta = ({data}) => {
+export const meta = ({data, matches}) => {
+  const portal = matches.find((m) => m.id === 'root')?.data?.portal;
+  if (portal) return [{title: `Catalog | ${portal.name}`}];
   return [{title: `Openhouse | ${data?.collection.title ?? ''} Collection`}];
 };
 
@@ -28,7 +39,16 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  await checkMaintenanceRedirect(args);
+  const {portal} = args.context;
+  if (portal) {
+    // A portal's catalog is its own collection, for verified members only
+    await requirePortalRole(args.context, ['member', 'admin']);
+    if (args.params.handle !== portal.collectionHandle) {
+      throw new Response('Not found', {status: 404});
+    }
+  } else {
+    await checkMaintenanceRedirect(args);
+  }
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -86,10 +106,32 @@ async function loadCriticalData({context, params, request}) {
   // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: collection});
 
+  const {portal} = context;
+  if (portal) {
+    const products = onlyPortalProductNodes(collection.products, portal);
+    return {
+      collection: {
+        ...collection,
+        products: {
+          ...products,
+          filters: withoutPortalFacetValues(products.filters),
+        },
+      },
+    };
+  }
+
+  const products = excludePortalProductNodes(collection.products);
   return {
     collection: {
       ...collection,
-      products: excludePortalProductNodes(collection.products),
+      products: {
+        ...products,
+        filters: await correctFacetsForPortals({
+          filters: products.filters,
+          selected: filters,
+          fetchProducts: collectionProductsFetcher(storefront, handle),
+        }),
+      },
     },
   };
 }
@@ -107,8 +149,8 @@ function loadDeferredData({context}) {
 export default function Collection() {
   /** @type {LoaderReturnData} */
   const {publicStoreDomain, header} = useRouteLoaderData('root');
-  const {shop, menu} = header;
-  const {primaryDomain} = shop;
+  // Portals have no main-site header menu, so no collection side list
+  const primaryDomain = header?.shop?.primaryDomain;
   const {collection} = useLoaderData();
   const [total, setTotal] = useState(0);
   const [dotPosition, setDotPosition] = useState(0);
@@ -128,9 +170,10 @@ export default function Collection() {
 
   const {pathname} = useLocation();
 
-  const shopMenuItems = menu.items
-    .find((i) => i.title === 'Shop')
-    .items.filter((i) => i.title !== 'Categories');
+  const shopMenuItems =
+    header?.menu?.items
+      .find((i) => i.title === 'Shop')
+      ?.items.filter((i) => i.title !== 'Categories') ?? [];
 
   // Create array of URLs for cascading hook
   const collectionUrls = shopMenuItems.map((smi) => {

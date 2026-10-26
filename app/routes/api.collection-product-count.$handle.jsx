@@ -1,5 +1,8 @@
 // app/routes/api/collection-product-count.js
-import {excludePortalProducts} from '~/lib/portalProducts';
+import {
+  excludePortalProducts,
+  onlyPortalProductNodes,
+} from '~/lib/portalProducts';
 
 const QUERY = `
   query CollectionProducts($handle: String!, $cursor: String) {
@@ -39,8 +42,11 @@ export const loader = async ({request, context, params}) => {
       return Response.json({error: 'Collection not found'}, {status: 404});
     }
 
-    // Portal products are hidden from main-site collections
-    total += excludePortalProducts(products.edges.map((e) => e.node)).length;
+    // Portal products only count on their own portal's catalog
+    const nodes = products.edges.map((e) => e.node);
+    total += context.portal
+      ? onlyPortalProductNodes({nodes}, context.portal).nodes.length
+      : excludePortalProducts(nodes).length;
     hasNextPage = products.pageInfo.hasNextPage;
     cursor = products.pageInfo.endCursor;
   }

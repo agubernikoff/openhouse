@@ -11,6 +11,10 @@ import {
   excludePortalProductNodes,
   excludePortalProducts,
 } from '~/lib/portalProducts';
+import {
+  correctFacetsForPortals,
+  searchProductsFetcher,
+} from '~/lib/portalFacets';
 
 /**
  * @type {Route.MetaFunction}
@@ -234,17 +238,37 @@ async function regularSearch({request, context}) {
   const variables = getPaginationVariables(request, {pageBy: 12});
   const term = String(url.searchParams.get('q') || '');
 
+  // Same `filter` / `sortKey` / `reverse` params the Filter component sets
+  // on collection pages. Search only supports PRICE and RELEVANCE sorts (the
+  // Filter component disables the others when `isSearch`).
+  const filters = parseFilterParams(url.searchParams);
+  const sortKey =
+    url.searchParams.get('sortKey') === 'PRICE' ? 'PRICE' : 'RELEVANCE';
+  const reverse = url.searchParams.get('reverse') === 'true';
+
   // Search articles, pages, and products for the `q` term
   const {errors, ...data} = await storefront.query(SEARCH_QUERY, {
-    variables: {...variables, term},
+    variables: {...variables, term, filters, sortKey, reverse},
   });
 
   if (!data) {
     throw new Error('No search data returned from Shopify API');
   }
 
-  // Search can't exclude by tag in the query, so drop portal products here
-  const items = {...data, products: excludePortalProductNodes(data.products)};
+  // Search can't exclude by tag in the query, so drop portal products here,
+  // and correct the facet counts they'd otherwise inflate
+  const products = excludePortalProductNodes(data.products);
+  const items = {
+    ...data,
+    products: products && {
+      ...products,
+      productFilters: await correctFacetsForPortals({
+        filters: products.productFilters,
+        selected: filters,
+        fetchProducts: searchProductsFetcher(storefront, term),
+      }),
+    },
+  };
 
   const total = Object.values(items).reduce(
     (acc, {nodes}) => acc + nodes.length,
@@ -256,6 +280,21 @@ async function regularSearch({request, context}) {
     : undefined;
 
   return {type: 'regular', term, error, result: {total, items}};
+}
+
+/**
+ * `?filter=` params hold ProductFilter inputs as JSON; skip malformed ones
+ * rather than failing the whole search.
+ * @param {URLSearchParams} searchParams
+ */
+function parseFilterParams(searchParams) {
+  return searchParams.getAll('filter').flatMap((value) => {
+    try {
+      return [JSON.parse(value)];
+    } catch {
+      return [];
+    }
+  });
 }
 
 /**

@@ -6,7 +6,7 @@ import {isPortalPath} from '~/lib/portals';
  * Layout for franchise portal hosts, used in place of the main site's
  * PageLayout (header/footer/pop-ups).
  * @param {{
- *   portal: {handle: string; name: string};
+ *   portal: {handle: string; name: string; collectionHandle: string};
  *   isLoggedIn: Promise<boolean>;
  *   children?: React.ReactNode;
  * }}
@@ -16,7 +16,7 @@ export function PortalLayout({portal, isLoggedIn, children = null}) {
 
   // The root loader redirects non-portal paths on full page loads, but it
   // doesn't revalidate on client-side navigations, so guard those here too.
-  if (!isPortalPath(pathname)) return <Navigate to="/" replace />;
+  if (!isPortalPath(pathname, portal)) return <Navigate to="/" replace />;
 
   return (
     <div className="portal" data-portal={portal.handle}>

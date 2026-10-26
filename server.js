@@ -2,6 +2,7 @@
 import {storefrontRedirect} from '@shopify/hydrogen';
 import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 import {createHydrogenRouterContext} from '~/lib/context';
+import {isPortalPath} from '~/lib/portals';
 
 /**
  * Export a fetch handler in module format.
@@ -20,6 +21,21 @@ export default {
         env,
         executionContext,
       );
+
+      // Franchise portal hosts only serve portal paths. Checked here (not just
+      // in the root loader) so actions and resource routes are covered too.
+      const {portal} = hydrogenContext;
+      const url = new URL(request.url);
+      if (portal && !isPortalPath(url.pathname, portal)) {
+        const isPageLoad =
+          request.method === 'GET' && !url.pathname.endsWith('.data');
+        // Data requests from client navigation pass through to the loaders
+        // (read-only); the root loader and PortalLayout redirect those
+        if (isPageLoad) return Response.redirect(new URL('/', url), 302);
+        if (request.method !== 'GET') {
+          return new Response('Not found', {status: 404});
+        }
+      }
 
       /**
        * Create a Remix request handler and pass

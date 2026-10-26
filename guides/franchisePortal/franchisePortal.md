@@ -21,6 +21,7 @@ _Last updated 2026-10-16. Row numbers refer to request #12 in the development ro
 | 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
 | 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
 | 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
+| 12i | Portal catalog (in progress) | Reuses the collection page and filters at `/collections/magnolia-bakery` (§4.4). Needs the `magnolia-bakery` collection in Shopify. Product links work once 12j lands. |
 | 12d | Hide portal products from the main site | Server-side filtering in every main-site product loader plus the sitemap (§4.4). Verify after deploy with one test product. |
 
 ### Partly done
@@ -193,7 +194,7 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 - **Why code config, not a metaobject:** portal setup is manual per client anyway, the Slack webhook is a secret (metaobjects can be readable over the public Storefront API), and code config adds no request overhead and is versioned. Branding could move to a metaobject later if Openhouse wants to edit it without a deploy.
 - Portal pages live at the **same paths** as the main site (`/`, `/products/$handle`, `/cart`, `/account/*`), plus portal-only routes (`/onboarding`, `/admin/*`). Overlapping routes branch on `context.portal` and delegate to modules in `app/portal/`, so portal code stays separate. Portal-only routes return 404 on the main host.
   - *Why not a `/portal/*` route segment with a server rewrite:* SSR would render the rewritten path, and client hydration would see a different `window.location`. A visible `/portal/...` URL would undercut the subdomain. Validate this approach in the spike (Phase 0).
-- On a portal host, any route outside the allowlist redirects to `/`. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
+- On a portal host, any path outside the allowlist ([`isPortalPath`](../../app/lib/portals.js)) is blocked in [`server.js`](../../server.js) before routing: page loads redirect to `/`, and actions or other non-GET requests return 404. This covers main-site actions and resource routes like `/cart/:lines`. Client-side data requests pass through to read-only loaders; the root loader and `PortalLayout` redirect those. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
 
 ### 4.2 Auth
 - Uses the existing Customer Account API integration ([`account_.login.jsx`](../../app/routes/account_.login.jsx)). Each portal host's callback, JavaScript-origin and logout URLs must be registered in the Hydrogen channel's Customer Account API settings.
@@ -223,7 +224,7 @@ The client has no verification data today, so launch uses manual verification on
 - **Existing pending members:** when a strategy is turned on, a one-off script can run it against current `:pending` customers.
 
 ### 4.4 Catalog visibility
-- The portal catalog is the portal's collection, queried with the Storefront API, with category chips from product type.
+- **The portal catalog reuses the main site's collection page** ([`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx)), including `Filter` / `FilterColumns`, sort and pagination, served at `/collections/{portal.collectionHandle}` on the portal host. Members visiting `/` are redirected there. On a portal host the loader requires the `member` or `admin` role, 404s any other collection, keeps only products tagged `portal:{handle}` (fails closed), and hides the `portal:*` facet value. The main site's collection side list (built from the header menu) isn't shown. Category filters are the same tag facet as the main site.
 - **The main site hides every `portal:*` product (12d, implemented).** Helpers live in [`app/lib/portalProducts.js`](../../app/lib/portalProducts.js). Every main-site product fragment now includes `tags`, and loaders filter on the server before data reaches the browser:
   - [`collections.all.jsx`](../../app/routes/collections.all.jsx): excluded **in the query** (`-tag:'portal:{handle}'`, which the Storefront `products` query supports), so pagination is exact. It's post-filtered too.
   - [`collections.$handle.jsx`](../../app/routes/collections.$handle.jsx), the homepage featured grid, and [`api.collection-product-count`](../../app/routes/api.collection-product-count.$handle.jsx): post-filtered.
@@ -233,7 +234,9 @@ The client has no verification data today, so launch uses manual verification on
   - The filter fails open: a product queried without `tags` can't be checked, and logs a warning in development. Any new product query on the main site must include `tags`.
 - **Product setup rules for Openhouse (keep the main site clean):**
   1. Add the condition *Product tag is not equal to `portal:{handle}`* to every **automated** main-site collection (`all`, `in-stock`, `new-arrivals`, `best-sellers`, `frontpage`, …). The code already filters these; the condition keeps page sizes and counts exact.
-  2. Don't give portal products the main site's category tags (`drinkware`, `carry`, …). Those feed the search "Categories" facet, whose counts can't be filtered. Use the product type for portal category chips instead.
+  2. Portal products **can** use the main site's category tags (`drinkware`, `carry`, …), so the same tag filters work on the portal catalog.
+- **Facet correction** ([`app/lib/portalFacets.js`](../../app/lib/portalFacets.js)): on collection and search pages, when the tag facet contains a `portal:*` value (portal products are in the result), the `portal:*` values are removed and every tag value is recounted without portal products, so counts match what a click on that filter actually shows. The recount uses the shopper's non-tag filters, because tag counts are multi-select and ignore the selection within their own group. Search & Discovery value groups (e.g. "headwear") get one membership query each. When no portal products are in the result, nothing extra runs. *Verified 2026-10-25* against the live test product on `carry`, `best-sellers`, `in-stock` and search.
+  - Limits: the recount covers up to 250 products per result, and only the tag facet. Other facet types, if added later, aren't corrected.
 - Known minor gap: predictive search *query suggestions* (not products) could echo words from a portal product title. Low risk; revisit if it ever shows up.
 - **Limitation (accepted):** the Storefront API is public, so portal product data can't be made fully secret without B2B. We hide it everywhere in the UI and block it at the cart (§4.6). The risk is low given what's being sold.
 
