@@ -1,4 +1,5 @@
 import {redirect} from 'react-router';
+import {checkCartMerchandise} from '~/lib/portalCart.server';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
@@ -33,6 +34,13 @@ export async function loader({request, context, params}) {
       quantity,
     };
   });
+
+  // Portal products can't be bought through a main-site cart link
+  const check = await checkCartMerchandise(
+    context,
+    linesMap.map((line) => line.merchandiseId),
+  );
+  if (!check.ok) throw new Response(check.message, {status: check.status});
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);

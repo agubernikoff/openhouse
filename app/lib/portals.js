@@ -17,12 +17,14 @@
  *   hostname: string;
  *   name: string;
  *   collectionHandle: string;
+ *   leadTime: string;
  *   slackWebhookEnvVar: string;
  *   verification: 'manual';
  *   onboardingFields: OnboardingField[];
  * }} Portal
  *
  * - `collectionHandle`: the Shopify collection that is the portal's catalog.
+ * - `leadTime`: lead time copy shown on portal product pages.
  * - `slackWebhookEnvVar`: name of the env var holding the portal's Slack
  *   incoming webhook for new sign-ups (the URL itself is a secret).
  * - `verification`: sign-up verification strategy (portal/verification.server.js).
@@ -37,6 +39,7 @@ export const PORTALS = [
     hostname: 'magnoliabakery.byopenhouse.com',
     name: 'Magnolia Bakery',
     collectionHandle: 'magnolia-bakery',
+    leadTime: 'Ships in under 4 weeks',
     slackWebhookEnvVar: 'SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL',
     verification: 'manual',
     onboardingFields: [],
@@ -46,8 +49,15 @@ export const PORTALS = [
 // Paths a portal host serves. Everything else on a portal host redirects to
 // `/` (or 404s for non-page requests), so the main site's pages, actions and
 // resource routes are never reachable through a portal. See server.js.
-const PORTAL_PATHS = ['/', '/onboarding', '/robots.txt', '/__manifest'];
-const PORTAL_PATH_PREFIXES = ['/account'];
+const PORTAL_PATHS = [
+  '/',
+  '/onboarding',
+  '/cart',
+  '/robots.txt',
+  '/__manifest',
+];
+// `/products/*` loaders 404 anything not tagged for the portal
+const PORTAL_PATH_PREFIXES = ['/account', '/products'];
 
 /** Paths that depend on the portal's own config, e.g. its catalog. */
 const portalPaths = (portal) => [
@@ -99,6 +109,6 @@ export function isPortalPath(pathname, portal) {
  */
 export function toPublicPortal(portal) {
   if (!portal) return null;
-  const {handle, name, collectionHandle, onboardingFields} = portal;
-  return {handle, name, collectionHandle, onboardingFields};
+  const {handle, name, collectionHandle, leadTime, onboardingFields} = portal;
+  return {handle, name, collectionHandle, leadTime, onboardingFields};
 }

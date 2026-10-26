@@ -5,6 +5,8 @@ import {CartMain} from '~/components/CartMain';
 import {ProductItem} from '~/components/ProductItem';
 import {useState, useEffect, useRef} from 'react';
 import {excludePortalProducts} from '~/lib/portalProducts';
+import {checkCartMerchandise} from '~/lib/portalCart.server';
+import {requirePortalRole} from '~/portal/access.server';
 
 /**
  * @type {Route.MetaFunction}
@@ -55,9 +57,31 @@ export async function action({request, context}) {
   let result;
 
   switch (action) {
-    case CartForm.ACTIONS.LinesAdd:
+    case CartForm.ACTIONS.LinesAdd: {
+      // Portal products only on their portal; verified members only there
+      const check = await checkCartMerchandise(
+        context,
+        inputs.lines.map((line) => line.merchandiseId),
+      );
+      if (!check.ok) {
+        return data(
+          {cart: await cart.get(), errors: [{message: check.message}]},
+          {status: check.status},
+        );
+      }
       result = await cart.addLines(inputs.lines);
+      // Tag portal carts so the order carries the portal (plan §4.7)
+      const {portal} = context;
+      const hasPortalAttribute = result.cart?.attributes?.some(
+        (a) => a.key === '_portal',
+      );
+      if (portal && result.cart?.id && !hasPortalAttribute) {
+        result = await cart.updateAttributes([
+          {key: '_portal', value: portal.handle},
+        ]);
+      }
       break;
+    }
     case CartForm.ACTIONS.LinesUpdate:
       result = await cart.updateLines(inputs.lines);
       break;
@@ -130,8 +154,15 @@ export async function action({request, context}) {
  * @param {Route.LoaderArgs}
  */
 export async function loader({context}) {
+  const {cart, storefront, portal} = context;
+
+  if (portal) {
+    // Portal carts: verified members only, no main-site recommendations
+    await requirePortalRole(context, ['member', 'admin']);
+    return {cart: await cart.get(), recommendations: []};
+  }
+
   await checkMaintenanceRedirect({context});
-  const {cart, storefront} = context;
 
   // Get cart data
   const cartData = await cart.get();

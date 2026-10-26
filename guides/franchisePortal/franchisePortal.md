@@ -21,6 +21,8 @@ _Last updated 2026-10-16. Row numbers refer to request #12 in the development ro
 | 12f | Sign-up, verification states & access gating | `/onboarding`, `portal:{handle}:pending/member/admin` tags, pending screen, role cache. Browser-tested. |
 | 12g | Slack sign-up notifications | `#magnolia-portal-signups` webhook (`SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL`) |
 | 12h | Verification extension point | `onboardingFields` config plus `verifySignup` strategies (manual only at launch) |
+| 12j | Portal product page (built, needs browser test) | Portal mode of `products.$handle.jsx` with [`PortalProductForm`](../../app/portal/PortalProductForm.jsx): multi-color, per-size/option quantities, per-color MOQ, static lead time, portal breadcrumb; FAQs and recommendations hidden. |
+| 12k | Cart & checkout protection (partly) | Portal `/cart` page and header link. Server-side cart guard ([`portalCart.server.js`](../../app/lib/portalCart.server.js)): main site rejects portal products (including `/cart/:lines`); portal requires member/admin and its own products. Portal carts get the `_portal` attribute. **Still to do:** MOQ re-check in the cart and on checkout click, Shopify Flow order tag. |
 | 12i | Portal catalog (in progress) | Reuses the collection page and filters at `/collections/magnolia-bakery` (§4.4). Needs the `magnolia-bakery` collection in Shopify. Product links work once 12j lands. |
 | 12d | Hide portal products from the main site | Server-side filtering in every main-site product loader plus the sitemap (§4.4). Verify after deploy with one test product. |
 

@@ -3930,7 +3930,8 @@ div:has(> .sticky-scroll-image) {
   }
 
   body > main,
-  body > main:has(> .product) {
+  body > main:has(> .product) .portal > main,
+  .portal > main:has(> .product) {
     margin: 120px 1rem 1rem 1rem;
   }
 
@@ -5074,4 +5075,25 @@ body:has(.contact) .contact-error-message {
 .portal-form .portal-button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.portal-product-form .portal-lead-time {
+  margin: 0;
+}
+.portal-product-form .portal-cart-status p {
+  margin: 0.5rem 0 0;
+}
+.portal-product-form .product-options-item input {
+  width: 100%;
+}
+.portal-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--color-oh-black);
+  font-family: 'apfel';
+  font-weight: 400;
+  white-space: nowrap;
 }

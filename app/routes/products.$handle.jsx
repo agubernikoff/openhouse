@@ -1,5 +1,5 @@
 import {checkMaintenanceRedirect} from '~/lib/maintenance';
-import {useLoaderData, Link, Await} from 'react-router';
+import {useLoaderData, useRouteLoaderData, Link, Await} from 'react-router';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -30,7 +30,13 @@ import {FilterInput} from '~/components/Filter';
 import {AnimatePresence, motion} from 'motion/react';
 import {useNavigationContext} from '~/context/NavigationContext';
 import {useCascadingSelection} from '~/hooks/useCascadingSelection';
-import {excludePortalProducts, isPortalProduct} from '~/lib/portalProducts';
+import {
+  excludePortalProducts,
+  isPortalProduct,
+  portalProductTag,
+} from '~/lib/portalProducts';
+import {requirePortalRole} from '~/portal/access.server';
+import {PortalProductForm, parseMoq} from '~/portal/PortalProductForm';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);
@@ -62,7 +68,12 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  await checkMaintenanceRedirect(args);
+  if (args.context.portal) {
+    // Portal product pages: verified members only (product check below)
+    await requirePortalRole(args.context, ['member', 'admin']);
+  } else {
+    await checkMaintenanceRedirect(args);
+  }
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -92,8 +103,13 @@ async function loadCriticalData({context, params, request}) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  // Portal products only exist on their portal (plan §4.4)
-  if (!product?.id || isPortalProduct(product)) {
+  // Portal products only exist on their portal, and a portal only shows
+  // its own products (plan §4.4)
+  const {portal} = context;
+  const allowed = portal
+    ? product?.tags?.includes(portalProductTag(portal.handle))
+    : !isPortalProduct(product);
+  if (!product?.id || !allowed) {
     throw new Response(null, {status: 404});
   }
 
@@ -116,8 +132,18 @@ function loadDeferredData({context, params}) {
   const {handle} = params;
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
-  const faqs = storefront.query(FAQ_QUERY);
   const global_pdp_data = storefront.query(GLOBAL_PDP_QUERY);
+  // Portals skip the main site's FAQs and recommendations
+  if (context.portal) {
+    const none = Promise.resolve({productRecommendations: []});
+    return {
+      faqs: Promise.resolve(null),
+      global_pdp_data,
+      recs: none,
+      compliments: none,
+    };
+  }
+  const faqs = storefront.query(FAQ_QUERY);
   const recs = storefront
     .query(PRODUCT_RECOMENDATIONS_QUERY, {variables: {handle}})
     .then(withoutPortalRecommendations);
@@ -137,6 +163,7 @@ function withoutPortalRecommendations(data) {
 export default function Product() {
   /** @type {LoaderReturnData} */
   const {product, faqs, global_pdp_data, recs, compliments} = useLoaderData();
+  const portal = useRouteLoaderData('root')?.portal;
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -299,41 +326,52 @@ export default function Product() {
         </div>
         <div className="product-main">
           <div className="product-main-details">
-            <nav className="breadcrumbs" aria-label="Breadcrumb">
-              <Link style={{color: '#6e6e6e'}} to="/collections/frontpage">
-                Categories
-              </Link>
-              <svg
-                className="breadcrumb-separator"
-                width="32"
-                height="2"
-                viewBox="0 0 32 2"
-                style={{
-                  margin: '0 16px',
-                  display: 'inline-block',
-                  verticalAlign: 'middle',
-                }}
-                aria-hidden="true"
-              >
-                <line
-                  x1="0"
-                  y1="1"
-                  x2="32"
-                  y2="1"
-                  stroke="#BFC0C1"
-                  strokeWidth="1.5"
-                />
-              </svg>
-              <Link className="crumb" to={to}>
-                {to.includes('new-arrivals')
-                  ? 'New Arrivals'
-                  : to.includes('best-sellers')
-                    ? 'Best Sellers'
-                    : to.includes('frontpage')
-                      ? 'All Products'
-                      : formatCollectionTitle(to.split('/collections/')[1])}
-              </Link>
-            </nav>
+            {portal ? (
+              <nav className="breadcrumbs" aria-label="Breadcrumb">
+                <Link
+                  className="crumb"
+                  to={`/collections/${portal.collectionHandle}`}
+                >
+                  Catalog
+                </Link>
+              </nav>
+            ) : (
+              <nav className="breadcrumbs" aria-label="Breadcrumb">
+                <Link style={{color: '#6e6e6e'}} to="/collections/frontpage">
+                  Categories
+                </Link>
+                <svg
+                  className="breadcrumb-separator"
+                  width="32"
+                  height="2"
+                  viewBox="0 0 32 2"
+                  style={{
+                    margin: '0 16px',
+                    display: 'inline-block',
+                    verticalAlign: 'middle',
+                  }}
+                  aria-hidden="true"
+                >
+                  <line
+                    x1="0"
+                    y1="1"
+                    x2="32"
+                    y2="1"
+                    stroke="#BFC0C1"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+                <Link className="crumb" to={to}>
+                  {to.includes('new-arrivals')
+                    ? 'New Arrivals'
+                    : to.includes('best-sellers')
+                      ? 'Best Sellers'
+                      : to.includes('frontpage')
+                        ? 'All Products'
+                        : formatCollectionTitle(to.split('/collections/')[1])}
+                </Link>
+              </nav>
+            )}
             <h1 className="product-title">{title}</h1>
             <ProductPrice
               price={selectedVariant?.price}
@@ -344,13 +382,24 @@ export default function Product() {
               dangerouslySetInnerHTML={{__html: descriptionHtml}}
             />
           </div>
-          <ProductForm
-            key={product.id}
-            productOptions={reorderedOptions}
-            selectedVariant={selectedVariant}
-            variants={product.variants.nodes}
-            madeToOrderLeadTime={product.made_to_order_lead_time?.value}
-          />
+          {portal ? (
+            <PortalProductForm
+              key={product.id}
+              productOptions={reorderedOptions}
+              variants={product.variants.nodes}
+              productMoq={parseMoq(selectedVariant?.product?.minimumQuantity)}
+              leadTime={portal.leadTime}
+              catalogPath={`/collections/${portal.collectionHandle}`}
+            />
+          ) : (
+            <ProductForm
+              key={product.id}
+              productOptions={reorderedOptions}
+              selectedVariant={selectedVariant}
+              variants={product.variants.nodes}
+              madeToOrderLeadTime={product.made_to_order_lead_time?.value}
+            />
+          )}
         </div>
         <Analytics.ProductView
           data={{
@@ -373,8 +422,8 @@ export default function Product() {
         global_pdp_data={global_pdp_data}
         selectedVariant={selectedVariant}
       />
-      <FAQSection data={faqs} />
-      <YouMayAlsoLike recs={recs} compliments={compliments} />
+      {!portal && <FAQSection data={faqs} />}
+      {!portal && <YouMayAlsoLike recs={recs} compliments={compliments} />}
     </>
   );
 }
@@ -802,6 +851,7 @@ const PRODUCT_FRAGMENT = `#graphql
     variants(first: 250) {
       nodes {
         id
+        availableForSale
         quantityAvailable
         currentlyNotInStock
         price {
