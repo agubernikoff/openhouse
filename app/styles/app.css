@@ -3930,7 +3930,8 @@ div:has(> .sticky-scroll-image) {
   }
 
   body > main,
-  body > main:has(> .product) .portal > main,
+  body > main:has(> .product),
+  .portal > main,
   .portal > main:has(> .product) {
     margin: 120px 1rem 1rem 1rem;
   }
