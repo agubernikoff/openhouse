@@ -335,7 +335,11 @@ export default function App() {
         consent={data.consent}
         canTrack={portalCanTrack}
       >
-        <PortalLayout portal={data.portal} isLoggedIn={data.isLoggedIn}>
+        <PortalLayout
+          portal={data.portal}
+          isLoggedIn={data.isLoggedIn}
+          cart={data.cart}
+        >
           <Outlet />
         </PortalLayout>
       </Analytics.Provider>

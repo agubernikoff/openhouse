@@ -408,7 +408,7 @@ function ColorOptionGrid({inStock, madeToOrder, renderValue}) {
  *   name: string;
  * }}
  */
-function ProductOptionSwatch({swatch, name}) {
+export function ProductOptionSwatch({swatch, name}) {
   const image = swatch?.image?.previewImage?.url;
   const color = swatch?.color;
 
