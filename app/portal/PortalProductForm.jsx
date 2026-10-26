@@ -76,6 +76,9 @@ export function PortalProductForm({
         merchandiseId: v.id,
         quantity: quantities[v.id],
         selectedVariant: v,
+        // CartMain groups `_color` lines into one CartLineGroup per product
+        // and color, the same cart display the old wholesale form used
+        ...(g.color && {attributes: [{key: '_color', value: g.color}]}),
       })),
   );
   const belowMoq = groups.some((g) => g.moq != null && g.total < g.moq);
@@ -112,13 +115,16 @@ export function PortalProductForm({
       {colorOption && (
         <div className="product-options product-options-color">
           <div className="product-options-header">
-            <h5 id="portal-colors-label">
+            <p className="option-caption" id="portal-colors-label">
               <span className="option-bullet">●</span>
-              COLORS:{' '}
-              {selectedColors.length
-                ? selectedColors.join(', ').toUpperCase()
-                : 'SELECT ONE OR MORE'}
-            </h5>
+              <span className="option-number">1.</span> COLORS:{' '}
+              <span>
+                {selectedColors.length
+                  ? selectedColors.join(', ').toUpperCase()
+                  : 'SELECT ONE OR MORE'}
+              </span>
+            </p>
+            <span className="option-required">REQUIRED</span>
           </div>
           <div
             className="product-options-grid"
@@ -207,11 +213,11 @@ function QuantityGroup({
   return (
     <>
       {color && (
-        <div className="product-options-header color-group-label">
-          <h5>
+        <div className="product-options-header">
+          <p className="option-caption">
             <span className="option-bullet">●</span>
             {color.toUpperCase()}
-          </h5>
+          </p>
           <button
             type="button"
             className="portal-link-button"
