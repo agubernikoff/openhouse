@@ -53,6 +53,7 @@ const PORTAL_PATHS = [
   '/',
   '/onboarding',
   '/cart',
+  '/cart/checkout',
   '/robots.txt',
   '/__manifest',
 ];

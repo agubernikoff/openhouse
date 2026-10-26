@@ -5,7 +5,10 @@ import {CartMain} from '~/components/CartMain';
 import {ProductItem} from '~/components/ProductItem';
 import {useState, useEffect, useRef} from 'react';
 import {excludePortalProducts} from '~/lib/portalProducts';
-import {checkCartMerchandise} from '~/lib/portalCart.server';
+import {
+  checkCartMerchandise,
+  withoutCheckoutUrl,
+} from '~/lib/portalCart.server';
 import {requirePortalRole} from '~/portal/access.server';
 
 /**
@@ -65,7 +68,12 @@ export async function action({request, context}) {
       );
       if (!check.ok) {
         return data(
-          {cart: await cart.get(), errors: [{message: check.message}]},
+          {
+            cart: context.portal
+              ? withoutCheckoutUrl(await cart.get())
+              : await cart.get(),
+            errors: [{message: check.message}],
+          },
           {status: check.status},
         );
       }
@@ -139,7 +147,7 @@ export async function action({request, context}) {
 
   return data(
     {
-      cart: cartResult,
+      cart: context.portal ? withoutCheckoutUrl(cartResult) : cartResult,
       errors,
       warnings,
       analytics: {
@@ -159,7 +167,7 @@ export async function loader({context}) {
   if (portal) {
     // Portal carts: verified members only, no main-site recommendations
     await requirePortalRole(context, ['member', 'admin']);
-    return {cart: await cart.get(), recommendations: []};
+    return {cart: withoutCheckoutUrl(await cart.get()), recommendations: []};
   }
 
   await checkMaintenanceRedirect({context});

@@ -36,7 +36,8 @@ import {
   portalProductTag,
 } from '~/lib/portalProducts';
 import {requirePortalRole} from '~/portal/access.server';
-import {PortalProductForm, parseMoq} from '~/portal/PortalProductForm';
+import {PortalProductForm} from '~/portal/PortalProductForm';
+import {parseMoq} from '~/lib/portalMoq';
 
 function useIsFirstRender() {
   const isFirst = useRef(true);

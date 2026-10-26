@@ -6,7 +6,12 @@ import {useAside} from '~/components/Aside';
 /**
  * @param {CartSummaryProps}
  */
-export function CartSummary({cart, layout}) {
+export function CartSummary({
+  cart,
+  layout,
+  isPortal = false,
+  belowMoq = false,
+}) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
@@ -30,15 +35,23 @@ export function CartSummary({cart, layout}) {
         checkoutUrl={cart?.checkoutUrl}
         layout={layout}
         cart={cart}
+        isPortal={isPortal}
+        belowMoq={belowMoq}
       />
     </div>
   );
 }
 
 /**
- * @param {{checkoutUrl?: string, layout: string, cart: any}}
+ * @param {{
+ *   checkoutUrl?: string;
+ *   layout: string;
+ *   cart: any;
+ *   isPortal?: boolean;
+ *   belowMoq?: boolean;
+ * }}
  */
-function CartCheckoutActions({checkoutUrl, layout, cart}) {
+function CartCheckoutActions({checkoutUrl, layout, cart, isPortal, belowMoq}) {
   const [isOpen, setIsOpen] = useState(false);
   const [instructions, setInstructions] = useState(cart?.note || '');
   const textareaRef = useRef(null);
@@ -69,7 +82,8 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
   }, [fetcher.state, fetcher.data]);
 
   // *** FIXED: Early return is now AFTER all hooks ***
-  if (!checkoutUrl) return null;
+  // Portal carts never carry checkoutUrl; they check out via /cart/checkout
+  if (!checkoutUrl && !isPortal) return null;
 
   const handleButtonClick = () => {
     if (isOpen && instructions.trim()) {
@@ -185,10 +199,39 @@ function CartCheckoutActions({checkoutUrl, layout, cart}) {
         )}
       </div>
 
-      <a href={checkoutUrl} target="_self" className="cart-checkout-button">
-        PROCEED TO CHECKOUT
-      </a>
+      {isPortal ? (
+        <PortalCheckoutButton belowMoq={belowMoq} />
+      ) : (
+        <a href={checkoutUrl} target="_self" className="cart-checkout-button">
+          PROCEED TO CHECKOUT
+        </a>
+      )}
     </div>
+  );
+}
+
+/**
+ * Franchise portal checkout: goes through /cart/checkout, which re-checks
+ * minimum order quantities server-side before redirecting to Shopify.
+ * @param {{belowMoq: boolean}}
+ */
+function PortalCheckoutButton({belowMoq}) {
+  if (belowMoq) {
+    return (
+      <div className="portal-checkout-blocked">
+        <button type="button" className="cart-checkout-button" disabled>
+          PROCEED TO CHECKOUT
+        </button>
+        <p className="moq-label" role="status">
+          Some items are below their minimum order quantity.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <a href="/cart/checkout" className="cart-checkout-button">
+      PROCEED TO CHECKOUT
+    </a>
   );
 }
 

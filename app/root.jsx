@@ -24,6 +24,7 @@ import {PageLayout} from './components/PageLayout';
 import {GoogleAnalytics} from './components/GoogleAnalytics';
 import {PortalLayout} from './portal/PortalLayout';
 import {isPortalPath, toPublicPortal} from '~/lib/portals';
+import {withoutCheckoutUrl} from '~/lib/portalCart.server';
 import {NavigationProvider} from './context/NavigationContext';
 import {PopUpProvider} from './context/PopUpContext';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
@@ -124,7 +125,7 @@ function loadPortalData({request, context}) {
     // No tracking on portals (see Layout), so no consent banner either
     consent: {...analyticsData.consent, withPrivacyBanner: false},
     portal: toPublicPortal(context.portal),
-    cart: context.cart.get(),
+    cart: context.cart.get().then(withoutCheckoutUrl),
     isLoggedIn: context.customerAccount.isLoggedIn(),
   };
 }
