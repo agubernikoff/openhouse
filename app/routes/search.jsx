@@ -11,6 +11,10 @@ import {
   excludePortalProductNodes,
   excludePortalProducts,
 } from '~/lib/portalProducts';
+import {
+  correctFacetsForPortals,
+  searchProductsFetcher,
+} from '~/lib/portalFacets';
 
 /**
  * @type {Route.MetaFunction}
@@ -243,8 +247,21 @@ async function regularSearch({request, context}) {
     throw new Error('No search data returned from Shopify API');
   }
 
-  // Search can't exclude by tag in the query, so drop portal products here
-  const items = {...data, products: excludePortalProductNodes(data.products)};
+  // Search can't exclude by tag in the query, so drop portal products here,
+  // and correct the facet counts they'd otherwise inflate
+  const products = excludePortalProductNodes(data.products);
+  const items = {
+    ...data,
+    products: products && {
+      ...products,
+      productFilters: await correctFacetsForPortals({
+        filters: products.productFilters,
+        // SEARCH_QUERY above isn't passed the URL's filter params
+        selected: [],
+        fetchProducts: searchProductsFetcher(storefront, term),
+      }),
+    },
+  };
 
   const total = Object.values(items).reduce(
     (acc, {nodes}) => acc + nodes.length,

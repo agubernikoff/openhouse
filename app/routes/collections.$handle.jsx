@@ -16,6 +16,10 @@ import {motion} from 'motion/react';
 import Filter, {FilterColumns} from '~/components/Filter';
 import {useCascadingFilterSelection} from '~/hooks/useCascadingFilterSelection';
 import {excludePortalProductNodes} from '~/lib/portalProducts';
+import {
+  collectionProductsFetcher,
+  correctFacetsForPortals,
+} from '~/lib/portalFacets';
 
 /**
  * @type {Route.MetaFunction}
@@ -86,10 +90,18 @@ async function loadCriticalData({context, params, request}) {
   // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: collection});
 
+  const products = excludePortalProductNodes(collection.products);
   return {
     collection: {
       ...collection,
-      products: excludePortalProductNodes(collection.products),
+      products: {
+        ...products,
+        filters: await correctFacetsForPortals({
+          filters: products.filters,
+          selected: filters,
+          fetchProducts: collectionProductsFetcher(storefront, handle),
+        }),
+      },
     },
   };
 }
