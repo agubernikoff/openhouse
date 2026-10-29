@@ -93,6 +93,10 @@ body > main:has(> .product),
 .portal > main:has(> .product) {
   margin: 90px 1rem 1rem 1rem;
 }
+.portal > main:has(> .account) {
+  margin-top: 0;
+  padding: 0;
+}
 
 section {
   margin-bottom: 120px;
