@@ -15,7 +15,7 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | Row | Item | Status |
 |---|---|---|
 | 12a | Discovery, architecture & plan | Done (this document) |
-| 12b | Subdomain spike | Done. Checkout "continue shopping" return still to check (12m). |
+| 12b | Subdomain spike | Done. "Continue shopping" returns to `www` (confirmed); handled by the return-to-portal redirect (12m). |
 | 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
 | 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
 | 12e | Branded layout + landing | Structure done; Magnolia branding waiting on assets |
@@ -26,7 +26,7 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. **Remaining:** test the Shopify Flow order-tag rule (set up 2026-10-25, **untested**). |
 | 12l | Order history & re-order | Built 2026-10-28 (reuses `/account/orders`; filters by the order's `_portal` attribute, so it doesn't need the Flow tag). **Needs a test portal order** to verify in a browser, which also tests the Flow tag, `/cart/checkout`, saved addresses and the 12b "continue shopping" return. |
-| 12m | My Locations + return to portal | Not started |
+| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (needs a re-test with an order). My Locations not started. |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
@@ -264,8 +264,8 @@ The client has no verification data today, so launch uses manual verification on
 
 ### 4.9 Return to portal after checkout
 - Shopify's thank-you and order status pages link back to the store's primary domain (byopenhouse.com), not the portal, and the main site's session doesn't know about the portal session.
-- When a portal user starts checkout, set a one-time hint cookie `oh_portal_return={handle}` with `Domain=.byopenhouse.com` and a short max-age (about 1 day). Both hosts can read it.
-- In the main site's root loader, if the cookie is present: clear it and redirect to that portal's `/account/orders`. Clearing it on first use means a franchisee who is also a regular Openhouse customer isn't repeatedly bounced off the main site.
+- **Confirmed 2026-10-28:** "continue shopping" on the thank-you page goes to `www`.
+- **Implemented 2026-10-28** (helpers in [`portals.js`](../../app/lib/portals.js)): `/cart/checkout` sets the one-time hint cookie `oh_portal_return={handle}` (`Domain=.byopenhouse.com`, 2-hour max-age) on its redirect to Shopify checkout. In [`server.js`](../../server.js), a GET of `www`'s **homepage only** with that cookie clears it and 302s to `https://{portal.hostname}/account/orders`. Clearing it on first use, and limiting it to the homepage, means a franchisee who is also a regular Openhouse customer isn't repeatedly bounced off the main site. Unknown handles are ignored.
 - The cookie only carries the portal handle, never identity or role. The portal still authenticates as usual.
 - Alternative, if a visible button is preferred: a Checkout UI extension on the thank-you / order status page (available on non-Plus plans) showing "Back to {portal}" when the order has a `_portal` attribute. More setup, so not in core scope.
 
