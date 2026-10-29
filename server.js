@@ -76,8 +76,10 @@ export default {
         response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       }
 
+      // append, not set: a response can also carry other cookies (e.g.
+      // Hydrogen's `cart` id cookie), which `set` would silently drop
       if (hydrogenContext.session.isPending) {
-        response.headers.set(
+        response.headers.append(
           'Set-Cookie',
           await hydrogenContext.session.commit(),
         );
