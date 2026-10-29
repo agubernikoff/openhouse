@@ -147,7 +147,16 @@ export async function reorderPortalOrder(context, order) {
   );
   if (!check.ok) return check;
 
-  const result = await tagPortalCart(context, await cart.addLines(lines));
+  const added = await cart.addLines(lines);
+  if (added.errors?.length || !added.cart?.id) {
+    console.error('Portal re-order addLines failed:', added.errors);
+    return {
+      ok: false,
+      status: 400,
+      message: 'These items couldn’t be added to your cart. Please try again.',
+    };
+  }
+  const result = await tagPortalCart(context, added);
   return {ok: true, result, added: lines.length, skipped};
 }
 
