@@ -9,11 +9,8 @@ import {
 import {Money, Image} from '@shopify/hydrogen';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 import {reorderPortalOrder} from '~/lib/portalCart.server';
-import {
-  isPortalOrder,
-  portalOrderStatus,
-  portalOrderTracking,
-} from '~/lib/portalOrders';
+import {portalOrderStatus, portalOrderTracking} from '~/lib/portalOrders';
+import {getPortalOrder} from '~/lib/portalOrders.server';
 
 /**
  * @type {Route.MetaFunction}
@@ -45,9 +42,12 @@ export async function loader({params, context}) {
 
   const {order} = data;
 
-  // A portal only shows its own orders (plan §4.7)
-  if (context.portal && !isPortalOrder(order, context.portal)) {
-    throw new Response('Order not found', {status: 404});
+  // A portal only shows its own orders (plan §4.7); status, tracking and
+  // re-order data come from the Admin API (lib/portalOrders.server.js)
+  let portalOrder = null;
+  if (context.portal) {
+    portalOrder = await getPortalOrder(context, order.id);
+    if (!portalOrder) throw new Response('Order not found', {status: 404});
   }
 
   // Extract line items directly from nodes array
@@ -74,6 +74,8 @@ export async function loader({params, context}) {
 
   return {
     order,
+    portalStatus: portalOrder && portalOrderStatus(portalOrder),
+    portalTracking: portalOrder ? portalOrderTracking(portalOrder) : [],
     lineItems,
     discountValue,
     discountPercentage,
@@ -86,7 +88,7 @@ export async function loader({params, context}) {
  * @param {Route.ActionArgs}
  */
 export async function action({request, params, context}) {
-  const {customerAccount, portal, cart} = context;
+  const {portal, cart} = context;
   if (!portal || !params.id) {
     throw new Response('Not found', {status: 404});
   }
@@ -96,17 +98,17 @@ export async function action({request, params, context}) {
     throw new Response('Bad request', {status: 400});
   }
 
-  // Loaded through the customer's own session, so it's always their order
-  const {data} = await customerAccount.query(CUSTOMER_ORDER_QUERY, {
-    variables: {
-      orderId: atob(params.id),
-      language: customerAccount.i18n.language,
-    },
-  });
-  const order = data?.order;
-  if (!order || !isPortalOrder(order, portal)) {
-    throw new Response('Order not found', {status: 404});
+  // Checked against the session's customer and this portal
+  let order;
+  try {
+    order = await getPortalOrder(context, atob(params.id), {withLines: true});
+  } catch (error) {
+    console.error('Portal re-order lookup failed:', error);
+    return {
+      error: 'Re-order isn’t available right now. Please try again later.',
+    };
   }
+  if (!order) throw new Response('Order not found', {status: 404});
 
   const reorder = await reorderPortalOrder(context, order);
   if (!reorder.ok) return {error: reorder.message};
@@ -121,6 +123,8 @@ export default function OrderRoute() {
   /** @type {LoaderReturnData} */
   const {
     order,
+    portalStatus,
+    portalTracking,
     lineItems,
     discountValue,
     discountPercentage,
@@ -227,9 +231,9 @@ export default function OrderRoute() {
           )}
           <h3>Status</h3>
           <div>
-            <p>{isPortal ? portalOrderStatus(order) : fulfillmentStatus}</p>
+            <p>{isPortal ? portalStatus : fulfillmentStatus}</p>
             {isPortal &&
-              portalOrderTracking(order).map((t) =>
+              portalTracking.map((t) =>
                 t.url ? (
                   <p key={t.number ?? t.url}>
                     <a href={t.url} target="_blank" rel="noreferrer">

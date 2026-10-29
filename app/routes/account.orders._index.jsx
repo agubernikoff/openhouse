@@ -18,7 +18,8 @@ import {
 } from '~/lib/orderFilters';
 import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-import {isPortalOrder, portalOrderStatus} from '~/lib/portalOrders';
+import {portalOrderStatus} from '~/lib/portalOrders';
+import {listPortalOrders} from '~/lib/portalOrders.server';
 
 /**
  * @type {Route.MetaFunction}
@@ -40,8 +41,24 @@ export async function loader({request, context}) {
   const filters = parseOrderFilters(url.searchParams);
   const query = buildOrderSearchQuery(filters);
 
+  // Franchise portal: only this portal's orders, via the Admin API
+  // (lib/portalOrders.server.js); no pagination, counts are small
   if (context.portal) {
-    return {customer: await loadPortalOrders(context, query), filters};
+    const nodes = await listPortalOrders(context, query);
+    return {
+      customer: {
+        orders: {
+          nodes,
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+            startCursor: null,
+            endCursor: null,
+          },
+        },
+      },
+      filters,
+    };
   }
 
   const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
@@ -61,58 +78,6 @@ export async function loader({request, context}) {
   }
 
   return {customer: data.customer, filters};
-}
-
-/**
- * Franchise portal: only this portal's orders (plan §4.7). The Customer
- * Account API can't filter by order attribute, so scan the customer's recent
- * orders (newest first, up to 200) and keep the portal ones; franchisees'
- * portal order counts are small, so there's no pagination.
- * @param {any} context
- * @param {string | undefined} query - order number / confirmation search
- */
-async function loadPortalOrders(context, query) {
-  const {customerAccount, portal} = context;
-  const nodes = [];
-  let endCursor = null;
-  let customer = null;
-
-  // Same page size as the regular list; up to 10 pages (200 orders)
-  for (let page = 0; page < 10; page++) {
-    const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
-      variables: {
-        first: 20,
-        endCursor,
-        query,
-        language: customerAccount.i18n.language,
-      },
-    });
-    if (errors?.length || !data?.customer) {
-      console.error(
-        'Portal orders query failed:',
-        errors?.map((e) => e.message).join('; ') ?? 'no customer',
-      );
-      throw Error('Customer orders not found');
-    }
-    customer = data.customer;
-    const {orders} = data.customer;
-    nodes.push(...orders.nodes.filter((o) => isPortalOrder(o, portal)));
-    if (!orders.pageInfo.hasNextPage) break;
-    endCursor = orders.pageInfo.endCursor;
-  }
-
-  return {
-    ...customer,
-    orders: {
-      nodes,
-      pageInfo: {
-        hasNextPage: false,
-        hasPreviousPage: false,
-        startCursor: null,
-        endCursor: null,
-      },
-    },
-  };
 }
 
 export default function Orders() {
