@@ -2,7 +2,11 @@
 import {storefrontRedirect} from '@shopify/hydrogen';
 import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 import {createHydrogenRouterContext} from '~/lib/context';
-import {isPortalPath} from '~/lib/portals';
+import {
+  clearPortalReturnCookie,
+  isPortalPath,
+  portalFromReturnCookie,
+} from '~/lib/portals';
 
 /**
  * Export a fetch handler in module format.
@@ -26,6 +30,22 @@ export default {
       // in the root loader) so actions and resource routes are covered too.
       const {portal} = hydrogenContext;
       const url = new URL(request.url);
+      // Back from a portal checkout: Shopify's "continue shopping" lands on
+      // www's homepage. Send the customer to their portal's orders once.
+      if (!portal && url.pathname === '/' && request.method === 'GET') {
+        const returnTo = portalFromReturnCookie(request);
+        if (returnTo) {
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: `https://${returnTo.hostname}/account/orders`,
+              'Set-Cookie': clearPortalReturnCookie(returnTo, request),
+              'Cache-Control': 'no-store',
+            },
+          });
+        }
+      }
+
       if (portal && !isPortalPath(url.pathname, portal)) {
         const isPageLoad =
           request.method === 'GET' && !url.pathname.endsWith('.data');

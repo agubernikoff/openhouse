@@ -53,6 +53,10 @@ export async function loader({request, context}) {
   });
 
   if (errors?.length || !data?.customer) {
+    console.error(
+      'Customer orders query failed:',
+      errors?.map((e) => e.message).join('; ') ?? 'no customer',
+    );
     throw Error('Customer orders not found');
   }
 
@@ -62,7 +66,7 @@ export async function loader({request, context}) {
 /**
  * Franchise portal: only this portal's orders (plan §4.7). The Customer
  * Account API can't filter by order attribute, so scan the customer's recent
- * orders (newest first, up to 250) and keep the portal ones; franchisees'
+ * orders (newest first, up to 200) and keep the portal ones; franchisees'
  * portal order counts are small, so there's no pagination.
  * @param {any} context
  * @param {string | undefined} query - order number / confirmation search
@@ -73,16 +77,21 @@ async function loadPortalOrders(context, query) {
   let endCursor = null;
   let customer = null;
 
-  for (let page = 0; page < 5; page++) {
+  // Same page size as the regular list; up to 10 pages (200 orders)
+  for (let page = 0; page < 10; page++) {
     const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
       variables: {
-        first: 50,
+        first: 20,
         endCursor,
         query,
         language: customerAccount.i18n.language,
       },
     });
     if (errors?.length || !data?.customer) {
+      console.error(
+        'Portal orders query failed:',
+        errors?.map((e) => e.message).join('; ') ?? 'no customer',
+      );
       throw Error('Customer orders not found');
     }
     customer = data.customer;

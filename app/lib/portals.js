@@ -113,3 +113,64 @@ export function toPublicPortal(portal) {
   const {handle, name, collectionHandle, leadTime, onboardingFields} = portal;
   return {handle, name, collectionHandle, leadTime, onboardingFields};
 }
+
+/**
+ * Return-to-portal after checkout (plan §4.9). Shopify's thank-you page
+ * links to the store's primary domain (www), not the portal, so starting
+ * checkout from a portal sets a one-time hint cookie on the shared parent
+ * domain; www's homepage reads it once and sends the customer back. It only
+ * names the portal — the portal still requires its normal login.
+ */
+export const PORTAL_RETURN_COOKIE = 'oh_portal_return';
+const PORTAL_RETURN_MAX_AGE = 2 * 60 * 60; // checkout is usually minutes
+
+/** e.g. magnoliabakery.byopenhouse.com → .byopenhouse.com */
+function sharedCookieDomain(portal) {
+  return `.${portal.hostname.split('.').slice(1).join('.')}`;
+}
+
+/**
+ * Set-Cookie value marking a checkout that started on `portal`.
+ * @param {Portal} portal
+ * @param {Request} request
+ */
+export function portalReturnCookie(portal, request) {
+  return buildReturnCookie(
+    portal,
+    request,
+    portal.handle,
+    PORTAL_RETURN_MAX_AGE,
+  );
+}
+
+/**
+ * Set-Cookie value clearing the hint (must match the domain it was set on).
+ * @param {Portal} portal
+ * @param {Request} request
+ */
+export function clearPortalReturnCookie(portal, request) {
+  return buildReturnCookie(portal, request, '', 0);
+}
+
+function buildReturnCookie(portal, request, value, maxAge) {
+  const domain = sharedCookieDomain(portal);
+  const {hostname} = new URL(request.url);
+  // Only scope to the shared domain when this host is under it (not in local
+  // dev, where the portal is forced via PORTAL_DEV_HANDLE)
+  const domainAttr = hostname.endsWith(domain) ? `; Domain=${domain}` : '';
+  return `${PORTAL_RETURN_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; Secure; SameSite=Lax${domainAttr}`;
+}
+
+/**
+ * The portal a main-site request should return to, if it carries the hint.
+ * @param {Request} request
+ * @return {Portal | null}
+ */
+export function portalFromReturnCookie(request) {
+  const cookies = request.headers.get('Cookie') ?? '';
+  const match = cookies.match(
+    new RegExp(`(?:^|;\\s*)${PORTAL_RETURN_COOKIE}=([^;]+)`),
+  );
+  if (!match) return null;
+  return PORTALS.find((p) => p.handle === decodeURIComponent(match[1])) ?? null;
+}
