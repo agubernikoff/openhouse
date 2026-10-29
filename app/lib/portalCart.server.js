@@ -72,3 +72,99 @@ export function withoutCheckoutUrl(cart) {
   delete rest.checkoutUrl;
   return rest;
 }
+
+/**
+ * Tags a portal cart with `_portal` (once) so the order carries the portal
+ * (plan §4.7). Returns the cart result to use going forward.
+ * @param {any} context
+ * @param {any} result - result of a cart mutation
+ */
+export async function tagPortalCart(context, result) {
+  const {portal, cart} = context;
+  const tagged = result?.cart?.attributes?.some((a) => a.key === '_portal');
+  if (!portal || !result?.cart?.id || tagged) return result;
+  return cart.updateAttributes([{key: '_portal', value: portal.handle}]);
+}
+
+/**
+ * Re-order (plan §4.7): adds a past portal order's lines to the cart at
+ * current prices, keeping each line's `_color` so the cart groups them.
+ * Lines whose variant is gone, unavailable, or no longer in this portal are
+ * skipped. MOQ is left to the cart's usual check.
+ * @param {any} context
+ * @param {{lineItems: {nodes: {variantId?: string | null; quantity: number; customAttributes?: {key: string; value?: string | null}[]}[]}}} order
+ * @return {Promise<{ok: true; result: any; added: number; skipped: number} | {ok: false; status: number; message: string}>}
+ */
+export async function reorderPortalOrder(context, order) {
+  const {portal, storefront, cart} = context;
+  const items = order.lineItems.nodes.filter((l) => l.quantity > 0);
+
+  const variantIds = [
+    ...new Set(items.map((l) => l.variantId).filter(Boolean)),
+  ];
+  const {nodes} = variantIds.length
+    ? await storefront.query(REORDER_VARIANTS_QUERY, {
+        variables: {ids: variantIds},
+        cache: storefront.CacheNone(),
+      })
+    : {nodes: []};
+  const orderable = new Set(
+    nodes
+      .filter(
+        (v) =>
+          v?.availableForSale &&
+          v.product?.tags?.includes(portalProductTag(portal.handle)),
+      )
+      .map((v) => v.id),
+  );
+
+  const lines = items
+    .filter((l) => orderable.has(l.variantId))
+    .map((l) => {
+      const color = l.customAttributes?.find((a) => a.key === '_color');
+      return {
+        merchandiseId: l.variantId,
+        quantity: l.quantity,
+        ...(color?.value && {
+          attributes: [{key: '_color', value: color.value}],
+        }),
+      };
+    });
+  const skipped = items.length - lines.length;
+
+  if (!lines.length) {
+    return {
+      ok: false,
+      status: 409,
+      message: 'None of the items in this order are available any more.',
+    };
+  }
+
+  // Same guard as the cart action (verified member, this portal's products)
+  const check = await checkCartMerchandise(
+    context,
+    lines.map((l) => l.merchandiseId),
+  );
+  if (!check.ok) return check;
+
+  const result = await tagPortalCart(context, await cart.addLines(lines));
+  return {ok: true, result, added: lines.length, skipped};
+}
+
+const REORDER_VARIANTS_QUERY = `#graphql
+  query ReorderVariants(
+    $ids: [ID!]!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    nodes(ids: $ids) {
+      ... on ProductVariant {
+        id
+        availableForSale
+        product {
+          tags
+        }
+      }
+    }
+  }
+`;

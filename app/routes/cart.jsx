@@ -1,5 +1,5 @@
 import {checkMaintenanceRedirect} from '~/lib/maintenance';
-import {useLoaderData, data} from 'react-router';
+import {useLoaderData, useSearchParams, data} from 'react-router';
 import {CartForm, useAnalytics} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {ProductItem} from '~/components/ProductItem';
@@ -7,6 +7,7 @@ import {useState, useEffect, useRef} from 'react';
 import {excludePortalProducts} from '~/lib/portalProducts';
 import {
   checkCartMerchandise,
+  tagPortalCart,
   withoutCheckoutUrl,
 } from '~/lib/portalCart.server';
 import {requirePortalRole} from '~/portal/access.server';
@@ -77,17 +78,8 @@ export async function action({request, context}) {
           {status: check.status},
         );
       }
-      result = await cart.addLines(inputs.lines);
       // Tag portal carts so the order carries the portal (plan §4.7)
-      const {portal} = context;
-      const hasPortalAttribute = result.cart?.attributes?.some(
-        (a) => a.key === '_portal',
-      );
-      if (portal && result.cart?.id && !hasPortalAttribute) {
-        result = await cart.updateAttributes([
-          {key: '_portal', value: portal.handle},
-        ]);
-      }
+      result = await tagPortalCart(context, await cart.addLines(inputs.lines));
       break;
     }
     case CartForm.ACTIONS.LinesUpdate:
@@ -216,6 +208,7 @@ export default function Cart() {
       <section className="home-featured-collection">
         <div>
           <h1 className="red-dot">CART</h1>
+          <ReorderNotice />
         </div>
         <div className="subgrid home-featured-products-grid">
           <CartMain layout="page" cart={cart} />
@@ -223,6 +216,24 @@ export default function Cart() {
       </section>
       <YouMayAlsoLike recommendations={recommendations} />
     </>
+  );
+}
+
+/**
+ * After a franchise portal re-order (account.orders.$id action), says what
+ * was added and what was skipped as no longer available.
+ */
+function ReorderNotice() {
+  const [searchParams] = useSearchParams();
+  const added = Number(searchParams.get('reordered') || 0);
+  const skipped = Number(searchParams.get('skipped') || 0);
+  if (!added) return null;
+  return (
+    <p className="portal-reorder-notice" role="status">
+      Added {added} item{added === 1 ? '' : 's'} from your past order.
+      {skipped > 0 &&
+        ` ${skipped} item${skipped === 1 ? ' is' : 's are'} no longer available and ${skipped === 1 ? 'was' : 'were'} skipped.`}
+    </p>
   );
 }
 

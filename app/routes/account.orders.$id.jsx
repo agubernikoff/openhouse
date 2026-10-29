@@ -1,6 +1,19 @@
-import {redirect, useLoaderData} from 'react-router';
+import {
+  Form,
+  redirect,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useRouteLoaderData,
+} from 'react-router';
 import {Money, Image} from '@shopify/hydrogen';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
+import {reorderPortalOrder} from '~/lib/portalCart.server';
+import {
+  isPortalOrder,
+  portalOrderStatus,
+  portalOrderTracking,
+} from '~/lib/portalOrders';
 
 /**
  * @type {Route.MetaFunction}
@@ -31,6 +44,11 @@ export async function loader({params, context}) {
   }
 
   const {order} = data;
+
+  // A portal only shows its own orders (plan §4.7)
+  if (context.portal && !isPortalOrder(order, context.portal)) {
+    throw new Response('Order not found', {status: 404});
+  }
 
   // Extract line items directly from nodes array
   const lineItems = order.lineItems.nodes;
@@ -63,6 +81,42 @@ export async function loader({params, context}) {
   };
 }
 
+/**
+ * Franchise portal re-order: rebuilds the cart from this order's lines.
+ * @param {Route.ActionArgs}
+ */
+export async function action({request, params, context}) {
+  const {customerAccount, portal, cart} = context;
+  if (!portal || !params.id) {
+    throw new Response('Not found', {status: 404});
+  }
+
+  const formData = await request.formData();
+  if (formData.get('intent') !== 'reorder') {
+    throw new Response('Bad request', {status: 400});
+  }
+
+  // Loaded through the customer's own session, so it's always their order
+  const {data} = await customerAccount.query(CUSTOMER_ORDER_QUERY, {
+    variables: {
+      orderId: atob(params.id),
+      language: customerAccount.i18n.language,
+    },
+  });
+  const order = data?.order;
+  if (!order || !isPortalOrder(order, portal)) {
+    throw new Response('Order not found', {status: 404});
+  }
+
+  const reorder = await reorderPortalOrder(context, order);
+  if (!reorder.ok) return {error: reorder.message};
+
+  const headers = cart.setCartId(reorder.result.cart.id);
+  const search = new URLSearchParams({reordered: String(reorder.added)});
+  if (reorder.skipped) search.set('skipped', String(reorder.skipped));
+  return redirect(`/cart?${search}`, {headers});
+}
+
 export default function OrderRoute() {
   /** @type {LoaderReturnData} */
   const {
@@ -72,6 +126,7 @@ export default function OrderRoute() {
     discountPercentage,
     fulfillmentStatus,
   } = useLoaderData();
+  const isPortal = !!useRouteLoaderData('root')?.portal;
   return (
     <div className="account-order">
       <h2>Order {order.name}</h2>
@@ -79,6 +134,7 @@ export default function OrderRoute() {
       {order.confirmationNumber && (
         <p>Confirmation: {order.confirmationNumber}</p>
       )}
+      {isPortal && <PortalOrderActions />}
       <br />
       <div>
         <table>
@@ -171,7 +227,25 @@ export default function OrderRoute() {
           )}
           <h3>Status</h3>
           <div>
-            <p>{fulfillmentStatus}</p>
+            <p>{isPortal ? portalOrderStatus(order) : fulfillmentStatus}</p>
+            {isPortal &&
+              portalOrderTracking(order).map((t) =>
+                t.url ? (
+                  <p key={t.number ?? t.url}>
+                    <a href={t.url} target="_blank" rel="noreferrer">
+                      Track {t.company ? `${t.company} ` : ''}
+                      {t.number ?? 'shipment'} →
+                    </a>
+                  </p>
+                ) : (
+                  t.number && (
+                    <p key={t.number}>
+                      {t.company ? `${t.company}: ` : 'Tracking: '}
+                      {t.number}
+                    </p>
+                  )
+                ),
+              )}
           </div>
         </div>
       </div>
@@ -182,6 +256,29 @@ export default function OrderRoute() {
         </a>
       </p>
     </div>
+  );
+}
+
+/**
+ * Franchise portal: re-order this order's items into the cart (posts to
+ * this route's action).
+ */
+function PortalOrderActions() {
+  const actionData = useActionData();
+  const {state} = useNavigation();
+  const busy = state !== 'idle';
+  return (
+    <Form method="POST" className="portal-order-actions">
+      <input type="hidden" name="intent" value="reorder" />
+      <button type="submit" disabled={busy}>
+        {busy ? 'Re-ordering…' : 'Re-order these items'}
+      </button>
+      {actionData?.error && (
+        <p className="portal-form-error" role="alert">
+          {actionData.error}
+        </p>
+      )}
+    </Form>
   );
 }
 

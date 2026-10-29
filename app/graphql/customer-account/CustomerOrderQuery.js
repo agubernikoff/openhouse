@@ -41,6 +41,12 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
       width
     }
     variantTitle
+    # Franchise portal re-order (app/lib/portalCart.server.js)
+    variantId
+    customAttributes {
+      key
+      value
+    }
   }
   fragment Order on Order {
     id
@@ -49,10 +55,20 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     statusPageUrl
     fulfillmentStatus
     processedAt
-    fulfillments(first: 1) {
+    fulfillments(first: 10) {
       nodes {
         status
+        latestShipmentStatus
+        trackingInformation {
+          company
+          number
+          url
+        }
       }
+    }
+    customAttributes {
+      key
+      value
     }
     totalTax {
       ...OrderMoney
