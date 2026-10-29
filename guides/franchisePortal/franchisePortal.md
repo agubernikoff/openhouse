@@ -24,8 +24,8 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
 | 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
-| 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. **Remaining:** test the Shopify Flow order-tag rule (set up 2026-10-25, **untested**). |
-| 12l | Order history & re-order | Built 2026-10-28 (reuses `/account/orders`; filters by the order's `_portal` attribute, so it doesn't need the Flow tag). **Needs a test portal order** to verify in a browser, which also tests the Flow tag, `/cart/checkout`, saved addresses and the 12b "continue shopping" return. |
+| 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
+| 12l | Order history & re-order | Built on the Admin API (Flow tag **verified** on order #1406). List and detail tested against live data. **Re-order needs the `read_products` scope** on the Admin API app. |
 | 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (needs a re-test with an order). My Locations not started. |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
@@ -36,7 +36,7 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
 - Optional: reorder the product gallery by selected colors (the old wholesale form did).
 
-### Shopify Flow order tag (12k, set up 2026-10-25, untested)
+### Shopify Flow order tag (12k, verified 2026-10-28)
 Trigger *Order created* → condition *custom attributes key = `_portal`* → action *Add order tags*:
 `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`
 
@@ -255,9 +255,11 @@ The client has no verification data today, so launch uses manual verification on
 
 ### 4.7 Order history and re-order
 - A Shopify Flow rule ("Order created" + custom attribute `_portal` → add tag `portal:{handle}`) tags portal orders.
-  - **Set up 2026-10-25** ("Tag franchise portal orders"). **Not yet tested**: no portal order has been placed. Verify with the first test order before building 12l. Tag Liquid: `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`.
+  - **Set up 2026-10-25** ("Tag franchise portal orders"). Verified 2026-10-28 on test order #1406. Tag Liquid: `{% for attr in order.customAttributes %}{% if attr.key == "_portal" %}portal:{{ attr.value }}{% endif %}{% endfor %}`.
   - **Runbook note (draft or manual orders):** orders Openhouse creates for a franchisee in Shopify admin (draft orders) have no `_portal` attribute, so Flow won't tag them. Add the tag `portal:{handle}` to the order by hand, and it then appears in the franchisee's portal history and the corporate admin view. If this becomes frequent, a second Flow rule could tag any order whose customer has a `portal:{handle}:member` tag.
-- **History (implemented 2026-10-28) reuses the existing `/account/orders` pages** through the Customer Account API, so customers only ever see their own orders. The API exposes each order's `customAttributes`, so on a portal the loader keeps orders whose `_portal` matches (it scans up to the 250 most recent orders; no pagination). The detail page 404s any non-portal order. **This doesn't depend on the Flow tag**; the tag is still needed for the corporate all-franchisees view (12n) and for Openhouse filtering in admin.
+- **History reuses the existing `/account/orders` pages; portal data comes from the Admin API** ([`portalOrders.server.js`](../../app/lib/portalOrders.server.js)): `customer_id:{session customer} AND tag:'portal:{handle}'`, so customers only ever see their own orders. The detail page keeps rendering from the Customer Account API, but 404s unless the Admin API confirms the order belongs to the session's customer and this portal (tag or `_portal` attribute).
+  - **Lesson (2026-10-28 production 500):** the Customer Account API version the storefront calls has **no `Order.customAttributes`**, even though Hydrogen's bundled schema lists it. A first version that added it to the shared order queries broke `/account/orders` on `www` until it was hotfixed (`b84be6c`). Validate new Customer Account API fields against the live API, not only the bundled schema.
+  - Re-order reads line variants, which needs the **`read_products`** Admin API scope. Until that's granted, Re-order shows an error message and status/tracking still work.
 - Status ([`portalOrders.js`](../../app/lib/portalOrders.js)): Submitted / Partially shipped / Shipped, and Delivered once fully fulfilled with every shipment delivered. Tracking links come from fulfillment tracking info.
 - Re-order (`reorderPortalOrder` in [`portalCart.server.js`](../../app/lib/portalCart.server.js), action on the order detail route) rebuilds the cart from the order's variant IDs, quantities and `_color` attributes, at **current** prices. It skips variants that are gone, unavailable or no longer in the portal, uses the same server guard as the cart, and redirects to `/cart?reordered=N&skipped=M`, where a notice explains what happened. MOQ is left to the cart's normal check.
 - Order emails use Shopify's standard notifications. Optionally, branch the Liquid templates on the `_portal` attribute for light per-portal copy.

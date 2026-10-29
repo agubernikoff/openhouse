@@ -1,18 +1,7 @@
 /**
- * Franchise portal orders (plan §4.7). A portal order carries the
- * `_portal: {handle}` attribute from its cart, which the Customer Account
- * API exposes on the order, so history doesn't depend on the Flow order tag.
+ * Franchise portal order status and tracking, from orders normalized by
+ * lib/portalOrders.server.js (plan §4.7).
  */
-
-/**
- * @param {{customAttributes?: {key: string; value?: string | null}[]}} order
- * @param {{handle: string}} portal
- */
-export function isPortalOrder(order, portal) {
-  return !!order?.customAttributes?.some(
-    (a) => a.key === '_portal' && a.value === portal.handle,
-  );
-}
 
 /**
  * Franchisee-facing status: Submitted → Shipped → Delivered.
