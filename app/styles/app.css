@@ -5115,3 +5115,23 @@ body:has(.contact) .contact-error-message {
   padding: 0;
   list-style: none;
 }
+.portal-order-actions {
+  margin-top: 1rem;
+}
+.portal-order-actions button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-oh-black);
+  background: var(--color-oh-black);
+  color: var(--color-oh-white);
+  cursor: pointer;
+}
+.portal-order-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.portal-reorder-notice {
+  font-family: 'mono';
+  font-size: 14px;
+  margin: 0.75rem 0 0;
+}

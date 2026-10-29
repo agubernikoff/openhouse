@@ -10,7 +10,13 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
     fulfillments(first: 1) {
       nodes {
         status
+        latestShipmentStatus
       }
+    }
+    # Franchise portal orders carry _portal (app/lib/portalOrders.js)
+    customAttributes {
+      key
+      value
     }
     id
     number

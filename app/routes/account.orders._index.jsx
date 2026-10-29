@@ -1,5 +1,6 @@
 import {
   Link,
+  useRouteLoaderData,
   useLoaderData,
   useNavigation,
   useSearchParams,
@@ -17,6 +18,7 @@ import {
 } from '~/lib/orderFilters';
 import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {isPortalOrder, portalOrderStatus} from '~/lib/portalOrders';
 
 /**
  * @type {Route.MetaFunction}
@@ -38,6 +40,10 @@ export async function loader({request, context}) {
   const filters = parseOrderFilters(url.searchParams);
   const query = buildOrderSearchQuery(filters);
 
+  if (context.portal) {
+    return {customer: await loadPortalOrders(context, query), filters};
+  }
+
   const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
     variables: {
       ...paginationVariables,
@@ -51,6 +57,53 @@ export async function loader({request, context}) {
   }
 
   return {customer: data.customer, filters};
+}
+
+/**
+ * Franchise portal: only this portal's orders (plan §4.7). The Customer
+ * Account API can't filter by order attribute, so scan the customer's recent
+ * orders (newest first, up to 250) and keep the portal ones; franchisees'
+ * portal order counts are small, so there's no pagination.
+ * @param {any} context
+ * @param {string | undefined} query - order number / confirmation search
+ */
+async function loadPortalOrders(context, query) {
+  const {customerAccount, portal} = context;
+  const nodes = [];
+  let endCursor = null;
+  let customer = null;
+
+  for (let page = 0; page < 5; page++) {
+    const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
+      variables: {
+        first: 50,
+        endCursor,
+        query,
+        language: customerAccount.i18n.language,
+      },
+    });
+    if (errors?.length || !data?.customer) {
+      throw Error('Customer orders not found');
+    }
+    customer = data.customer;
+    const {orders} = data.customer;
+    nodes.push(...orders.nodes.filter((o) => isPortalOrder(o, portal)));
+    if (!orders.pageInfo.hasNextPage) break;
+    endCursor = orders.pageInfo.endCursor;
+  }
+
+  return {
+    ...customer,
+    orders: {
+      nodes,
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    },
+  };
 }
 
 export default function Orders() {
@@ -92,6 +145,10 @@ function OrdersTable({orders, filters}) {
  * @param {{hasFilters?: boolean}}
  */
 function EmptyOrders({hasFilters = false}) {
+  const portal = useRouteLoaderData('root')?.portal;
+  const shopPath = portal
+    ? `/collections/${portal.collectionHandle}`
+    : '/collections';
   return (
     <div>
       {hasFilters ? (
@@ -107,7 +164,7 @@ function EmptyOrders({hasFilters = false}) {
           <p>You haven&apos;t placed any orders yet.</p>
           <br />
           <p>
-            <Link to="/collections">Start Shopping →</Link>
+            <Link to={shopPath}>Start Shopping →</Link>
           </p>
         </>
       )}
@@ -203,7 +260,10 @@ function OrderSearchForm({currentFilters}) {
  * @param {{order: OrderItemFragment}}
  */
 function OrderItem({order}) {
-  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
+  const portal = useRouteLoaderData('root')?.portal;
+  const fulfillmentStatus = portal
+    ? portalOrderStatus(order)
+    : flattenConnection(order.fulfillments)[0]?.status;
   return (
     <>
       <fieldset>
@@ -214,7 +274,7 @@ function OrderItem({order}) {
         {order.confirmationNumber && (
           <p>Confirmation: {order.confirmationNumber}</p>
         )}
-        <p>{order.financialStatus}</p>
+        {!portal && <p>{order.financialStatus}</p>}
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
         <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
