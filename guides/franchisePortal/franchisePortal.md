@@ -10,7 +10,7 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ## Status & Next Steps
 
-_Last updated 2026-10-25. Row numbers refer to request #12 in the development roadmap sheet._
+_Last updated 2026-10-28. Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
 
 | Row | Item | Status |
 |---|---|---|
@@ -23,14 +23,23 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
+| 12j | Portal product page | Done and browser-tested: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Gallery-by-color reorder is optional polish. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
-| 12l | Order history & re-order | Built on the Admin API (Flow tag **verified** on order #1406). List, detail and re-order tested against live data (`read_products` granted). Re-test re-order in the browser after the cart-cookie fix. |
-| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (needs a re-test with an order). My Locations not started. |
+| 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
+| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (**not yet re-tested**: needs one more portal checkout). My Locations not started. |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
-**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
+**Production incident 2026-10-28:** `/account/orders` returned 500 on `www` and the portal for about 30 minutes after the 12l deploy (Customer Account API field the live API rejects). Hotfixed in `b84be6c`; see §4.7.
+
+**Also fixed along the way (main site, not portal scope):** `server.js` dropped Hydrogen's `cart` cookie whenever the session also changed (`set` → `append`); the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
+
+### Next session
+1. **Clean up the test order:** cancel #1406 (restock, refund the $10 shipping) and deactivate `PORTALTEST100` (and the shipping code, if created).
+2. **Re-test return-to-portal** with one more portal checkout: "continue shopping" should land on the portal's orders.
+3. **12m My Locations:** present the address book as "My Locations" on the portal (store name in the address `company` field, matching sign-up), and check that checkout pre-fills them.
+4. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
+5. Then **12e** branding (needs assets), **12p** wrap-up (corporate admin account, new-portal playbook, verification runbook), and **12n/12o** if approved.
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
