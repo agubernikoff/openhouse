@@ -85,8 +85,17 @@ export default function Orders() {
   const {customer, filters} = useLoaderData();
   const {orders} = customer;
 
+  const isPortal = !!useRouteLoaderData('root')?.portal;
+
   return (
     <div className="orders">
+      {isPortal && (
+        // Portal orders are picked up by their Flow tag, added shortly after
+        // the order is placed
+        <p className="portal-orders-note">
+          New orders can take a minute or two to appear here.
+        </p>
+      )}
       <OrderSearchForm currentFilters={filters} />
       <OrdersTable orders={orders} filters={filters} />
     </div>
