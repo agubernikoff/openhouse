@@ -23,10 +23,10 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | Done and browser-tested 2026-11-01 (color × size, color-only and one-size/one-color products; gallery follows selected colors). Open decision: info tabs. |
+| 12j | Portal product page | Done and browser-tested 2026-11-01 (color × size, color-only and one-size/one-color products; gallery follows selected colors). Info tabs kept (decided 2026-11-01). |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
-| 12m | My Locations + return to portal | Built: return-to-portal redirect (2026-10-28) and **My Locations** (2026-11-01). The address book reads "My Locations" on portals, store name is required, up to 50 locations. Return-to-portal **verified** 2026-11-01 (new orders show after a minute or two, via the Flow tag; noted on the page). **Still to confirm:** checkout offers a second saved location. |
+| 12m | My Locations + return to portal | Done 2026-11-01 (My Locations, second location offered at checkout, return-to-portal verified; new-order delay noted on the orders page). |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
@@ -41,6 +41,10 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 4. **12m test:** on the portal, Account → My Locations → add a second location. Then check out: Shopify should offer both saved locations, with the default pre-selected. "Continue shopping" should return to the portal's orders.
 5. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
 6. **12e** branding: assets received 2026-11-01 (the full company brand kit plus a usage guide). Review them for logo files, colors, type and usage rules, cite the guide, and propose the portal theme, **12p** wrap-up (corporate admin account, new-portal playbook, verification runbook), and **12n/12o** if approved.
+
+### Decisions (2026-11-01)
+- Product page info tabs (Lead time / Material / Our commitment / Returns): **keep** on portal products.
+- Re-order: **leave** as its own action (no `CartForm` refactor).
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
