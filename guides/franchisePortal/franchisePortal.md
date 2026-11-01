@@ -23,7 +23,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | **Testing.** Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested **only with the test tote** (one size, 12 colors). Not yet tried: color × size and one-size/one-color products, size ordering, multi-size cart groups, per-size MOQ values. Open decisions: info tabs, gallery-by-color. |
+| 12j | Portal product page | **Testing.** Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested **only with the test tote** (one size, 12 colors). Not yet tried: color × size and one-size/one-color products, size ordering, multi-size cart groups, per-size MOQ values. Gallery follows the selected colors (added 2026-11-01). Open decision: info tabs. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
 | 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (**not yet re-tested**: needs one more portal checkout). My Locations not started. |
@@ -44,7 +44,9 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
    - the cart grouping several sizes under one color, with the MOQ status below Checkout
    - what happens when sizes within a color have **different** MOQ values (the product page and cart read different variants; confirm Openhouse will keep them equal, or align the code)
 
-   Also decide the info tabs and gallery-by-color.
+   - **gallery:** picking a color shows its images first (newest selection first). Products whose images aren't color-tagged (e.g. `playing-cards`) keep their normal gallery.
+
+   Also decide the info tabs.
 3. **Re-test return-to-portal** with one more portal checkout: "continue shopping" should land on the portal's orders.
 4. **12m My Locations:** present the address book as "My Locations" on the portal (store name in the address `company` field, matching sign-up), and check that checkout pre-fills them.
 5. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
@@ -52,7 +54,6 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
-- Optional: reorder the product gallery by selected colors (the old wholesale form did).
 
 ### Shopify Flow order tag (12k, verified 2026-10-28)
 Trigger *Order created* → condition *custom attributes key = `_portal`* → action *Add order tags*:

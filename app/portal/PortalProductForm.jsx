@@ -23,7 +23,10 @@ import {parseMoq} from '~/lib/portalMoq';
  *   productMoq: number | null;
  *   leadTime?: string;
  *   catalogPath: string;
+ *   onSelectedColorsChange?: (colors: string[]) => void;
  * }}
+ *   - `onSelectedColorsChange`: lets the product page's gallery follow the
+ *     selected colors (in selection order)
  */
 export function PortalProductForm({
   productOptions,
@@ -31,6 +34,7 @@ export function PortalProductForm({
   productMoq,
   leadTime,
   catalogPath,
+  onSelectedColorsChange,
 }) {
   const colorOption = productOptions.find((o) => o.name === 'Color');
   // Options that vary within a color, e.g. Size. Single-value options
@@ -59,6 +63,11 @@ export function PortalProductForm({
   const [selectedColors, setSelectedColors] = useState(
     onlyColor ? [onlyColor] : [],
   );
+
+  useEffect(() => {
+    onSelectedColorsChange?.(selectedColors);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedColors]);
   // variant id → quantity
   const [quantities, setQuantities] = useState({});
 
