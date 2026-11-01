@@ -18,7 +18,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12b | Subdomain spike | Done. "Continue shopping" returns to `www` (confirmed); handled by the return-to-portal redirect (12m). |
 | 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
 | 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
-| 12e | Branded layout + landing | Structure done; Magnolia branding waiting on assets |
+| 12e | Branded layout + landing | Structure done; brand assets received 2026-11-01, review pending |
 | 12f | Sign-up, verification & gating | Done and live |
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
