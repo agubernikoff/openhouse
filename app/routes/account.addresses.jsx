@@ -4,6 +4,7 @@ import {
   useActionData,
   useNavigation,
   useOutletContext,
+  useRouteLoaderData,
 } from 'react-router';
 import {
   UPDATE_ADDRESS_MUTATION,
@@ -14,8 +15,9 @@ import {
 /**
  * @type {Route.MetaFunction}
  */
-export const meta = () => {
-  return [{title: 'Addresses'}];
+export const meta = ({matches}) => {
+  const portal = matches.find((m) => m.id === 'root')?.data?.portal;
+  return [{title: portal ? `My Locations | ${portal.name}` : 'Addresses'}];
 };
 
 /**
@@ -76,6 +78,15 @@ export async function action({request, context}) {
       if (typeof value === 'string') {
         address[key] = value;
       }
+    }
+
+    // Portal locations are identified by store name (plan §4.7, 12m)
+    const savesAddress = request.method === 'POST' || request.method === 'PUT';
+    if (context.portal && savesAddress && !address.company?.trim()) {
+      return data(
+        {error: {[addressId]: 'Please enter a store name or number.'}},
+        {status: 400},
+      );
     }
 
     switch (request.method) {
@@ -252,28 +263,36 @@ export async function action({request, context}) {
 export default function Addresses() {
   const {customer} = useOutletContext();
   const {defaultAddress, addresses} = customer;
+  const isPortal = !!useRouteLoaderData('root')?.portal;
 
+  // The create form always shows: with no saved addresses it used to be
+  // hidden, leaving no way to add one
   return (
     <div className="account-addresses">
-      <h2>Addresses</h2>
+      <h2>{isPortal ? 'My Locations' : 'Addresses'}</h2>
       <br />
-      {!addresses.nodes.length ? (
-        <p>You have no addresses saved.</p>
-      ) : (
+      <div>
         <div>
-          <div>
-            <legend>Create address</legend>
-            <NewAddressForm />
-          </div>
-          <br />
-          <hr />
-          <br />
+          <legend>{isPortal ? 'Add a location' : 'Create address'}</legend>
+          <NewAddressForm />
+        </div>
+        <br />
+        <hr />
+        <br />
+        {addresses.nodes.length ? (
           <ExistingAddresses
             addresses={addresses}
             defaultAddress={defaultAddress}
+            isPortal={isPortal}
           />
-        </div>
-      )}
+        ) : (
+          <p>
+            {isPortal
+              ? 'You have no locations saved.'
+              : 'You have no addresses saved.'}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -317,36 +336,44 @@ function NewAddressForm() {
 /**
  * @param {Pick<CustomerFragment, 'addresses' | 'defaultAddress'>}
  */
-function ExistingAddresses({addresses, defaultAddress}) {
+function ExistingAddresses({addresses, defaultAddress, isPortal}) {
   return (
     <div>
-      <legend>Existing addresses</legend>
+      <legend>{isPortal ? 'Your locations' : 'Existing addresses'}</legend>
       {addresses.nodes.map((address) => (
-        <AddressForm
-          key={address.id}
-          addressId={address.id}
-          address={address}
-          defaultAddress={defaultAddress}
-        >
-          {({stateForMethod}) => (
-            <div>
-              <button
-                disabled={stateForMethod('PUT') !== 'idle'}
-                formMethod="PUT"
-                type="submit"
-              >
-                {stateForMethod('PUT') !== 'idle' ? 'Saving' : 'Save'}
-              </button>
-              <button
-                disabled={stateForMethod('DELETE') !== 'idle'}
-                formMethod="DELETE"
-                type="submit"
-              >
-                {stateForMethod('DELETE') !== 'idle' ? 'Deleting' : 'Delete'}
-              </button>
-            </div>
+        <div key={address.id}>
+          {isPortal && (
+            <h3 className="portal-location-name">
+              {address.company || address.address1}
+              {defaultAddress?.id === address.id ? ' (default)' : ''}
+            </h3>
           )}
-        </AddressForm>
+          <AddressForm
+            key={address.id}
+            addressId={address.id}
+            address={address}
+            defaultAddress={defaultAddress}
+          >
+            {({stateForMethod}) => (
+              <div>
+                <button
+                  disabled={stateForMethod('PUT') !== 'idle'}
+                  formMethod="PUT"
+                  type="submit"
+                >
+                  {stateForMethod('PUT') !== 'idle' ? 'Saving' : 'Save'}
+                </button>
+                <button
+                  disabled={stateForMethod('DELETE') !== 'idle'}
+                  formMethod="DELETE"
+                  type="submit"
+                >
+                  {stateForMethod('DELETE') !== 'idle' ? 'Deleting' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </AddressForm>
+        </div>
       ))}
     </div>
   );
@@ -368,114 +395,121 @@ export function AddressForm({addressId, address, defaultAddress, children}) {
   const action = useActionData();
   const error = action?.error?.[addressId];
   const isDefaultAddress = defaultAddress?.id === addressId;
+  // Unique per form: the page shows one form per saved address
+  const fieldId = (name) => `${name}-${addressId}`;
+  // Franchise portals call addresses "locations" (plan §4.7, 12m)
+  const isPortal = !!useRouteLoaderData('root')?.portal;
   return (
     <Form id={addressId}>
       <fieldset>
         <input type="hidden" name="addressId" defaultValue={addressId} />
-        <label htmlFor="firstName">First name*</label>
+        <label htmlFor={fieldId('firstName')}>First name*</label>
         <input
           aria-label="First name"
           autoComplete="given-name"
           defaultValue={address?.firstName ?? ''}
-          id="firstName"
+          id={fieldId('firstName')}
           name="firstName"
           placeholder="First name"
           required
           type="text"
         />
-        <label htmlFor="lastName">Last name*</label>
+        <label htmlFor={fieldId('lastName')}>Last name*</label>
         <input
           aria-label="Last name"
           autoComplete="family-name"
           defaultValue={address?.lastName ?? ''}
-          id="lastName"
+          id={fieldId('lastName')}
           name="lastName"
           placeholder="Last name"
           required
           type="text"
         />
-        <label htmlFor="company">Company</label>
+        <label htmlFor={fieldId('company')}>
+          {isPortal ? 'Store name or number*' : 'Company'}
+        </label>
         <input
-          aria-label="Company"
+          aria-label={isPortal ? 'Store name or number' : 'Company'}
+          required={isPortal}
           autoComplete="organization"
           defaultValue={address?.company ?? ''}
-          id="company"
+          id={fieldId('company')}
           name="company"
-          placeholder="Company"
+          placeholder={isPortal ? 'Store name or number*' : 'Company'}
           type="text"
         />
-        <label htmlFor="address1">Address line*</label>
+        <label htmlFor={fieldId('address1')}>Address line*</label>
         <input
           aria-label="Address line 1"
           autoComplete="address-line1"
           defaultValue={address?.address1 ?? ''}
-          id="address1"
+          id={fieldId('address1')}
           name="address1"
           placeholder="Address line 1*"
           required
           type="text"
         />
-        <label htmlFor="address2">Address line 2</label>
+        <label htmlFor={fieldId('address2')}>Address line 2</label>
         <input
           aria-label="Address line 2"
           autoComplete="address-line2"
           defaultValue={address?.address2 ?? ''}
-          id="address2"
+          id={fieldId('address2')}
           name="address2"
           placeholder="Address line 2"
           type="text"
         />
-        <label htmlFor="city">City*</label>
+        <label htmlFor={fieldId('city')}>City*</label>
         <input
           aria-label="City"
           autoComplete="address-level2"
           defaultValue={address?.city ?? ''}
-          id="city"
+          id={fieldId('city')}
           name="city"
           placeholder="City"
           required
           type="text"
         />
-        <label htmlFor="zoneCode">State / Province*</label>
+        <label htmlFor={fieldId('zoneCode')}>State / Province*</label>
         <input
           aria-label="State/Province"
           autoComplete="address-level1"
           defaultValue={address?.zoneCode ?? ''}
-          id="zoneCode"
+          id={fieldId('zoneCode')}
           name="zoneCode"
           placeholder="State / Province"
           required
           type="text"
         />
-        <label htmlFor="zip">Zip / Postal Code*</label>
+        <label htmlFor={fieldId('zip')}>Zip / Postal Code*</label>
         <input
           aria-label="Zip"
           autoComplete="postal-code"
           defaultValue={address?.zip ?? ''}
-          id="zip"
+          id={fieldId('zip')}
           name="zip"
           placeholder="Zip / Postal Code"
           required
           type="text"
         />
-        <label htmlFor="territoryCode">Country Code*</label>
+        <label htmlFor={fieldId('territoryCode')}>Country Code*</label>
         <input
           aria-label="Country Code"
           autoComplete="country"
           defaultValue={address?.territoryCode ?? ''}
-          id="territoryCode"
+          id={fieldId('territoryCode')}
           name="territoryCode"
           placeholder="Country"
           required
           type="text"
           maxLength={2}
         />
-        <label htmlFor="phoneNumber">Phone</label>
+        <label htmlFor={fieldId('phoneNumber')}>Phone</label>
         <input
           aria-label="Phone Number"
           autoComplete="tel"
           defaultValue={address?.phoneNumber ?? ''}
-          id="phoneNumber"
+          id={fieldId('phoneNumber')}
           name="phoneNumber"
           placeholder="+16135551111"
           pattern="^\+?[1-9]\d{3,14}$"
@@ -484,11 +518,15 @@ export function AddressForm({addressId, address, defaultAddress, children}) {
         <div>
           <input
             defaultChecked={isDefaultAddress}
-            id="defaultAddress"
+            id={fieldId('defaultAddress')}
             name="defaultAddress"
             type="checkbox"
           />
-          <label htmlFor="defaultAddress">Set as default address</label>
+          <label htmlFor={fieldId('defaultAddress')}>
+            {isPortal
+              ? 'Default location (pre-selected at checkout)'
+              : 'Set as default address'}
+          </label>
         </div>
         {error ? (
           <p role="alert">

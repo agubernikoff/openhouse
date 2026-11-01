@@ -26,19 +26,19 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12j | Portal product page | Done and browser-tested 2026-11-01 (color × size, color-only and one-size/one-color products; gallery follows selected colors). Open decision: info tabs. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
-| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (**not yet re-tested**: needs one more portal checkout). My Locations not started. |
+| 12m | My Locations + return to portal | Built: return-to-portal redirect (2026-10-28) and **My Locations** (2026-11-01). The address book reads "My Locations" on portals, store name is required, up to 50 locations. **Needs a browser test**: add a 2nd location, check that checkout offers both, and that "continue shopping" returns to the portal. |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
 **Production incident 2026-10-28:** `/account/orders` returned 500 on `www` and the portal for about 30 minutes after the 12l deploy (Customer Account API field the live API rejects). Hotfixed in `b84be6c`; see §4.7.
 
-**Also fixed along the way (main site, not portal scope):** `server.js` dropped Hydrogen's `cart` cookie whenever the session also changed (`set` → `append`); the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
+**Also fixed along the way (main site, not portal scope):** the address book had no create form when no addresses were saved; address forms shared duplicate field IDs (labels and screen readers pointed at the first form); only 6 saved addresses were loaded; `server.js` dropped Hydrogen's `cart` cookie whenever the session also changed (`set` → `append`); the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
 
 ### Next session
 1. **Clean up the test order:** cancel #1406 (restock, refund the $10 shipping) and deactivate `PORTALTEST100` (and the shipping code, if created).
 2. **12j done** (2026-11-01). Remove the temporary `portal:magnolia-bakery` tags from `signature-hoodie` and `playing-cards`, if still set.
 3. **Re-test return-to-portal** with one more portal checkout: "continue shopping" should land on the portal's orders.
-4. **12m My Locations:** present the address book as "My Locations" on the portal (store name in the address `company` field, matching sign-up), and check that checkout pre-fills them.
+4. **12m test:** on the portal, Account → My Locations → add a second location. Then check out: Shopify should offer both saved locations, with the default pre-selected. "Continue shopping" should return to the portal's orders.
 5. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
 6. **12e** branding: assets received 2026-11-01 (the full company brand kit plus a usage guide). Review them for logo files, colors, type and usage rules, cite the guide, and propose the portal theme, **12p** wrap-up (corporate admin account, new-portal playbook, verification runbook), and **12n/12o** if approved.
 

@@ -4,6 +4,7 @@ import {
   NavLink,
   Outlet,
   useLoaderData,
+  useRouteLoaderData,
 } from 'react-router';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
 
@@ -59,6 +60,8 @@ export default function AccountLayout() {
 }
 
 function AccountMenu() {
+  // Franchise portals call addresses "locations" (12m)
+  const isPortal = !!useRouteLoaderData('root')?.portal;
   function isActiveStyle({isActive, isPending}) {
     return {
       fontWeight: isActive ? 'bold' : undefined,
@@ -77,7 +80,7 @@ function AccountMenu() {
       </NavLink>
       &nbsp;|&nbsp;
       <NavLink to="/account/addresses" style={isActiveStyle}>
-        &nbsp; Addresses &nbsp;
+        &nbsp; {isPortal ? 'My Locations' : 'Addresses'} &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <Logout />

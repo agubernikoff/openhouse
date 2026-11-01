@@ -5135,3 +5135,6 @@ body:has(.contact) .contact-error-message {
   font-size: 14px;
   margin: 0.75rem 0 0;
 }
+.portal-location-name {
+  margin: 1.5rem 0 0.5rem;
+}
