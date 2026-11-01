@@ -1,5 +1,4 @@
 import {redirect} from 'react-router';
-import {PORTALS} from '~/lib/portals';
 import {shopifyAdminFetch} from '~/lib/shopifyAdmin';
 
 /**
@@ -21,7 +20,9 @@ export const portalTag = (portal, role) => `portal:${portal.handle}:${role}`;
 // loses access within a few minutes without an Admin API call per request.
 const ACCESS_TTL_MS = 5 * 60 * 1000;
 
-const sessionKey = (handle) => `portalAccess:${handle}`;
+// All portals' cached roles live under one session key, keyed by handle
+const SESSION_KEY = 'portalAccess';
+const cachedAccess = (session, handle) => session.get(SESSION_KEY)?.[handle];
 
 /**
  * The logged-in customer's role on the current portal, or null when logged
@@ -36,7 +37,7 @@ export async function getPortalAccess(context) {
   if (!(await customerAccount.isLoggedIn())) return null;
 
   // Pending customers are always re-checked so approval shows up right away
-  const cached = session.get(sessionKey(portal.handle));
+  const cached = cachedAccess(session, portal.handle);
   const fresh = cached && Date.now() - cached.checkedAt < ACCESS_TTL_MS;
   if (fresh && cached.role !== 'pending') return cached;
 
@@ -64,7 +65,10 @@ export async function getPortalAccess(context) {
  */
 export function setPortalAccess({portal, session}, customerId, role) {
   const access = {customerId, role, checkedAt: Date.now()};
-  session.set(sessionKey(portal.handle), access);
+  session.set(SESSION_KEY, {
+    ...session.get(SESSION_KEY),
+    [portal.handle]: access,
+  });
   return access;
 }
 
@@ -74,7 +78,7 @@ export function setPortalAccess({portal, session}, customerId, role) {
  * @param {import('~/lib/session').AppSession} session
  */
 export function clearPortalAccess(session) {
-  for (const {handle} of PORTALS) session.unset(sessionKey(handle));
+  session.unset(SESSION_KEY);
 }
 
 /**

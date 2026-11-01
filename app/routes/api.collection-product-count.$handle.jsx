@@ -34,7 +34,7 @@ export const loader = async ({request, context, params}) => {
     return Response.json({error: 'Missing handle'}, {status: 400});
   }
   // Portal catalogs are only counted on their own portal
-  if (!context.portal && isPortalCollection(handle)) {
+  if (!context.portal && isPortalCollection(handle, context.portals)) {
     return Response.json({error: 'Collection not found'}, {status: 404});
   }
 

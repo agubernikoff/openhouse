@@ -33,7 +33,10 @@ export default {
       // Back from a portal checkout: Shopify's "continue shopping" lands on
       // www's homepage. Send the customer to their portal's orders once.
       if (!portal && url.pathname === '/' && request.method === 'GET') {
-        const returnTo = portalFromReturnCookie(request);
+        const returnTo = portalFromReturnCookie(
+          request,
+          hydrogenContext.portals,
+        );
         if (returnTo) {
           return new Response(null, {
             status: 302,

@@ -1,5 +1,3 @@
-import {PORTALS} from '~/lib/portals';
-
 /**
  * Franchise portal products are tagged `portal:{handle}` (plan §2) and must
  * never appear on the main site. Most Storefront API product sources can't
@@ -55,10 +53,13 @@ export function excludePortalProductNodes(connection) {
  * Storefront `products(query:)` does support tag exclusion, so the catalog
  * query excludes portal products up front (keeps pagination exact).
  * e.g. `-tag:'portal:magnolia-bakery'`
+ * @param {{handle: string}[]} portals - `context.portals`
  */
-export const EXCLUDE_PORTAL_PRODUCTS_QUERY = PORTALS.map(
-  ({handle}) => `-tag:'${portalProductTag(handle)}'`,
-).join(' ');
+export function excludePortalProductsQuery(portals) {
+  return portals
+    .map(({handle}) => `-tag:'${portalProductTag(handle)}'`)
+    .join(' ');
+}
 
 /**
  * The inverse, for a portal's own catalog: keep only products tagged for
@@ -81,9 +82,10 @@ export function onlyPortalProductNodes(connection, portal) {
  * A portal's catalog collection (`portal.collectionHandle`) is hidden on the
  * main site too: no page, not in listings, search suggestions or sitemap.
  * @param {string | null | undefined} handle
+ * @param {{collectionHandle: string}[]} portals - `context.portals`
  */
-export function isPortalCollection(handle) {
-  return PORTALS.some((portal) => portal.collectionHandle === handle);
+export function isPortalCollection(handle, portals) {
+  return portals.some((portal) => portal.collectionHandle === handle);
 }
 
 /**
@@ -91,6 +93,8 @@ export function isPortalCollection(handle) {
  * @param {T[] | null | undefined} collections
  * @return {T[]}
  */
-export function excludePortalCollections(collections) {
-  return (collections ?? []).filter((c) => !isPortalCollection(c.handle));
+export function excludePortalCollections(collections, portals) {
+  return (collections ?? []).filter(
+    (c) => !isPortalCollection(c.handle, portals),
+  );
 }

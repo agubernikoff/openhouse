@@ -50,7 +50,7 @@ export async function loader(args) {
   } else {
     await checkMaintenanceRedirect(args);
     // Portal catalogs only exist on their portal (plan §4.4)
-    if (isPortalCollection(args.params.handle)) {
+    if (isPortalCollection(args.params.handle, args.context.portals)) {
       throw new Response('Not found', {status: 404});
     }
   }

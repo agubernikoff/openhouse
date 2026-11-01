@@ -1,16 +1,21 @@
 /**
  * Franchise portals: gated storefronts served from their own byopenhouse.com
- * subdomain. Nothing in the app is portal-specific; each portal is just an
- * entry here. See guides/franchisePortal/franchisePortal.md.
+ * subdomain. Each portal is a `franchise_portal` metaobject in Shopify admin
+ * (Content → Metaobjects), so adding a brand needs no code change. See
+ * guides/franchisePortal/franchisePortal.md (§5, §7).
  *
- * Adding a portal: add an entry, connect the hostname in Shopify admin, and
- * register its Customer Account API callback/origin/logout URLs (plan §5).
+ * The metaobject handle is the portal handle and must match its tags
+ * (`portal:{handle}` on products, orders and customers). Secrets stay out of
+ * metaobjects (they're readable via the public Storefront API): the Slack
+ * sign-up webhook is the env var named by `slackWebhookEnvVar`.
  *
  * @typedef {{
  *   name: string;
  *   label: string;
  *   required?: boolean;
  * }} OnboardingField
+ *
+ * @typedef {{url: string; width?: number; height?: number; altText?: string | null}} PortalImage
  *
  * @typedef {{
  *   handle: string;
@@ -21,30 +26,135 @@
  *   slackWebhookEnvVar: string;
  *   verification: 'manual';
  *   onboardingFields: OnboardingField[];
+ *   theme: Record<string, string>;
+ *   logos: {header: PortalImage | null; landing: PortalImage | null; mark: PortalImage | null};
+ *   copy: {landingHeadline: string; landingBody: string; pendingMessage: string};
  * }} Portal
- *
- * - `collectionHandle`: the Shopify collection that is the portal's catalog.
- * - `leadTime`: lead time copy shown on portal product pages.
- * - `slackWebhookEnvVar`: name of the env var holding the portal's Slack
- *   incoming webhook for new sign-ups (the URL itself is a secret).
- * - `verification`: sign-up verification strategy (portal/verification.server.js).
- * - `onboardingFields`: extra text fields on the sign-up form, e.g.
- *   `{name: 'storeNumber', label: 'Store number', required: true}`.
  */
 
-/** @type {Portal[]} */
-export const PORTALS = [
-  {
-    handle: 'magnolia-bakery',
-    hostname: 'magnoliabakery.byopenhouse.com',
-    name: 'Magnolia Bakery',
-    collectionHandle: 'magnolia-bakery',
-    leadTime: 'Ships in under 4 weeks',
-    slackWebhookEnvVar: 'SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL',
+/**
+ * All portals, from the `franchise_portal` metaobjects. Cached briefly, so
+ * admin edits show up within a few minutes. Throws if Shopify can't be
+ * reached: failing beats serving a portal hostname as the main site.
+ * @param {any} storefront
+ * @return {Promise<Portal[]>}
+ */
+export async function loadPortals(storefront) {
+  const {metaobjects} = await storefront.query(PORTALS_QUERY, {
+    cache: storefront.CacheCustom({
+      mode: 'public',
+      maxAge: 60,
+      staleWhileRevalidate: 600,
+    }),
+  });
+  return metaobjects.nodes.map(toPortal).filter(Boolean);
+}
+
+/** @return {Portal | null} */
+function toPortal(node) {
+  const fields = Object.fromEntries(node.fields.map((f) => [f.key, f]));
+  const text = (key) => fields[key]?.value?.trim() || '';
+  const hostname = text('hostname').toLowerCase();
+  const collectionHandle = fields.collection?.reference?.handle;
+  if (!hostname || !collectionHandle) {
+    console.error(`Portal "${node.handle}" needs a hostname and collection`);
+    return null;
+  }
+
+  const name = text('name') || node.handle;
+  const color = (key, fallback) => {
+    const value = text(key);
+    return /^#[0-9a-f]{3,8}$/i.test(value) ? value : fallback;
+  };
+  const image = (key) => fields[key]?.reference?.image ?? null;
+  const font = text('font_family');
+
+  return {
+    handle: node.handle,
+    hostname,
+    name,
+    collectionHandle,
+    leadTime: text('lead_time'),
+    // e.g. magnolia-bakery → SLACK_PORTAL_MAGNOLIA_BAKERY_WEBHOOK_URL
+    slackWebhookEnvVar: `SLACK_PORTAL_${node.handle
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')}_WEBHOOK_URL`,
     verification: 'manual',
-    onboardingFields: [],
-  },
-];
+    onboardingFields: parseOnboardingFields(fields.onboarding_fields?.value),
+    theme: {
+      // Only plain family names (no CSS injection via admin input)
+      fontFamily: /^[\w -]+$/.test(font) ? font : '',
+      text: color('color_text', '#2d2d2b'),
+      background: color('color_background', '#ffffff'),
+      accent: color('color_accent', '#f4f2ea'),
+      button: color('color_button', '#2d2d2b'),
+      buttonText: color('color_button_text', '#ffffff'),
+      error: color('color_error', '#d8240c'),
+      errorBackground: color('color_error_background', '#ffffff'),
+    },
+    logos: {
+      header: image('logo_header'),
+      landing: image('logo_landing'),
+      mark: image('logo_mark'),
+    },
+    copy: {
+      landingHeadline: text('landing_headline') || `${name} ordering portal`,
+      landingBody:
+        text('landing_body') ||
+        `Sign in or create an account to order approved ${name} merchandise.`,
+      pendingMessage:
+        text('pending_message') ||
+        `Openhouse is verifying your ${name} account. You’ll be able to place orders as soon as it’s approved.`,
+    },
+  };
+}
+
+/** @return {OnboardingField[]} */
+function parseOnboardingFields(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed
+          .filter((f) => f?.name && f?.label)
+          .map((f) => ({
+            name: String(f.name),
+            label: String(f.label),
+            required: !!f.required,
+          }))
+      : [];
+  } catch {
+    console.error('Invalid portal onboarding_fields JSON');
+    return [];
+  }
+}
+
+const PORTALS_QUERY = `#graphql
+  query FranchisePortals {
+    metaobjects(type: "franchise_portal", first: 50) {
+      nodes {
+        handle
+        fields {
+          key
+          value
+          reference {
+            ... on MediaImage {
+              image {
+                url
+                width
+                height
+                altText
+              }
+            }
+            ... on Collection {
+              handle
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 // Paths a portal host serves. Everything else on a portal host redirects to
 // `/` (or 404s for non-page requests), so the main site's pages, actions and
@@ -74,15 +184,16 @@ const portalPaths = (portal) => [
  * portal's, so `PORTAL_DEV_HANDLE` in .env forces a portal in development only.
  * @param {Request} request
  * @param {Env} env
+ * @param {Portal[]} portals
  * @return {Portal | null}
  */
-export function resolvePortal(request, env) {
+export function resolvePortal(request, env, portals) {
   if (process.env.NODE_ENV === 'development' && env.PORTAL_DEV_HANDLE) {
-    return PORTALS.find((p) => p.handle === env.PORTAL_DEV_HANDLE) ?? null;
+    return portals.find((p) => p.handle === env.PORTAL_DEV_HANDLE) ?? null;
   }
 
   const {hostname} = new URL(request.url);
-  return PORTALS.find((p) => p.hostname === hostname) ?? null;
+  return portals.find((p) => p.hostname === hostname) ?? null;
 }
 
 /**
@@ -110,8 +221,26 @@ export function isPortalPath(pathname, portal) {
  */
 export function toPublicPortal(portal) {
   if (!portal) return null;
-  const {handle, name, collectionHandle, leadTime, onboardingFields} = portal;
-  return {handle, name, collectionHandle, leadTime, onboardingFields};
+  const {
+    handle,
+    name,
+    collectionHandle,
+    leadTime,
+    onboardingFields,
+    theme,
+    logos,
+    copy,
+  } = portal;
+  return {
+    handle,
+    name,
+    collectionHandle,
+    leadTime,
+    onboardingFields,
+    theme,
+    logos,
+    copy,
+  };
 }
 
 /**
@@ -164,13 +293,14 @@ function buildReturnCookie(portal, request, value, maxAge) {
 /**
  * The portal a main-site request should return to, if it carries the hint.
  * @param {Request} request
+ * @param {Portal[]} portals
  * @return {Portal | null}
  */
-export function portalFromReturnCookie(request) {
+export function portalFromReturnCookie(request, portals) {
   const cookies = request.headers.get('Cookie') ?? '';
   const match = cookies.match(
     new RegExp(`(?:^|;\\s*)${PORTAL_RETURN_COOKIE}=([^;]+)`),
   );
   if (!match) return null;
-  return PORTALS.find((p) => p.handle === decodeURIComponent(match[1])) ?? null;
+  return portals.find((p) => p.handle === decodeURIComponent(match[1])) ?? null;
 }
