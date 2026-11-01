@@ -4994,7 +4994,6 @@ body:has(.contact) .contact-error-message {
   align-items: center;
   gap: 1rem;
   text-align: center;
-  padding-top: 4rem;
 }
 .portal-home h1 {
   font-family: 'apfel';
@@ -5160,7 +5159,9 @@ body:has(.contact) .contact-error-message {
   --color-oh-gray: var(--portal-accent);
   --color-oh-gray-contact: var(--portal-text);
   --color-oh-yellow: var(--portal-text);
-  --color-oh-red: var(--portal-error);
+  /* The main site's red marks indicators (filter/sort dots, option bullets);
+     on portals those use the accent. Errors use --portal-error directly. */
+  --color-oh-red: var(--portal-accent);
   background: var(--portal-background);
   color: var(--portal-text);
   line-height: 1.4;
@@ -5235,6 +5236,9 @@ body:has(.contact) .contact-error-message {
   max-width: 36rem;
   margin: 0;
   white-space: pre-line;
+}
+.portal .portal-form-field [aria-invalid='true'] {
+  border-color: var(--portal-error);
 }
 /* Errors and MOQ notices: rich accent on its own pastel (p. 41) */
 .portal .portal-form-error,

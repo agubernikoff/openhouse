@@ -278,7 +278,7 @@ function QuantityGroup({
           style={{
             textAlign: 'right',
             color:
-              total >= moq ? 'var(--color-oh-black)' : 'var(--color-oh-red)',
+              total >= moq ? 'var(--color-oh-black)' : 'var(--portal-error)',
           }}
         >
           {`TOTAL(${total})`}
