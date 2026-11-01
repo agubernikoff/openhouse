@@ -5138,3 +5138,8 @@ body:has(.contact) .contact-error-message {
 .portal-location-name {
   margin: 1.5rem 0 0.5rem;
 }
+.portal-orders-note {
+  font-family: 'mono';
+  font-size: 14px;
+  margin: 0 0 1rem;
+}
