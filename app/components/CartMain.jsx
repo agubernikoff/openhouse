@@ -15,7 +15,8 @@ export function CartMain({layout, cart: originalCart}) {
   // so the user immediately sees feedback when they modify the cart.
   const cart = useOptimisticCart(originalCart);
   // Franchise portals enforce minimum order quantities in the cart
-  const isPortal = !!useRouteLoaderData('root')?.portal;
+  const portal = useRouteLoaderData('root')?.portal;
+  const isPortal = !!portal;
   const moqViolations = isPortal ? cartMoqViolations(cart) : new Map();
 
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
@@ -27,7 +28,13 @@ export function CartMain({layout, cart: originalCart}) {
 
   return (
     <div className={className}>
-      <CartEmpty hidden={linesCount} layout={layout} />
+      <CartEmpty
+        hidden={linesCount}
+        layout={layout}
+        shopPath={
+          portal ? `/collections/${portal.collectionHandle}` : undefined
+        }
+      />
       <div className="cart-details">
         <div aria-label="Cart items">
           <ul>
@@ -96,7 +103,7 @@ export function CartMain({layout, cart: originalCart}) {
  *   layout?: CartMainProps['layout'];
  * }}
  */
-function CartEmpty({hidden = false}) {
+function CartEmpty({hidden = false, shopPath = '/collections/frontpage'}) {
   const {close} = useAside();
   return (
     <div hidden={hidden}>
@@ -113,11 +120,7 @@ function CartEmpty({hidden = false}) {
           </dd>
         </dl>
         <div className="cart-checkout-actions">
-          <Link
-            to="/collections/frontpage"
-            className="cart-checkout-button"
-            onClick={close}
-          >
+          <Link to={shopPath} className="cart-checkout-button" onClick={close}>
             CONTINUE SHOPPING
           </Link>
         </div>
