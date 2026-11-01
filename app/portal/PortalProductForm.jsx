@@ -49,8 +49,16 @@ export function PortalProductForm({
     ]),
   );
 
-  // Colors chosen so far; products without Color have one unnamed group
-  const [selectedColors, setSelectedColors] = useState([]);
+  // Colors chosen so far; products without Color have one unnamed group.
+  // A single-color product (most one-size/one-color merch) starts with it
+  // selected, so its quantity input shows right away.
+  const onlyColor =
+    colorOption?.optionValues.length === 1
+      ? colorOption.optionValues[0].name
+      : null;
+  const [selectedColors, setSelectedColors] = useState(
+    onlyColor ? [onlyColor] : [],
+  );
   // variant id → quantity
   const [quantities, setQuantities] = useState({});
 
@@ -187,7 +195,7 @@ export function PortalProductForm({
         catalogPath={catalogPath}
         onAdded={() => {
           setQuantities({});
-          setSelectedColors([]);
+          setSelectedColors(onlyColor ? [onlyColor] : []);
         }}
       >
         ADD TO CART -{' '}

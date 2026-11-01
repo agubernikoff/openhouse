@@ -23,7 +23,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | **Testing.** Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested **only with the test tote** (one size, 12 colors). Not yet tried: color × size, size-only and no-option products, size ordering, multi-size cart groups, per-size MOQ values. Open decisions: info tabs, gallery-by-color. |
+| 12j | Portal product page | **Testing.** Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested **only with the test tote** (one size, 12 colors). Not yet tried: color × size and one-size/one-color products, size ordering, multi-size cart groups, per-size MOQ values. Open decisions: info tabs, gallery-by-color. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
 | 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (**not yet re-tested**: needs one more portal checkout). My Locations not started. |
@@ -36,8 +36,9 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 
 ### Next session
 1. **Clean up the test order:** cancel #1406 (restock, refund the $10 shipping) and deactivate `PORTALTEST100` (and the shipping code, if created).
-2. **Finish testing 12j:** tag a few real products `portal:magnolia-bakery` (or set up test ones), one each of: **color × size** (e.g. a tee, 2–3 colors × S–XL), **size-only**, and **no options**. Check:
+2. **Finish testing 12j.** The catalog (checked 2026-11-01) has only three shapes: **color × size** (12 products, e.g. `signature-hoodie`), **color only** (43, like the test tote, already tested) and **one size, one color** (26, e.g. `playing-cards`). There are no size-only or no-option products. Temporarily tag one of each untested shape `portal:magnolia-bakery`, and remove the tags afterwards so they reappear on `www`. Check:
    - inputs per size, ordered like the product's options
+   - a one-color product shows its quantity input right away (the only color is pre-selected, added 2026-11-01)
    - per-color MOQ messaging
    - totals
    - the cart grouping several sizes under one color, with the MOQ status below Checkout
