@@ -4,30 +4,35 @@ import {Link} from 'react-router';
  * Portal landing page for logged-out and pending customers. Members are
  * redirected to the catalog (the portal's collection) by the index loader.
  * @param {{
- *   portal: {handle: string; name: string};
+ *   portal: ReturnType<typeof import('~/lib/portals').toPublicPortal>;
  *   role: 'pending' | null;
  * }}
  */
 export function PortalHome({portal, role}) {
+  const {copy, logos} = portal;
+
   if (role === 'pending') {
     return (
       <section className="portal-home">
-        <h1>Thanks — you&rsquo;re all signed up</h1>
-        <p>
-          Openhouse is verifying your {portal.name} account. You&rsquo;ll be
-          able to place orders as soon as it&rsquo;s approved.
-        </p>
+        <h1>Thanks, you&rsquo;re all signed up</h1>
+        <p className="portal-home-body">{copy.pendingMessage}</p>
       </section>
     );
   }
 
   return (
     <section className="portal-home">
-      <h1>{portal.name} ordering portal</h1>
-      <p>
-        Sign in or create an account to order approved {portal.name}{' '}
-        merchandise.
-      </p>
+      {logos.landing && (
+        <img
+          className="portal-landing-logo"
+          src={logos.landing.url}
+          alt={portal.name}
+          width={logos.landing.width}
+          height={logos.landing.height}
+        />
+      )}
+      <h1>{copy.landingHeadline}</h1>
+      <p className="portal-home-body">{copy.landingBody}</p>
       <Link to="/account/login" className="portal-button">
         Sign in / Sign up
       </Link>

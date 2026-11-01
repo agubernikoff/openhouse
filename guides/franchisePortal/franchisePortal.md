@@ -229,7 +229,7 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 
 ### 4.1 Portal resolution and routing
 - `app/lib/portals.js` maps hostname to portal config. In `createHydrogenRouterContext` ([`app/lib/context.js`](../../app/lib/context.js)), resolve `context.portal` from the request host. An unknown host gives `null`, which means the normal Openhouse site.
-- **Why code config, not a metaobject:** portal setup is manual per client anyway, the Slack webhook is a secret (metaobjects can be readable over the public Storefront API), and code config adds no request overhead and is versioned. Branding could move to a metaobject later if Openhouse wants to edit it without a deploy.
+- **Portal config lives in Shopify admin (2026-11-01):** each portal is a `franchise_portal` metaobject (Content → Metaobjects), loaded once per request in the context (cached ~1 min, stale up to 10 min) by [`loadPortals`](../../app/lib/portals.js). The metaobject handle is the portal handle. Fields: `name`, `hostname`, `collection`, `lead_time`, `logo_header` / `logo_landing` / `logo_mark`, `font_family` (Google Fonts name), `color_*` (text, background, accent, button, button_text, error, error_background), `landing_headline`, `landing_body`, `pending_message`, `onboarding_fields` (JSON). The definition needs **Storefront read access**. Admin input is validated (hex colors, plain font names, JSON). Secrets stay out of metaobjects, since they're publicly readable: the Slack webhook is the env var `SLACK_PORTAL_{HANDLE}_WEBHOOK_URL`.
 - Portal pages live at the **same paths** as the main site (`/`, `/products/$handle`, `/cart`, `/account/*`), plus portal-only routes (`/onboarding`, `/admin/*`). Overlapping routes branch on `context.portal` and delegate to modules in `app/portal/`, so portal code stays separate. Portal-only routes return 404 on the main host.
   - *Why not a `/portal/*` route segment with a server rewrite:* SSR would render the rewritten path, and client hydration would see a different `window.location`. A visible `/portal/...` URL would undercut the subdomain. Validate this approach in the spike (Phase 0).
 - On a portal host, any path outside the allowlist ([`isPortalPath`](../../app/lib/portals.js)) is blocked in [`server.js`](../../server.js) before routing: page loads redirect to `/`, and actions or other non-GET requests return 404. This covers main-site actions and resource routes like `/cart/:lines`. Client-side data requests pass through to read-only loaders; the root loader and `PortalLayout` redirect those. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
@@ -327,7 +327,7 @@ The client has no verification data today, so launch uses manual verification on
 
 ## 5. Shopify Admin Setup Checklist (per portal)
 
-- [ ] Add the portal entry to `app/lib/portals.js` (hostname, handle, name, collection handle, branding) and deploy
+- [ ] Add a **Franchise portal** metaobject entry (handle = portal handle; hostname, collection, logos, colors, font, copy). No deploy needed.
 - [ ] Create the Slack channel and incoming webhook; add `SLACK_PORTAL_{HANDLE}_WEBHOOK_URL` to Oxygen environment variables
 - [ ] Connect the subdomain in the Hydrogen channel (Oxygen custom domain) and add the DNS CNAME
 - [ ] Register the subdomain's callback, JavaScript-origin and logout URLs in the Customer Account API settings
