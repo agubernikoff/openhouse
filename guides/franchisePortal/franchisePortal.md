@@ -18,7 +18,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12b | Subdomain spike | Done. "Continue shopping" returns to `www` (confirmed); handled by the return-to-portal redirect (12m). |
 | 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
 | 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
-| 12e | Branded layout + landing | Structure done; brand assets received 2026-11-01, review pending |
+| 12e | Branded layout + landing | Brand review done 2026-11-01 (see *Magnolia Brand Review*). Theme proposal pending sign-off; horizontal logo file still needed from Magnolia. |
 | 12f | Sign-up, verification & gating | Done and live |
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
@@ -58,6 +58,38 @@ Trigger *Order created* → condition *custom attributes key = `_portal`* → ac
 - Magnolia brand assets
 - Corporate admin's email (`portal:magnolia-bakery:admin`)
 - Decision on 12n/12o
+
+---
+
+## Magnolia Brand Review (12e, 2026-11-01)
+
+Source: the brand kit Openhouse forwarded, *VOL 1 - Brand Guidelines (Recipes for Brand Design Magic) 062426.pdf* (123 pp.; page labels match PDF pages), plus the font EULAs in `FONTS TO DOWNLOAD/`. Citations are to that guide unless noted. The kit isn't committed to the repo; only the assets chosen get added.
+
+**Logo**
+- Website headers should lead with the **horizontal logo** (or the brand mark), not the stacked primary logo (p. 29). The horizontal logo and the monogram are fixed assets (p. 31).
+- Minimum sizes (print): primary 1.5", **horizontal 2.5"**, monogram 0.4". When the monogram is used alone, "Magnolia Bakery" must be visible elsewhere (p. 34). At 96 CSS px per inch: about 240px horizontal, 144px primary, 38px monogram.
+- Clearspace = the height of the "O" in MAGNOLIA, on all sides (p. 33). Keep the ® (p. 29). No outlines, effects, recoloring parts, cropping or rotating (p. 35).
+- Color: Rich Magnolia Green on White or Magnolia Green (p. 30).
+- **Gap:** the kit has no web-ready logos. It contains only the stacked primary logo (`.ai`, PDF-compatible, renderable) and a print `.eps`. **There's no horizontal logo file.**
+
+**Color** (no tints, gradients or off-palette colors, p. 44)
+- Primary: Magnolia Green `#BAE8D4`, White `#FFFFFF`, **Rich Magnolia Green `#00211A` = primary text color** (pp. 39–40). At least 60% of any layout must be primary colors (p. 43).
+- Secondary pastels (Banana Pudding `#FFE5A3`, Red Velvet `#FFC9CB`, Purple Buttercream `#E7CBEF`, Bleecker St. Blue `#AFD9E9`) max 10% each, only where content-related. Rich accents (`#451F13`, `#581B28`, `#43234C`, `#050E3C`) max 2%, **never as backgrounds, and only on their own pastel** (pp. 41–44).
+- Contrast (WCAG): `#00211A` on White 17.0:1, on Magnolia Green 12.6:1, White on `#00211A` 17.0:1 (all AAA). Magnolia Green on White is 1.35:1, so decorative only.
+
+**Type**
+- Brand suite: Gatefold Demi (headlines), GT Alpina (subheads), Ambit Bold/Regular (secondary subheads/body), with line heights 125/120/120/140% (pp. 48–49). **"Web alternative is Karla"**; for font rights, "contact the design team" (p. 48).
+- Licenses in the kit are **desktop-only**: Gatefold (TDF EULA: web only as flattened images, no `@font-face`), Ambit (CoType Desktop EULA: rasterized images for web sites only). GT Alpina came without a license file. **So all live portal text uses Karla** (open-source, self-hostable).
+
+**Patterns, frames, tone**
+- Patterns are flexible assets (p. 26). Don't mix patterns or colorways, distort, rotate, crop off-center or make them too small, and **stripes only vertical** (p. 69). The source PNGs are 1.6–3MB and need web optimization.
+- Tone: warm, imaginative, detail-focused. "When in doubt, go short" (pp. 20–23). Mission line: "make today sweeter than yesterday" (p. 21); there's matching "Sweet Sayings" artwork in the kit.
+- Contacts for asset and rights questions: Desiree Tomich, Creative Lead; Jami Palmer, Associate Designer (p. 123).
+
+**Open questions for Magnolia (via Openhouse)**
+1. Web files of the **horizontal logo** and **monogram** (SVG preferred), per p. 29.
+2. Confirm **Karla** for web text, given the p. 48 note to contact the design team for font rights.
+3. Approve co-branding: "Magnolia Bakery **by Openhouse**" in the portal header. The guide doesn't cover partner co-branding.
 
 ---
 
