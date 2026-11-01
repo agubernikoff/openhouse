@@ -197,7 +197,27 @@ export default function Product() {
   const {title, descriptionHtml} = product;
   const allProductImages = product.images.nodes;
 
+  // Portal: the gallery follows the colors picked in PortalProductForm
+  const [portalColors, setPortalColors] = useState([]);
+
   const productImages = useMemo(() => {
+    if (portal && portalColors.length) {
+      // Most recently selected color first (like the old wholesale form),
+      // then images that aren't tied to a color
+      const colorImages = [...portalColors]
+        .reverse()
+        .flatMap((color) =>
+          allProductImages.filter(
+            (img) => img.altText?.toLowerCase() === color.toLowerCase(),
+          ),
+        );
+      if (colorImages.length) {
+        return [
+          ...colorImages,
+          ...allProductImages.filter((img) => !img.altText),
+        ];
+      }
+    }
     return allProductImages
       .sort((a, b) => (b.altText != null ? 1 : 0) - (a.altText != null ? 1 : 0))
       .filter((img) => {
@@ -207,7 +227,7 @@ export default function Product() {
             .includes(img.altText.toLowerCase());
         return true;
       });
-  }, [allProductImages, selectedVariant]);
+  }, [allProductImages, selectedVariant, portal, portalColors]);
 
   const [selectedImage, setSelectedImage] = useState(productImages[0]);
   const scrollContainerRef = useRef(null);
@@ -391,6 +411,7 @@ export default function Product() {
               productMoq={parseMoq(selectedVariant?.product?.minimumQuantity)}
               leadTime={portal.leadTime}
               catalogPath={`/collections/${portal.collectionHandle}`}
+              onSelectedColorsChange={setPortalColors}
             />
           ) : (
             <ProductForm

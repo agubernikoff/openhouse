@@ -10,7 +10,7 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ## Status & Next Steps
 
-_Last updated 2026-10-25. Row numbers refer to request #12 in the development roadmap sheet._
+_Last updated 2026-10-28. Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
 
 | Row | Item | Status |
 |---|---|---|
@@ -23,18 +23,37 @@ _Last updated 2026-10-25. Row numbers refer to request #12 in the development ro
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested via cart flow; gallery-by-color reorder is optional polish. |
+| 12j | Portal product page | **Testing.** Built: `PortalProductForm` (multi-color, per-size qty, per-color MOQ). Browser-tested **only with the test tote** (one size, 12 colors). Not yet tried: color × size and one-size/one-color products, size ordering, multi-size cart groups, per-size MOQ values. Gallery follows the selected colors (added 2026-11-01). Open decision: info tabs. |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
-| 12l | Order history & re-order | Built on the Admin API (Flow tag **verified** on order #1406). List, detail and re-order tested against live data (`read_products` granted). Re-test re-order in the browser after the cart-cookie fix. |
-| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (needs a re-test with an order). My Locations not started. |
+| 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
+| 12m | My Locations + return to portal | Return-to-portal redirect built 2026-10-28 (**not yet re-tested**: needs one more portal checkout). My Locations not started. |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
-**Also fixed along the way (main site, not portal scope):** the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
+**Production incident 2026-10-28:** `/account/orders` returned 500 on `www` and the portal for about 30 minutes after the 12l deploy (Customer Account API field the live API rejects). Hotfixed in `b84be6c`; see §4.7.
+
+**Also fixed along the way (main site, not portal scope):** `server.js` dropped Hydrogen's `cart` cookie whenever the session also changed (`set` → `append`); the search page ignored filter/sort params; the search results count and the **filtered collection count** only showed the current page (max 12); the collection count request re-fired on every render.
+
+### Next session
+1. **Clean up the test order:** cancel #1406 (restock, refund the $10 shipping) and deactivate `PORTALTEST100` (and the shipping code, if created).
+2. **Finish testing 12j.** The catalog (checked 2026-11-01) has only three shapes: **color × size** (12 products, e.g. `signature-hoodie`), **color only** (43, like the test tote, already tested) and **one size, one color** (26, e.g. `playing-cards`). There are no size-only or no-option products. Temporarily tag one of each untested shape `portal:magnolia-bakery`, and remove the tags afterwards so they reappear on `www`. Check:
+   - inputs per size, ordered like the product's options
+   - a one-color product shows its quantity input right away (the only color is pre-selected, added 2026-11-01)
+   - per-color MOQ messaging
+   - totals
+   - the cart grouping several sizes under one color, with the MOQ status below Checkout
+   - what happens when sizes within a color have **different** MOQ values (the product page and cart read different variants; confirm Openhouse will keep them equal, or align the code)
+
+   - **gallery:** picking a color shows its images first (newest selection first). Products whose images aren't color-tagged (e.g. `playing-cards`) keep their normal gallery.
+
+   Also decide the info tabs.
+3. **Re-test return-to-portal** with one more portal checkout: "continue shopping" should land on the portal's orders.
+4. **12m My Locations:** present the address book as "My Locations" on the portal (store name in the address `company` field, matching sign-up), and check that checkout pre-fills them.
+5. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
+6. Then **12e** branding (needs assets), **12p** wrap-up (corporate admin account, new-portal playbook, verification runbook), and **12n/12o** if approved.
 
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
-- Optional: reorder the product gallery by selected colors (the old wholesale form did).
 
 ### Shopify Flow order tag (12k, verified 2026-10-28)
 Trigger *Order created* → condition *custom attributes key = `_portal`* → action *Add order tags*:
