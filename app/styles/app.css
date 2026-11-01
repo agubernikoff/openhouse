@@ -5214,8 +5214,10 @@ body:has(.contact) .contact-error-message {
     display: none;
   }
 }
+/* Buttons, including link-buttons that `.portal a` would otherwise recolor */
 .portal .portal-button,
-.portal .portal-order-actions button {
+.portal .portal-order-actions button,
+.portal .cart-checkout-button {
   background: var(--portal-button);
   color: var(--portal-button-text);
   border-color: var(--portal-button);
