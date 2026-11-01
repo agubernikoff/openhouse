@@ -1,11 +1,11 @@
 import {getSitemap} from '@shopify/hydrogen';
-import {PORTALS} from '~/lib/portals';
 import {portalProductTag} from '~/lib/portalProducts';
 
 /**
  * @param {Route.LoaderArgs}
  */
-export async function loader({request, params, context: {storefront}}) {
+export async function loader({request, params, context}) {
+  const {storefront, portals} = context;
   const response = await getSitemap({
     storefront,
     request,
@@ -22,13 +22,13 @@ export async function loader({request, params, context: {storefront}}) {
     body = withoutUrls(
       body,
       'products',
-      await portalProductHandles(storefront),
+      await portalProductHandles(storefront, portals),
     );
   } else if (params.type === 'collections') {
     body = withoutUrls(
       body,
       'collections',
-      new Set(PORTALS.map((p) => p.collectionHandle)),
+      new Set(portals.map((p) => p.collectionHandle)),
     );
   }
 
@@ -57,10 +57,11 @@ function withoutUrls(xml, type, handles) {
 /**
  * @param {Route.LoaderArgs['context']['storefront']} storefront
  */
-async function portalProductHandles(storefront) {
-  const query = PORTALS.map(
-    ({handle}) => `tag:'${portalProductTag(handle)}'`,
-  ).join(' OR ');
+async function portalProductHandles(storefront, portals) {
+  if (!portals.length) return new Set();
+  const query = portals
+    .map(({handle}) => `tag:'${portalProductTag(handle)}'`)
+    .join(' OR ');
   const {products} = await storefront.query(PORTAL_PRODUCT_HANDLES_QUERY, {
     variables: {query},
     cache: storefront.CacheShort(),

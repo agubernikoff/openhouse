@@ -38,7 +38,7 @@ async function loadCriticalData({context, request}) {
   return {
     collections: {
       ...collections,
-      nodes: excludePortalCollections(collections.nodes),
+      nodes: excludePortalCollections(collections.nodes, context.portals),
     },
   };
 }

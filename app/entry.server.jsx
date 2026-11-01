@@ -19,6 +19,15 @@ export default async function handleRequest(
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     defaultSrc: ["'self'"],
+    // Franchise portal fonts (Google Fonts family from the portal metaobject).
+    // fontSrc replaces the default-src fallback, so it keeps self + Shopify.
+    styleSrc: ['https://fonts.googleapis.com'],
+    fontSrc: [
+      "'self'",
+      'https://cdn.shopify.com',
+      'https://fonts.gstatic.com',
+      ...(process.env.NODE_ENV === 'development' ? ['http://localhost:*'] : []),
+    ],
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,

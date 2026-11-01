@@ -18,15 +18,15 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12b | Subdomain spike | Done. "Continue shopping" returns to `www` (confirmed); handled by the return-to-portal redirect (12m). |
 | 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
 | 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
-| 12e | Branded layout + landing | Structure done; brand assets received 2026-11-01, review pending |
+| 12e | Branded layout + landing | Brand review done 2026-11-01 (see *Magnolia Brand Review*). Theme proposal pending sign-off; horizontal logo file still needed from Magnolia. |
 | 12f | Sign-up, verification & gating | Done and live |
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
 | 12i | Portal catalog | Done. Reuses the collection page and filters at `/collections/magnolia-bakery`. |
-| 12j | Portal product page | Done and browser-tested 2026-11-01 (color × size, color-only and one-size/one-color products; gallery follows selected colors). Open decision: info tabs. |
+| 12j | Portal product page | Done and browser-tested 2026-11-01 (color × size, color-only and one-size/one-color products; gallery follows selected colors). Info tabs kept (decided 2026-11-01). |
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
-| 12m | My Locations + return to portal | Built: return-to-portal redirect (2026-10-28) and **My Locations** (2026-11-01). The address book reads "My Locations" on portals, store name is required, up to 50 locations. Return-to-portal **verified** 2026-11-01 (new orders show after a minute or two, via the Flow tag; noted on the page). **Still to confirm:** checkout offers a second saved location. |
+| 12m | My Locations + return to portal | Done 2026-11-01 (My Locations, second location offered at checkout, return-to-portal verified; new-order delay noted on the orders page). |
 | 12n / 12o | Corporate admin | Not started (optional) |
 | 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
 
@@ -42,6 +42,10 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 5. **Optional refactor (pending your call):** make Re-order a plain `CartForm` LinesAdd to `/cart`, like the product page, instead of its own action. Less code, one add-to-cart path. Land on `/cart` (recommended) or `/cart/checkout`.
 6. **12e** branding: assets received 2026-11-01 (the full company brand kit plus a usage guide). Review them for logo files, colors, type and usage rules, cite the guide, and propose the portal theme, **12p** wrap-up (corporate admin account, new-portal playbook, verification runbook), and **12n/12o** if approved.
 
+### Decisions (2026-11-01)
+- Product page info tabs (Lead time / Material / Our commitment / Returns): **keep** on portal products.
+- Re-order: **leave** as its own action (no `CartForm` refactor).
+
 ### Open decisions
 - Product page "Lead time / Material / Our commitment / Returns" tabs on the portal: keep, hide, or trim to Material + Size chart?
 
@@ -54,6 +58,38 @@ Trigger *Order created* → condition *custom attributes key = `_portal`* → ac
 - Magnolia brand assets
 - Corporate admin's email (`portal:magnolia-bakery:admin`)
 - Decision on 12n/12o
+
+---
+
+## Magnolia Brand Review (12e, 2026-11-01)
+
+Source: the brand kit Openhouse forwarded, *VOL 1 - Brand Guidelines (Recipes for Brand Design Magic) 062426.pdf* (123 pp.; page labels match PDF pages), plus the font EULAs in `FONTS TO DOWNLOAD/`. Citations are to that guide unless noted. The kit isn't committed to the repo; only the assets chosen get added.
+
+**Logo**
+- Website headers should lead with the **horizontal logo** (or the brand mark), not the stacked primary logo (p. 29). The horizontal logo and the monogram are fixed assets (p. 31).
+- Minimum sizes (print): primary 1.5", **horizontal 2.5"**, monogram 0.4". When the monogram is used alone, "Magnolia Bakery" must be visible elsewhere (p. 34). At 96 CSS px per inch: about 240px horizontal, 144px primary, 38px monogram.
+- Clearspace = the height of the "O" in MAGNOLIA, on all sides (p. 33). Keep the ® (p. 29). No outlines, effects, recoloring parts, cropping or rotating (p. 35).
+- Color: Rich Magnolia Green on White or Magnolia Green (p. 30).
+- **Gap:** the kit has no web-ready logos. It contains only the stacked primary logo (`.ai`, PDF-compatible, renderable) and a print `.eps`. **There's no horizontal logo file.**
+
+**Color** (no tints, gradients or off-palette colors, p. 44)
+- Primary: Magnolia Green `#BAE8D4`, White `#FFFFFF`, **Rich Magnolia Green `#00211A` = primary text color** (pp. 39–40). At least 60% of any layout must be primary colors (p. 43).
+- Secondary pastels (Banana Pudding `#FFE5A3`, Red Velvet `#FFC9CB`, Purple Buttercream `#E7CBEF`, Bleecker St. Blue `#AFD9E9`) max 10% each, only where content-related. Rich accents (`#451F13`, `#581B28`, `#43234C`, `#050E3C`) max 2%, **never as backgrounds, and only on their own pastel** (pp. 41–44).
+- Contrast (WCAG): `#00211A` on White 17.0:1, on Magnolia Green 12.6:1, White on `#00211A` 17.0:1 (all AAA). Magnolia Green on White is 1.35:1, so decorative only.
+
+**Type**
+- Brand suite: Gatefold Demi (headlines), GT Alpina (subheads), Ambit Bold/Regular (secondary subheads/body), with line heights 125/120/120/140% (pp. 48–49). **"Web alternative is Karla"**; for font rights, "contact the design team" (p. 48).
+- Licenses in the kit are **desktop-only**: Gatefold (TDF EULA: web only as flattened images, no `@font-face`), Ambit (CoType Desktop EULA: rasterized images for web sites only). GT Alpina came without a license file. **So all live portal text uses Karla** (open-source, self-hostable).
+
+**Patterns, frames, tone**
+- Patterns are flexible assets (p. 26). Don't mix patterns or colorways, distort, rotate, crop off-center or make them too small, and **stripes only vertical** (p. 69). The source PNGs are 1.6–3MB and need web optimization.
+- Tone: warm, imaginative, detail-focused. "When in doubt, go short" (pp. 20–23). Mission line: "make today sweeter than yesterday" (p. 21); there's matching "Sweet Sayings" artwork in the kit.
+- Contacts for asset and rights questions: Desiree Tomich, Creative Lead; Jami Palmer, Associate Designer (p. 123).
+
+**Open questions for Magnolia (via Openhouse)**
+1. Web files of the **horizontal logo** and **monogram** (SVG preferred), per p. 29.
+2. Confirm **Karla** for web text, given the p. 48 note to contact the design team for font rights.
+3. Approve co-branding: "Magnolia Bakery **by Openhouse**" in the portal header. The guide doesn't cover partner co-branding.
 
 ---
 
@@ -193,7 +229,7 @@ Verification: Openhouse (in Shopify admin) or the portal admin (in the portal) s
 
 ### 4.1 Portal resolution and routing
 - `app/lib/portals.js` maps hostname to portal config. In `createHydrogenRouterContext` ([`app/lib/context.js`](../../app/lib/context.js)), resolve `context.portal` from the request host. An unknown host gives `null`, which means the normal Openhouse site.
-- **Why code config, not a metaobject:** portal setup is manual per client anyway, the Slack webhook is a secret (metaobjects can be readable over the public Storefront API), and code config adds no request overhead and is versioned. Branding could move to a metaobject later if Openhouse wants to edit it without a deploy.
+- **Portal config lives in Shopify admin (2026-11-01):** each portal is a `franchise_portal` metaobject (Content → Metaobjects), loaded once per request in the context (cached ~1 min, stale up to 10 min) by [`loadPortals`](../../app/lib/portals.js). The metaobject handle is the portal handle. Fields: `name`, `hostname`, `collection`, `lead_time`, `logo_header` / `logo_landing` / `logo_mark`, `font_family` (Google Fonts name), `color_*` (text, background, accent, button, button_text, error, error_background), `landing_headline`, `landing_body`, `pending_message`, `onboarding_fields` (JSON). The definition needs **Storefront read access**. Admin input is validated (hex colors, plain font names, JSON). Secrets stay out of metaobjects, since they're publicly readable: the Slack webhook is the env var `SLACK_PORTAL_{HANDLE}_WEBHOOK_URL`.
 - Portal pages live at the **same paths** as the main site (`/`, `/products/$handle`, `/cart`, `/account/*`), plus portal-only routes (`/onboarding`, `/admin/*`). Overlapping routes branch on `context.portal` and delegate to modules in `app/portal/`, so portal code stays separate. Portal-only routes return 404 on the main host.
   - *Why not a `/portal/*` route segment with a server rewrite:* SSR would render the rewritten path, and client hydration would see a different `window.location`. A visible `/portal/...` URL would undercut the subdomain. Validate this approach in the spike (Phase 0).
 - On a portal host, any path outside the allowlist ([`isPortalPath`](../../app/lib/portals.js)) is blocked in [`server.js`](../../server.js) before routing: page loads redirect to `/`, and actions or other non-GET requests return 404. This covers main-site actions and resource routes like `/cart/:lines`. Client-side data requests pass through to read-only loaders; the root loader and `PortalLayout` redirect those. The root layout ([`app/root.jsx`](../../app/root.jsx) → `PageLayout`) renders a portal header and footer themed from `portal.branding`.
@@ -291,7 +327,7 @@ The client has no verification data today, so launch uses manual verification on
 
 ## 5. Shopify Admin Setup Checklist (per portal)
 
-- [ ] Add the portal entry to `app/lib/portals.js` (hostname, handle, name, collection handle, branding) and deploy
+- [ ] Add a **Franchise portal** metaobject entry (handle = portal handle; hostname, collection, logos, colors, font, copy). No deploy needed.
 - [ ] Create the Slack channel and incoming webhook; add `SLACK_PORTAL_{HANDLE}_WEBHOOK_URL` to Oxygen environment variables
 - [ ] Connect the subdomain in the Hydrogen channel (Oxygen custom domain) and add the DNS CNAME
 - [ ] Register the subdomain's callback, JavaScript-origin and logout URLs in the Customer Account API settings

@@ -4,7 +4,7 @@ import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 import {
-  EXCLUDE_PORTAL_PRODUCTS_QUERY,
+  excludePortalProductsQuery,
   excludePortalProductNodes,
 } from '~/lib/portalProducts';
 
@@ -42,7 +42,10 @@ async function loadCriticalData({context, request}) {
 
   const [{products}] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
-      variables: {...paginationVariables, query: EXCLUDE_PORTAL_PRODUCTS_QUERY},
+      variables: {
+        ...paginationVariables,
+        query: excludePortalProductsQuery(context.portals),
+      },
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);

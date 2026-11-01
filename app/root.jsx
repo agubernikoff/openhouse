@@ -74,7 +74,6 @@ export function links() {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
 
@@ -257,9 +256,22 @@ export function Layout({children}) {
         <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
+        {/* In Layout (not links()) so portals can use their own mark */}
+        {portal?.logos?.mark ? (
+          <link rel="icon" type="image/png" href={portal.logos.mark.url} />
+        ) : (
+          <link rel="icon" type="image/svg+xml" href={favicon} />
+        )}
+        {portal?.theme?.fontFamily && (
+          <PortalFontLinks family={portal.theme.fontFamily} />
+        )}
         {!portal && <TrackingHeadScripts nonce={nonce} />}
       </head>
-      <body>
+      <body
+        style={
+          portal?.theme ? {background: portal.theme.background} : undefined
+        }
+      >
         <a href="#main-content" className="skip-to-content-link">
           Skip to content
         </a>
@@ -271,6 +283,28 @@ export function Layout({children}) {
         {!portal && <TrackingBodyScripts nonce={nonce} />}
       </body>
     </html>
+  );
+}
+
+/**
+ * Franchise portal web font from Google Fonts (regular + bold), e.g. Karla
+ * for Magnolia Bakery (brand guide p. 48).
+ * @param {{family: string}}
+ */
+function PortalFontLinks({family}) {
+  const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+    family,
+  ).replace(/%20/g, '+')}:wght@400;700&display=swap`;
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link rel="stylesheet" href={href} />
+    </>
   );
 }
 

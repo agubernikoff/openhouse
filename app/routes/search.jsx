@@ -454,7 +454,10 @@ async function predictiveSearch({request, context}) {
   }
 
   items.products = excludePortalProducts(items.products);
-  items.collections = excludePortalCollections(items.collections);
+  items.collections = excludePortalCollections(
+    items.collections,
+    context.portals,
+  );
 
   const total = Object.values(items).reduce(
     (acc, item) => acc + item.length,

@@ -5143,3 +5143,103 @@ body:has(.contact) .contact-error-message {
   font-size: 14px;
   margin: 0 0 1rem;
 }
+
+/* --------------------------------------------------------------------------
+ * Franchise portal theme. Colors and font come from the portal metaobject
+ * (PortalLayout sets --portal-* on .portal). The shared components use the
+ * --color-oh-* tokens, so remapping those themes catalog, product, cart and
+ * account pages without touching them. Magnolia: brand guide pp. 39-44
+ * (primary palette only, no off-palette grays; errors as Rich Red Velvet on
+ * Red Velvet, p. 41), Karla for web (p. 48), body line height 140% (p. 49).
+ * ----------------------------------------------------------------------- */
+.portal {
+  --color-oh-black: var(--portal-text);
+  --color-dark: var(--portal-text);
+  --color-oh-white: var(--portal-background);
+  --color-light: var(--portal-background);
+  --color-oh-gray: var(--portal-accent);
+  --color-oh-gray-contact: var(--portal-text);
+  --color-oh-yellow: var(--portal-text);
+  --color-oh-red: var(--portal-error);
+  background: var(--portal-background);
+  color: var(--portal-text);
+  line-height: 1.4;
+}
+.portal,
+.portal * {
+  font-family: var(--portal-font), sans-serif !important;
+}
+.portal a {
+  color: var(--portal-text);
+}
+.portal-header {
+  background: var(--portal-accent);
+  border-bottom: none;
+  height: auto;
+  min-height: var(--header-height);
+  padding: 0.75rem 1rem;
+}
+.portal-header-brand {
+  align-items: center;
+  color: var(--portal-text);
+}
+.portal-header-byline {
+  color: var(--portal-text);
+}
+/* Horizontal logo: min 2.5" ≈ 240px wide (p. 34); clearspace via padding */
+.portal-logo-wide {
+  width: 280px;
+  height: auto;
+  display: block;
+}
+.portal-logo-mark,
+.portal-header-name {
+  display: none;
+}
+@media (max-width: 640px) {
+  .portal-logo-wide {
+    display: none;
+  }
+  /* Monogram min .4" ≈ 38px, with the name visible (p. 34) */
+  .portal-logo-mark {
+    display: block;
+    width: 40px;
+    height: auto;
+  }
+  .portal-header-name {
+    display: inline;
+  }
+  .portal-header-byline {
+    display: none;
+  }
+}
+.portal .portal-button,
+.portal .portal-order-actions button {
+  background: var(--portal-button);
+  color: var(--portal-button-text);
+  border-color: var(--portal-button);
+}
+/* Form fields need a 3:1 boundary (WCAG 1.4.11): use the text color */
+.portal .portal-form-field input,
+.portal .portal-form-field select,
+.portal .portal-form-field textarea,
+.portal .account-addresses input {
+  border-color: var(--portal-text);
+}
+.portal-landing-logo {
+  width: 220px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+.portal-home-body {
+  max-width: 36rem;
+  margin: 0;
+  white-space: pre-line;
+}
+/* Errors and MOQ notices: rich accent on its own pastel (p. 41) */
+.portal .portal-form-error,
+.portal .portal-moq-status:not(:empty) {
+  color: var(--portal-error);
+  background: var(--portal-error-background);
+  padding: 0.5rem 0.75rem;
+}

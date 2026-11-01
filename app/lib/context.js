@@ -1,7 +1,7 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
-import {resolvePortal} from '~/lib/portals';
+import {loadPortals, resolvePortal} from '~/lib/portals';
 
 // Define the additional context object
 const additionalContext = {
@@ -50,12 +50,15 @@ export async function createHydrogenRouterContext(
         queryFragment: CART_QUERY_FRAGMENT,
       },
     },
-    {
-      ...additionalContext,
-      // Franchise portal for this request's host, or null on the main site.
-      portal: resolvePortal(request, env),
-    },
+    additionalContext,
   );
+
+  // Franchise portals (franchise_portal metaobjects) and this request's
+  // portal, or null on the main site. Hydrogen's context proxy has no set
+  // trap, so these land on the underlying provider and read back normally.
+  const portals = await loadPortals(hydrogenContext.storefront);
+  hydrogenContext.portals = portals;
+  hydrogenContext.portal = resolvePortal(request, env, portals);
 
   return hydrogenContext;
 }
