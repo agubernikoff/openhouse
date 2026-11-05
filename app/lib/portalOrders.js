@@ -37,3 +37,29 @@ export function portalOrderTracking(order) {
     (f) => f.trackingInformation ?? [],
   );
 }
+
+/**
+ * Status for an Admin API order (corporate admin views).
+ * @param {{displayFinancialStatus?: string; displayFulfillmentStatus?: string; fulfillments: {displayStatus?: string}[]}} order
+ */
+export function adminOrderStatus(order) {
+  if (order.displayFinancialStatus === 'REFUNDED') return 'Refunded';
+  return portalOrderStatus({
+    fulfillmentStatus: order.displayFulfillmentStatus,
+    fulfillments: {
+      nodes: order.fulfillments.map((f) => ({
+        latestShipmentStatus: f.displayStatus,
+      })),
+    },
+  });
+}
+
+/**
+ * "Store name · City, ST" for an order's ship-to address.
+ * @param {{company?: string | null; city?: string | null; provinceCode?: string | null} | null} address
+ */
+export function formatLocation(address) {
+  if (!address) return '—';
+  const place = [address.city, address.provinceCode].filter(Boolean).join(', ');
+  return [address.company, place].filter(Boolean).join(' · ') || '—';
+}

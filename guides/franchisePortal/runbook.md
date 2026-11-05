@@ -14,7 +14,8 @@ Each franchisee is a normal Shopify customer. Their portal access is a **custome
 |---|---|
 | `portal:magnolia-bakery:pending` | Signed up, waiting for you to verify. Can't browse or order. |
 | `portal:magnolia-bakery:member` | Verified franchisee. Can browse, order and see their orders. |
-| `portal:magnolia-bakery:admin` | The client's corporate account. Same access as a member for now (see the note at the end). |
+| `portal:magnolia-bakery:admin` | The client's corporate account. Member access, plus the portal's **Admin** pages (all orders, member access). |
+| `portal:magnolia-bakery:revoked` | Access removed. Sees an "access removed" notice and can't sign up again. |
 
 Give each customer **one** of these per portal. If someone somehow has several, the highest wins (admin, then member, then pending).
 
@@ -29,9 +30,14 @@ Give each customer **one** of these per portal. If someone somehow has several, 
 
 It takes effect on their next page load: they'll land on the catalog.
 
-## Remove a franchisee's access
+The client's corporate admin can also do this from the portal: **Admin → Members → Approve**.
 
-Remove their `portal:magnolia-bakery:member` tag (or `…:admin`). Access ends within **about 5 minutes**. Their past orders stay in Shopify.
+## Remove or restore a franchisee's access
+
+- **From the portal (corporate admin):** **Admin → Members → Remove access** / **Restore access**.
+- **From Shopify admin:** swap `portal:magnolia-bakery:member` for `portal:magnolia-bakery:revoked`. To restore, swap it back. If you only delete the member tag, they can simply sign up again.
+
+Access ends within **about 5 minutes**. Their past orders stay in Shopify.
 
 ## Set up the corporate (admin) account
 
@@ -105,4 +111,10 @@ Changes go live within **a few minutes**, with no deploy.
 
 ---
 
-**Note on corporate admin:** an "all locations" order view and approving franchisees from inside the portal (roadmap 12n / 12o) are optional and not built. Until they are, the corporate account sees the portal like a member, and approvals happen in Shopify admin as above.
+## Corporate admin pages
+
+Customers tagged `portal:magnolia-bakery:admin` get an **Admin** link in the portal header:
+- **Orders:** every portal order across all franchisees, searchable by order number, name or email, and filterable by shipped status and date. Each order opens to its items, ship-to address and tracking.
+- **Members:** everyone with portal access. Approve sign-ups, remove access, restore access.
+
+Admins can't change other admins or themselves. Openhouse manages admin tags in Shopify admin.

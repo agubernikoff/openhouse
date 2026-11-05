@@ -9,7 +9,8 @@ import {shopifyAdminFetch} from '~/lib/shopifyAdmin';
  * - `admin`:   the client's corporate account
  * A logged-in customer with none of these tags has role `none`.
  *
- * @typedef {'admin' | 'member' | 'pending' | 'none'} PortalRole
+ * - `revoked`: access removed by the portal admin (12o); can't re-sign-up
+ * @typedef {'admin' | 'member' | 'pending' | 'revoked' | 'none'} PortalRole
  * @typedef {{customerId: string; role: PortalRole; checkedAt: number}} PortalAccess
  */
 
@@ -100,8 +101,13 @@ export async function requirePortalRole(context, roles) {
  * @param {string[]} tags
  * @return {PortalRole}
  */
-function roleFromTags(portal, tags) {
-  for (const role of /** @type {const} */ (['admin', 'member', 'pending'])) {
+export function roleFromTags(portal, tags) {
+  for (const role of /** @type {const} */ ([
+    'admin',
+    'member',
+    'revoked',
+    'pending',
+  ])) {
     if (tags.includes(portalTag(portal, role))) return role;
   }
   return 'none';

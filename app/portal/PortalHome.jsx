@@ -5,11 +5,23 @@ import {Link} from 'react-router';
  * redirected to the catalog (the portal's collection) by the index loader.
  * @param {{
  *   portal: ReturnType<typeof import('~/lib/portals').toPublicPortal>;
- *   role: 'pending' | null;
+ *   role: 'pending' | 'revoked' | null;
  * }}
  */
 export function PortalHome({portal, role}) {
   const {copy, logos} = portal;
+
+  if (role === 'revoked') {
+    return (
+      <section className="portal-home">
+        <h1>Your access has been removed</h1>
+        <p className="portal-home-body">
+          Your {portal.name} ordering access is no longer active. If you think
+          this is a mistake, please contact your {portal.name} team.
+        </p>
+      </section>
+    );
+  }
 
   if (role === 'pending') {
     return (

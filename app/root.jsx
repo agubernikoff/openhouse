@@ -25,6 +25,7 @@ import {GoogleAnalytics} from './components/GoogleAnalytics';
 import {PortalLayout} from './portal/PortalLayout';
 import {isPortalPath, toPublicPortal} from '~/lib/portals';
 import {withoutCheckoutUrl} from '~/lib/portalCart.server';
+import {getPortalAccess} from '~/portal/access.server';
 import {NavigationProvider} from './context/NavigationContext';
 import {PopUpProvider} from './context/PopUpContext';
 import normalizeMetaobject from '~/helpers/normalizeMetaobject';
@@ -125,6 +126,10 @@ function loadPortalData({request, context}) {
     consent: {...analyticsData.consent, withPrivacyBanner: false},
     portal: toPublicPortal(context.portal),
     cart: context.cart.get().then(withoutCheckoutUrl),
+    // Shows the corporate admin link in the portal header (12n/12o)
+    isPortalAdmin: getPortalAccess(context)
+      .then((access) => access?.role === 'admin')
+      .catch(() => false),
     isLoggedIn: context.customerAccount.isLoggedIn(),
   };
 }
@@ -373,6 +378,7 @@ export default function App() {
         <PortalLayout
           portal={data.portal}
           isLoggedIn={data.isLoggedIn}
+          isPortalAdmin={data.isPortalAdmin}
           cart={data.cart}
         >
           <Outlet />
