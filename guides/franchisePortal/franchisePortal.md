@@ -10,7 +10,7 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ## Status & Next Steps
 
-_Last updated 2026-11-04. Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
+_Last updated 2026-11-04 (all roadmap rows complete). Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
 
 | Row | Item | Status |
 |---|---|---|
@@ -27,7 +27,7 @@ _Last updated 2026-11-04. Row numbers refer to request #12 in the development ro
 | 12k | Cart & checkout protection | Built: server cart guard (both hosts), `_portal` cart attribute, `_color` grouping, MOQ status + disabled checkout, `/cart/checkout` server re-check. Shopify Flow order tag **verified** on order #1406 (2026-10-28). |
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
 | 12m | My Locations + return to portal | Done 2026-11-01 (My Locations, second location offered at checkout, return-to-portal verified; new-order delay noted on the orders page). |
-| 12n / 12o | Corporate admin | Built 2026-11-04: `/admin` (all portal orders: search, status and date filters, paging, order detail) and `/admin/members` (approve / remove / restore; removal tags `portal:{handle}:revoked`). Admin API, tested against live data; access changes tested against a stub. **Needs a browser test** with an admin-tagged account. |
+| 12n / 12o | Corporate admin | Done and browser-tested 2026-11-04: `/admin` (all portal orders, filters, detail) and `/admin/members` (approve / remove / restore; portal-only order counts). |
 | 12p | Magnolia setup + handoff | Done except the **corporate admin account** (waiting on Magnolia's email). Config moved to Shopify admin (metaobjects). Handoff docs: [runbook.md](runbook.md) (Openhouse staff) and [new-portal-playbook.md](new-portal-playbook.md) (next brand). |
 
 **Production incident 2026-10-28:** `/account/orders` returned 500 on `www` and the portal for about 30 minutes after the 12l deploy (Customer Account API field the live API rejects). Hotfixed in `b84be6c`; see §4.7.
