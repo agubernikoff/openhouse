@@ -115,7 +115,7 @@ export default function AdminMembers() {
             <tr>
               <th scope="col">Member</th>
               <th scope="col">Locations</th>
-              <th scope="col">Orders</th>
+              <th scope="col">Portal orders</th>
               <th scope="col">Status</th>
               <th scope="col">
                 <span className="visually-hidden">Actions</span>
@@ -150,7 +150,7 @@ export default function AdminMembers() {
                         ))
                       : '—'}
                   </td>
-                  <td>{member.numberOfOrders}</td>
+                  <td>{member.portalOrders}</td>
                   <td>{STATUS_LABELS[member.role] ?? member.role}</td>
                   <td>
                     {action && !isSelf && (
