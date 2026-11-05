@@ -10,7 +10,7 @@ This is the single source of truth for the project. Update it in place as decisi
 
 ## Status & Next Steps
 
-_Last updated 2026-10-28. Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
+_Last updated 2026-11-04. Row numbers refer to request #12 in the development roadmap sheet. Everything below is merged to `main` and live._
 
 | Row | Item | Status |
 |---|---|---|
@@ -18,7 +18,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12b | Subdomain spike | Done. "Continue shopping" returns to `www` (confirmed); handled by the return-to-portal redirect (12m). |
 | 12c | Portal foundation | Done. Hostname → config, allowlist enforced in `server.js` for every request, noindex, no tracking. |
 | 12d | Hide portal products from main site | Done and live. Products **and** the portal catalog collection are hidden; search/collection filter counts are corrected (§4.4). |
-| 12e | Branded layout + landing | Brand review done 2026-11-01 (see *Magnolia Brand Review*). Theme proposal pending sign-off; horizontal logo file still needed from Magnolia. |
+| 12e | Branded layout + landing | Done 2026-11-01. Theme comes from the portal metaobject (logos, colors, Karla, copy) and was reviewed in the browser. |
 | 12f | Sign-up, verification & gating | Done and live |
 | 12g | Slack sign-up notifications | Done and live |
 | 12h | Verification extension point | Done (manual at launch) |
@@ -28,7 +28,7 @@ _Last updated 2026-10-28. Row numbers refer to request #12 in the development ro
 | 12l | Order history & re-order | Done and browser-tested 2026-10-28 (Admin API by customer + Flow tag; re-order works). |
 | 12m | My Locations + return to portal | Done 2026-11-01 (My Locations, second location offered at checkout, return-to-portal verified; new-order delay noted on the orders page). |
 | 12n / 12o | Corporate admin | Not started (optional) |
-| 12p | Magnolia setup | Domain, DNS, login URLs, Slack, API scopes, `magnolia-bakery` collection done. Admin account, branding, playbook to do. |
+| 12p | Magnolia setup + handoff | Done except the **corporate admin account** (waiting on Magnolia's email). Config moved to Shopify admin (metaobjects). Handoff docs: [runbook.md](runbook.md) (Openhouse staff) and [new-portal-playbook.md](new-portal-playbook.md) (next brand). |
 
 **Production incident 2026-10-28:** `/account/orders` returned 500 on `www` and the portal for about 30 minutes after the 12l deploy (Customer Account API field the live API rejects). Hotfixed in `b84be6c`; see §4.7.
 
