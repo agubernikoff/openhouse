@@ -10,10 +10,17 @@ import {isPortalPath} from '~/lib/portals';
  *   portal: ReturnType<typeof import('~/lib/portals').toPublicPortal>;
  *   isLoggedIn: Promise<boolean>;
  *   cart: Promise<any>;
+ *   isPortalAdmin: Promise<boolean>;
  *   children?: React.ReactNode;
  * }}
  */
-export function PortalLayout({portal, isLoggedIn, cart, children = null}) {
+export function PortalLayout({
+  portal,
+  isLoggedIn,
+  isPortalAdmin,
+  cart,
+  children = null,
+}) {
   const {pathname} = useLocation();
 
   // The root loader redirects non-portal paths on full page loads, but it
@@ -82,6 +89,13 @@ export function PortalLayout({portal, isLoggedIn, cart, children = null}) {
                           </Await>
                         </Suspense>
                       </Link>
+                      <Suspense fallback={null}>
+                        <Await resolve={isPortalAdmin} errorElement={null}>
+                          {(admin) =>
+                            admin ? <Link to="/admin">Admin</Link> : null
+                          }
+                        </Await>
+                      </Suspense>
                       <Link to="/account">Account</Link>
                       <Form method="POST" action="/account/logout">
                         <button type="submit">Sign out</button>

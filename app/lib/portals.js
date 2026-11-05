@@ -168,7 +168,7 @@ const PORTAL_PATHS = [
   '/__manifest',
 ];
 // `/products/*` loaders 404 anything not tagged for the portal
-const PORTAL_PATH_PREFIXES = ['/account', '/products'];
+const PORTAL_PATH_PREFIXES = ['/account', '/products', '/admin'];
 
 /** Paths that depend on the portal's own config, e.g. its catalog. */
 const portalPaths = (portal) => [
