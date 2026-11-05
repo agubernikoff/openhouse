@@ -5256,9 +5256,6 @@ body:has(.contact) .contact-error-message {
   flex-direction: column;
   gap: 1rem;
 }
-.portal-admin h1 {
-  margin: 0;
-}
 .portal-admin-nav {
   display: flex;
   gap: 1.5rem;
