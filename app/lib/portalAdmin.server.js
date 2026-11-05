@@ -80,21 +80,44 @@ export async function listPortalMembers(context, filters) {
   const q = cleanSearch(filters.q);
   if (q) parts.push(q);
 
-  const {customers} = await shopifyAdminFetch(context.env, {
-    query: MEMBERS_QUERY,
-    variables: {
-      query: parts.join(' AND '),
-      first: PAGE_SIZE,
-      after: filters.after || null,
-    },
-  });
+  const [{customers}, portalOrderCounts] = await Promise.all([
+    shopifyAdminFetch(context.env, {
+      query: MEMBERS_QUERY,
+      variables: {
+        query: parts.join(' AND '),
+        first: PAGE_SIZE,
+        after: filters.after || null,
+      },
+    }),
+    countPortalOrdersByCustomer(context),
+  ]);
   return {
     ...customers,
     nodes: customers.nodes.map((c) => ({
       ...c,
       role: roleFromTags(portal, c.tags),
+      // This portal's orders only (numberOfOrders counts the whole store)
+      portalOrders: portalOrderCounts.get(c.id) ?? 0,
     })),
   };
+}
+
+/**
+ * Portal orders per customer, from one query of the portal's tagged orders
+ * (up to 250; plenty for per-member counts on a franchise portal).
+ * @return {Promise<Map<string, number>>}
+ */
+async function countPortalOrdersByCustomer(context) {
+  const {orders} = await shopifyAdminFetch(context.env, {
+    query: PORTAL_ORDER_CUSTOMERS_QUERY,
+    variables: {query: `tag:'${portalProductTag(context.portal.handle)}'`},
+  });
+  const counts = new Map();
+  for (const o of orders.nodes) {
+    const id = o.customer?.id;
+    if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
 }
 
 const TRANSITIONS = {
@@ -280,7 +303,6 @@ const MEMBERS_QUERY = `#graphql
         displayName
         createdAt
         tags
-        numberOfOrders
         defaultEmailAddress {
           emailAddress
         }
@@ -295,6 +317,18 @@ const MEMBERS_QUERY = `#graphql
       pageInfo {
         hasNextPage
         endCursor
+      }
+    }
+  }
+`;
+
+const PORTAL_ORDER_CUSTOMERS_QUERY = `#graphql
+  query PortalAdminOrderCustomers($query: String!) {
+    orders(first: 250, query: $query) {
+      nodes {
+        customer {
+          id
+        }
       }
     }
   }

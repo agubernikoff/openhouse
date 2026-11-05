@@ -5282,6 +5282,11 @@ body:has(.contact) .contact-error-message {
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--color-oh-black);
   background: transparent;
+  margin: 0;
+  border-radius: 4px;
+  line-height: 19.6px;
+  height: 37px;
+  box-sizing: border-box;
 }
 .portal-admin-filters .portal-button,
 .portal-admin-table .portal-button {
